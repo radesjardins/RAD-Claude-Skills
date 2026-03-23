@@ -11,7 +11,10 @@ RAD-Claude-Skills/
 │
 └── skills/                            # Standalone skills (copy & use individually)
     ├── rad-code-review/               # Professional-grade code review with AI slop detection
-    └── rad-context-prompter/          # Context-aware prompt engineering (coming soon)
+    ├── rad-context-prompter/          # Context-aware prompt engineering for any AI tool
+    ├── rad-gem-creator/               # Google Gemini Gem instruction builder
+    ├── rad-gpt-creator/               # OpenAI ChatGPT Custom GPT builder
+    └── rad-para-second-brain/         # PARA method & Second Brain assistant
 ```
 
 ### Plugins vs. Skills
@@ -78,7 +81,10 @@ Start a new Claude Code session and check:
 | Skill | What It Does |
 |-------|-------------|
 | [RAD Code Review](#rad-code-review) | Professional-grade code review — AI slop detection, security, architecture, release readiness |
-| RAD Context Prompter | Context-aware prompt engineering and optimization (coming soon) |
+| [RAD Context Prompter](#rad-context-prompter) | Context-aware prompt engineering and optimization for any AI tool |
+| [RAD Gem Creator](#rad-gem-creator) | Guided workflow for creating Google Gemini Gems with structured instructions |
+| [RAD GPT Creator](#rad-gpt-creator) | Guided workflow for building OpenAI ChatGPT Custom GPTs |
+| [RAD PARA Second Brain](#rad-para-second-brain) | Build and maintain a PARA-based Second Brain using the CODE framework |
 
 ---
 
@@ -683,14 +689,9 @@ Every fix recommendation is scored:
 
 ---
 
-# Coming Soon
+# All Skills Installed
 
-| Skill/Plugin | Status | Description |
-|-------------|--------|-------------|
-| RAD Context Prompter | In Progress | Context-aware prompt engineering and optimization |
-| RAD Gem Creator | Planned | Create polished Google Gemini gems with optimized prompts |
-| RAD GPT Creator | Planned | Build custom OpenAI GPTs with structured configuration |
-| RAD PARA Second Brain | Planned | Implement the PARA method (Projects, Areas, Resources, Archives) for knowledge management |
+All planned skills are now available in this repo. See the [Standalone Skills](#standalone-skills) table above for the complete list.
 
 ---
 
