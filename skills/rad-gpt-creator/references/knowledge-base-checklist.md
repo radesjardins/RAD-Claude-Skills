@@ -17,26 +17,72 @@ Present this to the user if they opt in during Step 0.
 
 ---
 
+## How Files Are Processed (Chunking)
+
+When you upload a file, the GPT system:
+1. Breaks it into **chunks of ~800 tokens** with **400-token overlap** between consecutive chunks
+2. Embeds each chunk using `text-embedding-3-large`
+3. Stores chunks in a vector database for semantic search
+
+On each query, the system retrieves the **top 5-20 most relevant chunks** (not the
+full file). This means:
+- Well-structured files with clear headings produce cleaner, more targeted chunks
+- Dense paragraphs without headings may chunk unpredictably
+- The GPT only sees a fraction of your files at any given time
+- If a query doesn't match file content closely enough, retrieval returns nothing
+  and the model silently falls back to training data
+
+**You cannot configure chunking** through the GPT Builder UI. API users can adjust
+`max_chunk_size_tokens` (100-4096) and `chunk_overlap_tokens`, but Builder users
+get the defaults.
+
+**Practical implication:** Structure your files for chunking. Each section under a
+heading should be self-contained enough to be useful as an isolated 800-token chunk.
+
+---
+
 ## File Format Guidance
 
-**Best choices (most reliable retrieval):**
-- `.txt` — Plain text. No parsing overhead. Most consistent retrieval.
-- `.md` — Markdown. Excellent structure; headings improve chunk targeting.
-- `.docx` — Word documents. Clean text extraction.
+### All supported file types
 
-**Acceptable with caveats:**
-- `.pdf` (simple) — Single-column, clearly headed PDFs retrieve acceptably.
-  Avoid: multi-column layouts, scanned pages, heavy image content.
-- `.csv` — Tabular data works best when Code Interpreter is also enabled.
-  For structured data queries requiring precision, JSON is more reliable than CSV.
+**Via file_search (knowledge retrieval):**
+| Category | Formats |
+|----------|---------|
+| Code | `.c`, `.cpp`, `.cs`, `.go`, `.java`, `.js`, `.php`, `.py`, `.rb`, `.sh`, `.ts` |
+| Documents | `.doc`, `.docx`, `.pdf`, `.pptx`, `.txt` |
+| Markup/Data | `.css`, `.html`, `.json`, `.md`, `.tex` |
 
-**Avoid:**
-- `.pdf` (complex) — Multi-column, scanned, or image-heavy PDFs often produce
-  extraction errors or missed content.
-- `.pptx` — Slide layout and positional context are lost during extraction.
+Text files must be `utf-8`, `utf-16`, or `ascii` encoded.
 
-**Web content:** Copy-paste web page text into a `.txt` or `.md` file rather than
-saving PDFs of web pages — the exported PDF formatting almost always degrades retrieval.
+**Additional types when Code Interpreter is enabled:**
+- Spreadsheets: `.csv`, `.xls`, `.xlsx`
+- Images: up to 20MB each
+- Additional data formats for programmatic analysis
+
+### File format priority for text content
+
+| Rank | Format | Retrieval Quality | Best For |
+|------|--------|-------------------|----------|
+| 1 | **Plain text (.txt)** | Most reliable | Rules, procedures, notes — no parsing overhead |
+| 2 | **Markdown (.md)** | Excellent | Structured docs — headings improve chunk targeting |
+| 3 | **JSON (.json)** | Excellent for structured data | Catalogs, product data, FAQs — outperforms Markdown for complex queries |
+| 4 | **Word (.docx)** | Good | Received documents you can't easily convert |
+| 5 | **PDF (simple)** | Acceptable | Single-column, clearly headed documents |
+| 6 | **PDF (complex)** | Poor — avoid | Multi-column, scanned, image-heavy — parser frequently fails |
+| 7 | **PowerPoint (.pptx)** | Poor — avoid | Positional layout context is lost |
+
+### When to use JSON vs. Markdown
+
+- **JSON** outperforms Markdown for structured/catalog data (product lists, FAQs,
+  configuration data). Research found JSON provides more consistent retrieval accuracy
+  for complex queries.
+- **Markdown** is better for narrative text content (policies, guides, procedures).
+  Its heading structure naturally aligns with how the retrieval system chunks content.
+- **XML tags** within documents can mark important sections for easier retrieval targeting.
+
+### Web content
+Copy-paste web page text into `.txt` or `.md` rather than saving as PDF — exported
+PDF formatting almost always degrades retrieval quality.
 
 ---
 
@@ -104,6 +150,13 @@ product-messaging-matrix.md
 Name this file `knowledge-index.md` and reference it explicitly in the Source Policy:
 "Refer to knowledge-index.md to identify which file to consult for a given query."
 
+### Enable Code Interpreter for tabular data
+
+If your GPT uses CSV, Excel, or other structured data files, enable Code Interpreter
+alongside file_search. The model can then parse structured data programmatically rather
+than relying solely on semantic chunk retrieval — significantly improving accuracy for
+queries like "what's the total for column X" or "filter rows where status is active."
+
 ---
 
 ## Updating Knowledge Files
@@ -122,6 +175,47 @@ When a source document changes:
 whether a Custom GPT with static files is the right tool, or whether a Projects +
 instructions approach (which supports live file uploads per conversation) would serve
 better.
+
+---
+
+## The Fact Registry Technique
+
+For small, critical datasets (under ~50 items), consider embedding the data directly
+in the GPT's instructions rather than in a knowledge file.
+
+### Why this works
+
+Knowledge files depend on semantic search retrieval — if the query doesn't match
+closely enough, the GPT won't find it. Data embedded in the instructions is always
+visible to the model, bypassing retrieval entirely.
+
+### When to use it
+
+- You have a small, stable dataset (product list, team roster, key facts, FAQ)
+- Accuracy for this specific data is critical and retrieval has been unreliable
+- The data fits within the 8,000-character instruction limit
+- The data rarely changes
+
+### Example
+
+```
+# TEAM DIRECTORY
+| Name | Role | Email | Department |
+|------|------|-------|------------|
+| Jane Smith | Director | jane@company.com | Engineering |
+| Mike Chen | Manager | mike@company.com | Marketing |
+Total: 2 team members. No others exist.
+```
+
+The closure statement ("Total: 2. No others exist.") prevents the model from
+inventing additional entries from training data.
+
+### When NOT to use it
+
+- Large datasets (50+ items) — consumes too much of the 8,000-character limit
+- Frequently changing data — you'd need to edit instructions each time
+- Data that retrieves reliably from well-structured knowledge files
+- When the 8,000-character limit is already tight
 
 ---
 
