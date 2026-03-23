@@ -1,64 +1,197 @@
 # RAD Claude Skills
 
-Custom plugins and skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's CLI for Claude.
+Custom plugins and skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's CLI for Claude. Install everything at once or cherry-pick individual tools.
 
-## Available Plugins
+## What's Here
 
-### Ultimate SEO Optimizer
+```
+RAD-Claude-Skills/
+├── plugins/                           # Full Claude Code plugins (multi-skill bundles)
+│   └── ultimate-seo-optimizer/        # 11 skills, 3 agents, 6 commands, 7 reference docs
+│
+└── skills/                            # Standalone skills (copy & use individually)
+    └── ultimate-code-review/          # Professional-grade code review with AI slop detection
+```
 
-A comprehensive SEO domination toolkit for Claude Code. Perform full-site audits, optimize for AI search engines (ChatGPT, Perplexity, Google AI Overviews), discover keywords, analyze competitors, build link strategies, generate schema markup, and get step-by-step fix guidance — all from your terminal.
+### Plugins vs. Skills
 
-**Designed for business owners and webmasters who want to dominate their niche in both traditional and AI-powered search.** No SEO background required — every recommendation is in plain English with exact commands to fix issues.
-
-[Full documentation below](#ultimate-seo-optimizer-1) | [Quick install](#installation)
+- **Plugins** bundle multiple skills, agents, commands, and reference docs into one installable unit. Install the whole thing.
+- **Skills** are standalone — one SKILL.md plus supporting files. Copy a single folder and you're done.
 
 ---
 
-## Installation
+## Quick Install
 
-### Install the Full Plugin
+### Option 1: Install Everything
 
 ```bash
-# Clone this repository
 git clone https://github.com/radesjardins/RAD-Claude-Skills.git
+```
 
-# Add the plugin to Claude Code
+Then install whichever components you want:
+```bash
+# Install the SEO plugin
 claude plugins add ./RAD-Claude-Skills/plugins/ultimate-seo-optimizer
+
+# Install the code review skill
+cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/skill ~/.claude/skills/ultimate-code-review
+cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/references ~/.ai-shared/ucr/references
+cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/workflows ~/.ai-shared/ucr/workflows
+cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/project-types ~/.ai-shared/ucr/project-types
+cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/templates ~/.ai-shared/ucr/templates
+cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/scripts ~/.ai-shared/ucr/scripts
 ```
 
-Or add it directly from GitHub:
-```bash
-claude plugins add https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/ultimate-seo-optimizer
-```
-
-After installation, restart Claude Code. You'll see the new skills, commands, and agents available.
-
-### Cherry-Pick Individual Skills
-
-If you only need specific capabilities, you can copy individual skill folders into your project's `.claude/skills/` directory or your global `~/.claude/skills/` directory:
+### Option 2: Cherry-Pick Individual Skills
 
 ```bash
-# Example: install just the AEO optimizer skill
+# Example: install just one SEO skill (AEO optimizer)
 mkdir -p ~/.claude/skills
 cp -r RAD-Claude-Skills/plugins/ultimate-seo-optimizer/skills/aeo-optimizer ~/.claude/skills/
 
-# Example: install just the keyword discovery skill
-cp -r RAD-Claude-Skills/plugins/ultimate-seo-optimizer/skills/keyword-discovery ~/.claude/skills/
+# Example: install just the code review skill
+cp -r RAD-Claude-Skills/skills/ultimate-code-review/skill ~/.claude/skills/ultimate-code-review
 ```
 
-> **Note:** Some skills reference shared reference documents in the `references/` directory. If a skill mentions reading a reference file and you get errors, copy the `references/` folder alongside your skills.
+> **Note:** Some skills reference shared files. If you get file-not-found errors, also copy the `references/` directory from the same component.
 
 ### Verify Installation
 
-After installing, start a new Claude Code session and check that skills are available:
+Start a new Claude Code session and check:
 ```
 > /skills
 ```
 
-You should see the ultimate-seo-optimizer skills listed. Try a quick test:
+---
+
+# Available Components
+
+## Plugins
+
+| Plugin | Skills | Agents | Commands | What It Does |
+|--------|--------|--------|----------|-------------|
+| [Ultimate SEO Optimizer](#ultimate-seo-optimizer) | 11 | 3 | 6 | Full SEO toolkit — audits, AEO, keywords, competitors, link building, schema, reports |
+
+## Standalone Skills
+
+| Skill | What It Does |
+|-------|-------------|
+| [Ultimate Code Review](#ultimate-code-review) | Professional-grade code review — AI slop detection, security, architecture, release readiness |
+
+---
+
+# Ultimate Code Review
+
+Professional-grade code review skill that catches AI-generated code issues, security vulnerabilities, architecture problems, and release blockers.
+
+## What It Does
+
+UCR performs **three review roles** on every run:
+
+1. **Bug Finder** — Functional defects, logic errors, race conditions, edge cases, and AI-specific failures (hallucinated imports, fake error handling, placeholder stubs, silent failures)
+2. **Architecture Reviewer** — Structure, coupling, naming, abstraction quality, test coverage gaps, performance issues, and maintainability
+3. **Release Gate** — Security (OWASP), accessibility, license compliance, dependency vulnerabilities, secret exposure, and documentation completeness
+
+Each finding includes severity, category, file location, code evidence, and a concrete fix suggestion.
+
+## Usage
+
 ```
-> /seo-audit
+/review                              # Review current diff (default)
+/review --scope repo                 # Review entire repository
+/review --scope commit               # Review last commit
+/review --scope tree                 # Review working tree changes
+/review --strictness production      # Strict review for production
+/review --strictness public          # Strictest — for public/open-source release
 ```
+
+Or just ask naturally:
+```
+Review this codebase for release readiness.
+Run a security-focused review on the src/ directory.
+Check this PR for AI slop and architecture issues.
+```
+
+## Review Scopes
+
+| Scope | What It Reviews | When To Use |
+|-------|----------------|-------------|
+| `diff` | Staged/unstaged changes or PR diff | Default for PRs and quick checks |
+| `commit` | Specific commit(s) | Post-merge review |
+| `tree` | All modified files in working tree | Before committing |
+| `repo` | Entire repository | First-time audit or major releases |
+
+## Strictness Levels
+
+| Level | What It Means |
+|-------|-------------|
+| `mvp` | Lenient — focus on blockers only (early development) |
+| `production` | Balanced — catches issues that would cause production incidents |
+| `public` | Strictest — everything a public/open-source release needs (security, licensing, docs) |
+
+## Review Categories
+
+| Category | What It Checks |
+|----------|---------------|
+| Functional Correctness | Logic errors, edge cases, race conditions, state corruption |
+| Security (OWASP) | Injection, XSS, CSRF, auth issues, secrets exposure |
+| AI Slop Detection | Hallucinated APIs, shallow error handling, copy-paste divergence, placeholder code |
+| Architecture | Coupling, boundaries, patterns, naming, extensibility |
+| Tests | Coverage gaps, flaky tests, missing edge case tests |
+| Performance | N+1 queries, memory leaks, unnecessary re-renders, algorithmic complexity |
+| UI/UX | Usability issues, accessibility (WCAG), responsive design |
+| Dependencies | Vulnerable packages, license conflicts, outdated dependencies |
+| Documentation | Missing or misleading docs, API contract issues |
+| Release Readiness | Migration safety, rollback plan, monitoring, feature flags |
+
+## Project Type Modules
+
+UCR adapts its review focus based on your project type:
+
+| Module | Focus Areas |
+|--------|------------|
+| Web App | SSR/CSR, routing, state management, SEO, performance |
+| API | REST/GraphQL conventions, auth, rate limiting, versioning |
+| Chrome Extension | Manifest v3, permissions, content scripts, CSP |
+| CLI Tool | Argument parsing, exit codes, signals, output formatting |
+| Library | API design, semver, tree-shaking, type exports |
+| Electron App | IPC security, native modules, auto-update, packaging |
+| Mobile App | Platform conventions, offline support, permissions, deep linking |
+| SaaS | Multi-tenancy, billing, onboarding, data isolation |
+
+## What You Get
+
+A structured report with:
+- **Severity-ranked findings** (Blocker, Critical, Major, Minor, Nit)
+- **Release verdict** (Ship / Ship-with-caveats / Block)
+- **Code evidence** for every finding (file, line, snippet)
+- **Fix suggestions** with concrete code changes
+- **Optional auto-fix** — UCR can apply fixes for blockers and critical issues
+
+## Installation
+
+**Using the install script:**
+```bash
+cd RAD-Claude-Skills/skills/ultimate-code-review
+
+# Unix / macOS / Git Bash
+./install.sh
+
+# Windows PowerShell
+.\install.ps1
+```
+
+**Manual:**
+```bash
+mkdir -p ~/.claude/skills/ultimate-code-review
+cp skill/SKILL.md ~/.claude/skills/ultimate-code-review/
+
+mkdir -p ~/.ai-shared/ucr
+cp -r references workflows project-types templates scripts ~/.ai-shared/ucr/
+chmod +x ~/.ai-shared/ucr/scripts/*.sh
+```
+
+For full details, see the [Ultimate Code Review README](skills/ultimate-code-review/README.md).
 
 ---
 
@@ -545,6 +678,23 @@ Every fix recommendation is scored:
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
 - A website URL and/or local codebase to audit
 - Internet access (for live site fetching and competitor research)
+
+---
+
+# Coming Soon
+
+| Skill/Plugin | Status | Description |
+|-------------|--------|-------------|
+| Gem Creator | Planned | Create polished Google Gemini gems with optimized prompts |
+| GPT Creator | Planned | Build custom OpenAI GPTs with structured configuration |
+| PARA Second Brain | Planned | Implement the PARA method (Projects, Areas, Resources, Archives) for knowledge management |
+
+---
+
+## Requirements (All Components)
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and authenticated
+- Internet access (for skills that fetch web content)
 
 ---
 
