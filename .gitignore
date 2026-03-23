@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Development artifacts
+optimization-workspace/
+*.output
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+*.key
+credentials.json
