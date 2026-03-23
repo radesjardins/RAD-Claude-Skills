@@ -7,10 +7,11 @@ Custom plugins and skills for [Claude Code](https://docs.anthropic.com/en/docs/c
 ```
 RAD-Claude-Skills/
 ├── plugins/                           # Full Claude Code plugins (multi-skill bundles)
-│   └── ultimate-seo-optimizer/        # 11 skills, 3 agents, 6 commands, 7 reference docs
+│   └── rad-seo-optimizer/             # 11 skills, 3 agents, 6 commands, 7 reference docs
 │
 └── skills/                            # Standalone skills (copy & use individually)
-    └── ultimate-code-review/          # Professional-grade code review with AI slop detection
+    ├── rad-code-review/               # Professional-grade code review with AI slop detection
+    └── rad-context-prompter/          # Context-aware prompt engineering (coming soon)
 ```
 
 ### Plugins vs. Skills
@@ -31,15 +32,15 @@ git clone https://github.com/radesjardins/RAD-Claude-Skills.git
 Then install whichever components you want:
 ```bash
 # Install the SEO plugin
-claude plugins add ./RAD-Claude-Skills/plugins/ultimate-seo-optimizer
+claude plugins add ./RAD-Claude-Skills/plugins/rad-seo-optimizer
 
 # Install the code review skill
-cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/skill ~/.claude/skills/ultimate-code-review
-cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/references ~/.ai-shared/ucr/references
-cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/workflows ~/.ai-shared/ucr/workflows
-cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/project-types ~/.ai-shared/ucr/project-types
-cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/templates ~/.ai-shared/ucr/templates
-cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/scripts ~/.ai-shared/ucr/scripts
+cp -r ./RAD-Claude-Skills/skills/rad-code-review/skill ~/.claude/skills/rad-code-review
+cp -r ./RAD-Claude-Skills/skills/rad-code-review/references ~/.ai-shared/ucr/references
+cp -r ./RAD-Claude-Skills/skills/rad-code-review/workflows ~/.ai-shared/ucr/workflows
+cp -r ./RAD-Claude-Skills/skills/rad-code-review/project-types ~/.ai-shared/ucr/project-types
+cp -r ./RAD-Claude-Skills/skills/rad-code-review/templates ~/.ai-shared/ucr/templates
+cp -r ./RAD-Claude-Skills/skills/rad-code-review/scripts ~/.ai-shared/ucr/scripts
 ```
 
 ### Option 2: Cherry-Pick Individual Skills
@@ -47,10 +48,10 @@ cp -r ./RAD-Claude-Skills/skills/ultimate-code-review/scripts ~/.ai-shared/ucr/s
 ```bash
 # Example: install just one SEO skill (AEO optimizer)
 mkdir -p ~/.claude/skills
-cp -r RAD-Claude-Skills/plugins/ultimate-seo-optimizer/skills/aeo-optimizer ~/.claude/skills/
+cp -r RAD-Claude-Skills/plugins/rad-seo-optimizer/skills/aeo-optimizer ~/.claude/skills/
 
 # Example: install just the code review skill
-cp -r RAD-Claude-Skills/skills/ultimate-code-review/skill ~/.claude/skills/ultimate-code-review
+cp -r RAD-Claude-Skills/skills/rad-code-review/skill ~/.claude/skills/rad-code-review
 ```
 
 > **Note:** Some skills reference shared files. If you get file-not-found errors, also copy the `references/` directory from the same component.
@@ -70,17 +71,18 @@ Start a new Claude Code session and check:
 
 | Plugin | Skills | Agents | Commands | What It Does |
 |--------|--------|--------|----------|-------------|
-| [Ultimate SEO Optimizer](#ultimate-seo-optimizer) | 11 | 3 | 6 | Full SEO toolkit — audits, AEO, keywords, competitors, link building, schema, reports |
+| [RAD SEO Optimizer](#rad-seo-optimizer) | 11 | 3 | 6 | Full SEO toolkit — audits, AEO, keywords, competitors, link building, schema, reports |
 
 ## Standalone Skills
 
 | Skill | What It Does |
 |-------|-------------|
-| [Ultimate Code Review](#ultimate-code-review) | Professional-grade code review — AI slop detection, security, architecture, release readiness |
+| [RAD Code Review](#rad-code-review) | Professional-grade code review — AI slop detection, security, architecture, release readiness |
+| RAD Context Prompter | Context-aware prompt engineering and optimization (coming soon) |
 
 ---
 
-# Ultimate Code Review
+# RAD Code Review
 
 Professional-grade code review skill that catches AI-generated code issues, security vulnerabilities, architecture problems, and release blockers.
 
@@ -172,7 +174,7 @@ A structured report with:
 
 **Using the install script:**
 ```bash
-cd RAD-Claude-Skills/skills/ultimate-code-review
+cd RAD-Claude-Skills/skills/rad-code-review
 
 # Unix / macOS / Git Bash
 ./install.sh
@@ -183,23 +185,23 @@ cd RAD-Claude-Skills/skills/ultimate-code-review
 
 **Manual:**
 ```bash
-mkdir -p ~/.claude/skills/ultimate-code-review
-cp skill/SKILL.md ~/.claude/skills/ultimate-code-review/
+mkdir -p ~/.claude/skills/rad-code-review
+cp skill/SKILL.md ~/.claude/skills/rad-code-review/
 
 mkdir -p ~/.ai-shared/ucr
 cp -r references workflows project-types templates scripts ~/.ai-shared/ucr/
 chmod +x ~/.ai-shared/ucr/scripts/*.sh
 ```
 
-For full details, see the [Ultimate Code Review README](skills/ultimate-code-review/README.md).
+For full details, see the [RAD Code Review README](skills/rad-code-review/README.md).
 
 ---
 
-# Ultimate SEO Optimizer
+# RAD SEO Optimizer
 
 ## What It Does
 
-The Ultimate SEO Optimizer is a complete SEO toolkit that turns Claude Code into your personal SEO consultant. It covers:
+The RAD SEO Optimizer is a complete SEO toolkit that turns Claude Code into your personal SEO consultant. It covers:
 
 | Capability | What You Get |
 |-----------|-------------|
@@ -218,7 +220,7 @@ The Ultimate SEO Optimizer is a complete SEO toolkit that turns Claude Code into
 ## Plugin Architecture
 
 ```
-ultimate-seo-optimizer/
+rad-seo-optimizer/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest
 ├── skills/                      # 11 interactive skills
@@ -685,9 +687,10 @@ Every fix recommendation is scored:
 
 | Skill/Plugin | Status | Description |
 |-------------|--------|-------------|
-| Gem Creator | Planned | Create polished Google Gemini gems with optimized prompts |
-| GPT Creator | Planned | Build custom OpenAI GPTs with structured configuration |
-| PARA Second Brain | Planned | Implement the PARA method (Projects, Areas, Resources, Archives) for knowledge management |
+| RAD Context Prompter | In Progress | Context-aware prompt engineering and optimization |
+| RAD Gem Creator | Planned | Create polished Google Gemini gems with optimized prompts |
+| RAD GPT Creator | Planned | Build custom OpenAI GPTs with structured configuration |
+| RAD PARA Second Brain | Planned | Implement the PARA method (Projects, Areas, Resources, Archives) for knowledge management |
 
 ---
 
