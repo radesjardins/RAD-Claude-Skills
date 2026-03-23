@@ -26,7 +26,7 @@ throughout the workflow:
 1. `references/best-practices.md` — Condensed rules from Google's docs and expert sources
 2. `references/gem-instruction-template.md` — The Markdown skeleton for final output
 
-Load `references/example-gems.md` only when drafting section prose in Step 8 or when
+Load `references/example-gems.md` only when drafting section prose in Step 9 or when
 the user asks for examples. Do not load it upfront.
 
 Load `references/knowledge-base-checklist.md` only if the user opts into the knowledge
@@ -49,7 +49,7 @@ These rules govern every Gem creation session.
   question.
 
 ### Revision Cap
-- During Step 8, propose a draft for each section and ask for approval.
+- During Step 9, propose a draft for each section and ask for approval.
 - If the user requests changes, revise and re-present **once**.
 - After one revision cycle per section, accept the result and move on regardless of
   further feedback on that section. The user can always update the Gem later.
@@ -77,7 +77,7 @@ Before starting the interview, determine what the user needs:
 - **Update an existing Gem:** Ask to see the current instructions. Map them to the
   section framework (Purpose, Scope, Source Policy, Knowledge File Reference, Workflow,
   Output Format, Tone, Constraints). Identify which sections are missing, weak, or
-  causing the problem the user described. Drop into Step 8 at those sections only —
+  causing the problem the user described. Drop into Step 9 at those sections only —
   do not re-run the full interview for sections that are already solid.
 - **Multiple Gems:** Complete one Gem fully before starting the next. Do not interleave.
 
@@ -104,6 +104,14 @@ Before starting the interview, ask exactly this:
   3. Structure your documents with clear headings. The Gem retrieves better from
      well-organized files than from dense, unheaded prose.
 - If **skip**: Proceed directly to Step 1.
+
+### How Gems Use Knowledge Files (Share if the User Seems Unclear)
+
+If the user seems confused about how knowledge files work, or asks why their Gem isn't using their documents, share this brief explanation:
+
+> "Quick technical note: Gems don't load your knowledge files into memory the way you might expect. Instead, each time you ask a question, the Gem searches your files for relevant passages — like a search engine. If your question doesn't closely match the language in your documents, the Gem may silently fall back to its general training knowledge without telling you. That's why how we write the instructions matters — we need to explicitly tell the Gem to check your files first and admit when it can't find something, rather than making up an answer."
+
+This explanation helps the user understand why the Source Focus Level question (Step 2.5) matters.
 
 ---
 
@@ -159,7 +167,40 @@ are involved. This feeds into the Source Policy section.
 
 ---
 
-## Step 3 — Document and Notebook Names
+## Step 3 — Source Focus Level
+
+Ask how heavily the Gem should rely on its knowledge files versus its general training and web search. This is the single most important architectural decision for the Gem — it shapes the entire Source Policy section of the instructions.
+
+**What to ask:**
+> "How focused should this Gem be on your knowledge files? Here are four levels — pick the one that best fits your use case:
+>
+> 1. **Knowledge-Only (Strict)** — The Gem answers ONLY from your uploaded files. If the answer isn't in your documents, it says 'I don't have that information.' It will not use general knowledge or web search. Best for: compliance reviews, policy Q&A, document analysis where accuracy is critical.
+>
+> 2. **Knowledge-First (Recommended for most Gems)** — The Gem checks your files first and cites them. If the answer isn't in your files, it tells you and then offers to try with general knowledge or web search. Best for: brand voice editors, process guides, reference-heavy assistants.
+>
+> 3. **Balanced** — The Gem uses your files alongside its training data and web search equally. Files inform its answers but don't override everything else. Best for: creative brainstorming with reference material, coding assistants with style guides.
+>
+> 4. **Training-Primary** — Your files are supplementary reference. The Gem primarily uses its general training and web search, consulting your files only when directly relevant. Best for: general-purpose assistants with a few reference docs."
+
+**If the user doesn't choose or gives an ambiguous answer** (e.g., "I want it to use my documents" or "just make it smart"):
+Ask this follow-up:
+> "When your documents don't contain the answer to a question, what should the Gem do?
+> A) Refuse to answer and say 'Not found in my documents'
+> B) Tell the user it's switching to general knowledge, then answer
+> C) Just answer naturally using whatever sources are best
+>
+> This helps me set the right guardrails."
+
+Map the answer: A → Knowledge-Only, B → Knowledge-First, C → Balanced.
+
+**If the user has no knowledge files:**
+Skip this step entirely. The Gem will use general training and web search by default.
+
+**Capture:** The source focus level (1-4). This is the primary input for the Source Policy section in the instruction assembly step.
+
+---
+
+## Step 4 — Document and Notebook Names
 
 Ask for the specific names of the documents or notebooks that will be included.
 
@@ -182,7 +223,7 @@ Policy and Workflow sections of the instructions.
 
 ---
 
-## Step 4 — Goal and Purpose
+## Step 5 — Goal and Purpose
 
 Ask what the user wants to accomplish with this Gem.
 
@@ -205,7 +246,7 @@ and shapes the Workflow section.
 
 ---
 
-## Step 5 — Must-Have Behaviors
+## Step 6 — Must-Have Behaviors
 
 Ask what behaviors the Gem absolutely must exhibit.
 
@@ -227,7 +268,7 @@ the Source Policy section.
 
 ---
 
-## Step 6 — Must-Not-Do Behaviors
+## Step 7 — Must-Not-Do Behaviors
 
 Ask what the Gem should never do.
 
@@ -250,9 +291,9 @@ LLM recency bias).
 
 ---
 
-## Step 7 — Clarifying Questions
+## Step 8 — Clarifying Questions
 
-Based on the answers collected in Steps 1-6, identify any gaps and ask **1-2 targeted
+Based on the answers collected in Steps 1-7, identify any gaps and ask **1-2 targeted
 clarifying questions**. Do not ask more than two.
 
 Common gaps to check for:
@@ -267,17 +308,20 @@ Common gaps to check for:
   hasn't described the sequence, ask now.
 - **Edge cases**: If there's an obvious failure mode the user hasn't addressed
   (e.g., what should the Gem do when a document doesn't contain the answer?), ask now.
+- **Source focus ambiguity**: If the user chose a source focus level in Step 3 but their
+  must-have or must-not-do behaviors seem to contradict it (e.g., they chose "Knowledge-First"
+  but said "never use web search"), resolve the contradiction now.
 
-If all areas are adequately covered from Steps 1-6, say so and move directly to Step 8.
+If all areas are adequately covered from Steps 1-7, say so and move directly to Step 9.
 
 ---
 
-## Step 8 — Instruction Assembly Walkthrough
+## Step 9 — Instruction Assembly Walkthrough
 
 Now walk the user through building each section of the Gem's instructions. For each
 section:
 
-1. Propose draft text based on the user's answers from Steps 1-7. Consult
+1. Propose draft text based on the user's answers from Steps 1-8. Consult
    `references/example-gems.md` to calibrate prose quality and structure.
 2. Present the draft in a Markdown code block so the user sees exactly what it will look like.
 3. Ask: "Does this look right, or would you like to change anything?"
@@ -287,43 +331,77 @@ section:
 
 ### Section order and source mapping:
 
-**A. Purpose and Role** (from Steps 1, 4)
+**A. Purpose and Role** (from Steps 1, 5)
 - Define the Gem's identity, expertise level, and primary objective.
 - Use the Persona + Task pillars from Google's framework.
 - Keep it to 2-4 sentences.
 
-**B. Scope and Boundaries** (from Steps 1, 6)
+**B. Scope and Boundaries** (from Steps 1, 7)
 - Define what the Gem handles and what it does not.
 - Include redirect language for off-topic requests.
 
-**C. Source Policy** (from Steps 2, 3, 5)
-- Define the priority order for information sources.
-- If the user wants source-grounded answers: use the "Source of Truth First" pattern.
-- Reference specific document names from Step 3.
-- Include the "not found in sources" fallback behavior.
-- If NotebookLM notebooks are involved, add the notebook-specific grounding language.
+**C. Source Policy** (from Steps 2, 3, 4, 5 — anchored by the Source Focus Level from Step 3)
 
-**D. Knowledge File Reference** (from Step 3)
+This is the most critical section for knowledge-grounded Gems. Use the focus level
+chosen in Step 3 to select the right template:
+
+**Knowledge-Only (Level 1):**
+- Use the strict SOURCE-ONLY MODE pattern
+- Include: Grounding Directive ("Always reference attached files before answering")
+- Include: Verification Fence ("Before writing, confirm every claim appears in your files")
+- Include: No-Match Path ("If not found: 'This information is not in my reference documents.'")
+- Include: Explicit Source Blocking ("Do not use general training knowledge. Do not search the web.")
+- Optional: Visible Receipt pattern ("List matched documents before answering")
+- Reference specific document names from Step 4
+
+**Knowledge-First (Level 2):**
+- Use the "Source of Truth First" pattern
+- Include: Grounding Directive
+- Include: Priority order (1. Knowledge files, 2. User-provided text, 3. General knowledge with disclosure)
+- Include: Disclosure requirement ("If answering from general knowledge, say so explicitly")
+- Include: No-Match Path with fallback offer ("Not found in my files. Would you like me to answer from general knowledge?")
+- Reference specific document names from Step 4
+
+**Balanced (Level 3):**
+- List knowledge files as a primary reference alongside training and web search
+- Include: Citation requirement when using knowledge files
+- Include: No special grounding restrictions
+- Reference document names from Step 4 as available resources
+
+**Training-Primary (Level 4):**
+- Mention knowledge files as supplementary reference only
+- Include: Directive to check files when the topic directly matches a document's scope
+- No grounding restrictions or source-blocking language
+
+For Levels 1 and 2, also consider the **Fact Registry** technique: if the user has a
+small set of critical data points (under ~50 items), embed them directly in the
+instructions rather than relying on knowledge file retrieval. Data in instructions is
+always visible to the model; data in knowledge files depends on retrieval matching.
+
+If NotebookLM notebooks are part of the knowledge base, strengthen the grounding
+language with the notebook-specific patterns from `references/best-practices.md`.
+
+**D. Knowledge File Reference** (from Step 4)
 - List every attached file by name with a one-line description of what it contains.
 - Include the directive: "Always reference the attached files before answering."
 - This is a separate section from Source Policy — Source Policy defines the rules;
   Knowledge File Reference names the actual documents.
 
-**E. Workflow** (from Steps 4, 5)
+**E. Workflow** (from Steps 5, 6)
 - Define the step-by-step process the Gem follows when handling a user query.
-- Include any "always do X first" behaviors from Step 5.
+- Include any "always do X first" behaviors from Step 6.
 - If the user specified structured reasoning, include the extract-then-answer pattern.
 
-**F. Output Format** (from Step 5 or Step 7)
+**F. Output Format** (from Step 6 or Step 8)
 - Define the structure of every response (tables, lists, headings, JSON, etc.).
 - Specify what must always be included (citations, confidence level, next steps, etc.).
 - Specify what must never be included.
 
-**G. Tone** (from Step 7 or inferred from Steps 1, 4)
+**G. Tone** (from Step 8 or inferred from Steps 1, 5)
 - Define the communication style in 1-2 sentences.
 - If not explicitly stated, propose a tone that fits the domain and purpose.
 
-**H. Constraints** (from Step 6, plus any additions from Step 7)
+**H. Constraints** (from Step 7, plus any additions from Step 8)
 - Consolidate all prohibitions into a single section placed at the **end** of the
   instructions (per Google's recommendation to put negative constraints last for
   better adherence).
@@ -335,7 +413,7 @@ these sections.
 
 ---
 
-## Step 9 — Final Generation and Delivery
+## Step 10 — Final Generation and Delivery
 
 After all sections are approved:
 
@@ -355,12 +433,18 @@ After all sections are approved:
    - Paste the instructions into the Instructions field: gemini.google.com → Explore Gems → New Gem
    - Add knowledge files through the Gem editor's Knowledge section — not through the chat
    - Click Save after adding files (the preview pane does not auto-save)
+   - IMPORTANT: When editing an existing Gem's knowledge files, you MUST click the blue
+     "Update" button. Without this, changes are not saved. This is the most common cause
+     of "my Gem forgot my documents."
 
    **Recommended before deploying:**
    - Test with the preview pane using normal prompts and at least 2-3 adversarial prompts
      (off-topic requests, questions not in your knowledge files, attempts to break the output format)
    - Iterate one change at a time when debugging — changing multiple things simultaneously
      makes it impossible to identify what fixed or broke a behavior
+   - If you plan to share this Gem with others, be aware that recipients can see your
+     instruction text and knowledge file names. Never embed passwords, API keys, proprietary
+     processes, or sensitive data in the instructions or file names of a Gem you intend to share.
 
    **Optional:**
    - The "magic wand" rewrite button can suggest additions, but your instructions are
@@ -382,7 +466,7 @@ and walk through only the missing sections.
 
 ### User wants to update an existing Gem
 Ask to see the current instructions and ask what behavior they want to change or add.
-Diagnose which section is responsible. Drop into Step 8 at that section only — do not
+Diagnose which section is responsible. Drop into Step 9 at that section only — do not
 re-run the full interview for sections that are working correctly.
 
 ### User wants a NotebookLM-grounded Gem

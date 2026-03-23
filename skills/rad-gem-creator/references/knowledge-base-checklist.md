@@ -10,6 +10,24 @@ structured for maximum retrieval accuracy and minimal token waste.
 Not all file formats perform equally in Gemini's knowledge retrieval pipeline.
 Choose formats based on how often the content changes and how well Gemini parses them.
 
+### All supported file types
+
+Gems accept a wide range of formats:
+
+| Category | Supported Formats |
+|----------|------------------|
+| Documents | Google Docs, TXT, DOC, DOCX, PDF, RTF, DOT, DOTX, HWP, HWPX, Markdown (.md) |
+| Spreadsheets | Google Sheets, XLS, XLSX, CSV, TSV |
+| Presentations | Google Slides, PPTX |
+| Images | JPEG/JPG, PNG, WEBP, HEIF |
+| Audio | WAV, MP3, AIFF, AAC, OGG Vorbis, FLAC |
+| Video | MP4, MOV, MPEG, MPG, AVI, WMV, WEBM, 3GPP, FLV |
+
+### Text content format priority
+
+For text-heavy knowledge files, format choice directly affects retrieval quality
+and token efficiency:
+
 | Rank | Format | Token Efficiency | Live Sync from Drive? | Best For |
 |------|--------|------------------|-----------------------|----------|
 | 1 | **Google Docs** | High | Yes — auto-updates every session | Style guides, SOPs, policies, memory cards |
@@ -27,6 +45,10 @@ Gemini processes each PDF page as an image using document vision, consuming roug
 as plain text or a Google Doc uses a fraction of those tokens. Use PDFs only when
 the visual layout (charts, diagrams, scanned forms) carries meaning that plain text
 cannot reproduce.
+
+For logic-heavy tasks (legal analysis, policy docs), clean `.txt` files with clear
+headings outperform complex PDFs. For structured data, `.csv` preserves relationships
+better than unstructured formats.
 
 ### The live sync advantage
 
@@ -142,6 +164,49 @@ the model's attention across too much context.
 
 ---
 
+## The Fact Registry Technique
+
+For small, critical datasets (under ~50 items), consider embedding the data directly
+in the Gem's instructions rather than in a knowledge file. This is called a "Fact
+Registry."
+
+### Why this works
+
+Knowledge files depend on semantic search retrieval — if the user's question doesn't
+match the file content closely enough, the Gem may not find it. Data embedded in the
+instructions is always visible to the model on every turn, bypassing retrieval entirely.
+
+### When to use it
+
+- You have a small, stable dataset (product list, team roster, project registry, FAQ)
+- Accuracy for this specific data is critical
+- The data fits comfortably in the instructions (under ~500 words)
+- The data rarely changes (since it's in the instructions, not a live-syncing Google Doc)
+
+### Example
+
+```
+# PROJECT REGISTRY
+| Name | Client | Status | Key Outcome |
+|------|--------|--------|-------------|
+| Project Alpha | Acme Corp | Completed | 40% cost reduction |
+| Project Beta | GlobalTech | In Progress | Phase 2 deployment |
+| Project Gamma | StartupXYZ | Planning | Q3 2026 launch |
+Total: 3 projects. No others exist.
+```
+
+The closure statement ("Total: 3 projects. No others exist.") is important — it
+prevents the model from inventing additional entries from training data.
+
+### When NOT to use it
+
+- Large datasets (50+ items) — these consume too much instruction space
+- Frequently changing data — use a Google Doc knowledge file instead (live sync)
+- Data that is already in well-structured, clearly-headed knowledge files with
+  good retrieval performance
+
+---
+
 ## Pre-Build Checklist
 
 Before opening the Gem builder at gemini.google.com:
@@ -156,3 +221,6 @@ Before opening the Gem builder at gemini.google.com:
 - [ ] If cross-session memory is needed, a Memory Card Google Doc is prepared
 - [ ] Text-only content is in Google Docs, Markdown, or plain text — not PDF
 - [ ] PDFs are reserved for documents where visual layout carries meaning
+- [ ] REMINDER: After adding or changing knowledge files in an existing Gem, you
+  MUST click the blue "Update" button. Without this, changes are not saved. This
+  is the most common cause of "my Gem forgot my documents."
