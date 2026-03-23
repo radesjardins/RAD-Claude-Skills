@@ -120,3 +120,177 @@ Mirror the same four top-level folders across every digital tool:
 - Email folders (optional)
 
 This creates consistency so you always know where to find and file things regardless of the platform.
+
+## PARA for Teams
+
+PARA can be extended from individual use to team-level knowledge management. The
+principles are the same — organize by actionability — but the implementation requires
+coordination.
+
+### Shared PARA Structure
+
+Set up a team-accessible workspace (Notion, Confluence, SharePoint, shared Drive) with:
+
+```
+📁 Team Projects     — Active team initiatives with goals and deadlines
+📁 Team Areas        — Ongoing team responsibilities (operations, customer support, etc.)
+📁 Team Resources    — Shared reference material (brand guidelines, templates, processes)
+📁 Team Archives     — Completed projects, past quarterly plans, retired processes
+```
+
+### Personal vs. Shared Boundaries
+
+Not everything belongs in the shared system:
+- **Shared:** Project deliverables, team processes, reference docs, meeting notes, templates
+- **Personal:** Your draft notes, learning captures, personal reflections, career planning
+- **Rule of thumb:** If a teammate would need it when you're on vacation, it's shared.
+  If it's only useful to you, it's personal.
+
+### The Knowledge Gardener Role
+
+Shared systems decay without maintenance. Assign a rotating "knowledge gardener" who:
+- Runs a monthly team review of the shared workspace
+- Archives completed projects
+- Prunes stale resources
+- Ensures naming conventions are followed
+- Onboards new team members to the system
+
+### Team Intermediate Packets
+
+The highest-value team practice: when anyone completes a project, they extract reusable
+Intermediate Packets into Team Resources before archiving:
+- Templates that worked well
+- Checklists refined through experience
+- Research findings that apply broadly
+- Outreach scripts, email templates, or communication patterns
+- Post-mortem insights
+
+This creates a growing library of team knowledge that accelerates future projects.
+
+### Shared 12 Favorite Problems
+
+Adapt Feynman's technique for the team:
+- Each team maintains 5-10 open-ended questions driving their work
+- Examples: "How can we reduce customer onboarding time?" / "What would make our
+  deployment process bulletproof?"
+- Review quarterly
+- When team members find relevant information, they share it and tag the relevant problem
+- This creates a shared capture filter and intellectual agenda
+
+### Getting Started with Team PARA
+
+1. Start with one team, one tool, basic 4-folder structure
+2. Migrate one active project into the shared system as a pilot
+3. Run a team retrospective after 4 weeks
+4. Expand to other teams only after the pilot team has established habits
+5. Keep it simple — team systems should have fewer folders and less nesting than
+   personal systems
+
+## Tool-Specific PARA Setup Guides
+
+### Notion
+
+**Structure:**
+- Create a top-level page called "Second Brain" (or use sidebar sections)
+- Inside, create 4 pages: Projects, Areas, Resources, Archives
+- For Projects: use a database with properties for Status, Deadline, and Priority
+- For Areas: use simple pages with sub-pages for each responsibility
+- For Resources: use a database with a Category property for filtering
+
+**Tips:**
+- Use Notion's database "Views" to create filtered views (Active Projects, This Week, etc.)
+- Toggle blocks work great for Progressive Summarization — collapse detail layers
+- Use Notion AI's "Summarize" feature for quick Layer 4 executive summaries
+- Templates: create project kickoff and completion templates
+
+**PARA-specific Notion template:**
+```
+📄 Projects (database)
+  → View: Active | Completed | On Hold
+  → Properties: Status, Deadline, Priority, Area (relation)
+📄 Areas (page with sub-pages)
+  → Health | Finances | Career | [each area]
+📄 Resources (database)
+  → View: By Topic | Recently Added
+  → Properties: Topic, Source, Date Added
+📄 Archives (page)
+  → Move completed project pages here
+```
+
+### Obsidian
+
+**Structure:**
+- Create 4 top-level folders: `1-Projects`, `2-Areas`, `3-Resources`, `4-Archives`
+- Use the numbers to ensure correct sort order
+- Create a `0-Inbox` folder for quick captures before sorting
+
+**Tips:**
+- Use daily notes as your capture inbox; sort into PARA during weekly review
+- Tags complement folders: tag notes with project names for cross-referencing
+- The Dataview plugin can create dynamic project dashboards
+- Smart Connections plugin suggests related notes across your vault
+- Use YAML frontmatter for metadata: `project:`, `area:`, `status:`, `date:`
+
+**Recommended plugins for PARA:**
+- Dataview (dynamic queries and project dashboards)
+- Templater (project kickoff/completion templates)
+- Smart Connections (AI-powered note linking)
+- Periodic Notes (weekly/monthly review templates)
+- Quick Add (fast capture with automatic filing)
+
+### Apple Notes
+
+**Structure:**
+- Create 4 folders: Projects, Areas, Resources, Archives
+- Use sub-folders sparingly (Apple Notes supports one level of nesting)
+- Use a pinned "Quick Capture" note for fast brain dumps
+
+**Tips:**
+- Apple Notes is intentionally simple — this is a feature, not a limitation
+- Use Smart Folders with tags to create dynamic views
+- Quick Note (swipe from corner on iPad/Mac) is excellent for instant capture
+- iCloud sync means your notes are everywhere Apple is
+- Don't fight the simplicity — if you need databases and backlinks, use a different tool
+
+### Google Drive + Google Keep
+
+**Structure:**
+- Google Drive: Create 4 top-level folders (Projects, Areas, Resources, Archives)
+  with sub-folders for each project/area
+- Google Keep: Use labels matching your project/area names for quick captures
+- Keep serves as the "inbox"; Drive is the long-term system
+
+**Tips:**
+- Google Docs are excellent for Progressive Summarization (use bold + highlight colors)
+- Google Keep → Drive: Create a Google Doc from a Keep note to promote it from
+  capture to organized
+- Star important items for quick access
+- Use Google Drive's search (which is excellent) rather than elaborate folder nesting
+
+### Plain File System Folders
+
+**Structure:**
+```
+Documents/
+├── 1-Projects/
+│   ├── Website Redesign/
+│   ├── Q2 Report/
+│   └── Move to New Apartment/
+├── 2-Areas/
+│   ├── Health/
+│   ├── Finances/
+│   └── Career/
+├── 3-Resources/
+│   ├── Design Inspiration/
+│   ├── Coding References/
+│   └── Book Notes/
+└── 4-Archives/
+    └── Archive 2026-03-22/
+```
+
+**Tips:**
+- Works on any OS, any cloud sync service, no vendor lock-in
+- Use plain text (.txt) or Markdown (.md) files for notes — future-proof and searchable
+- Everything Search (Windows) or Spotlight (Mac) provides instant full-text search
+- This is the most portable option — you can always migrate TO a specialized app later,
+  but migrating FROM a proprietary app is harder

@@ -28,6 +28,62 @@ For new users just getting started with a digital note-taking app. Commit to you
 
 ---
 
+## Quick-Start: 10-Minute PARA Setup
+
+For users who want to start immediately. This is the minimum viable Second Brain.
+
+### Minute 1-3: Archive Everything
+
+Move ALL existing files, notes, and documents into a single folder:
+- Name it: `Archive [today's date]` (e.g., "Archive 2026-03-22")
+- Include: Desktop files, Downloads folder, Documents, notes inbox, cloud drive root
+- Do NOT sort anything. Just move it all into the archive folder.
+- This instantly gives you a clean workspace.
+
+### Minute 3-5: Create the PARA Structure
+
+Create exactly 4 top-level folders:
+```
+📁 1-Projects
+📁 2-Areas
+📁 3-Resources
+📁 4-Archives
+```
+
+The numbers keep them sorted correctly in any file manager. Mirror these exact 4
+folders in every tool you use:
+- Notes app (Notion, Obsidian, Apple Notes)
+- File system (Documents folder)
+- Cloud drive (Google Drive, OneDrive, Dropbox)
+- Optionally: Email folders, bookmarks
+
+### Minute 5-8: List Active Projects
+
+Write down everything you're actively working on that has:
+- A specific goal or outcome (what does "done" look like?)
+- A deadline or timeframe (when does it need to be done?)
+
+Create a subfolder in `1-Projects` for each one.
+
+### Minute 8-10: Quick Sanity Check
+
+- Do you have between 10 and 15 projects? If way more, some are probably "false
+  projects" (dreams without deadlines). Move them to Areas or Resources.
+- Does each project have a clear outcome? "Get healthy" is an Area, not a Project.
+  "Complete Couch-to-5K program by June" is a Project.
+
+### You're Done
+
+Your Second Brain is live. From now on:
+- When you encounter something useful, save it in the relevant project folder
+- When you start a new project, create a folder for it
+- When you finish a project, move its folder to Archives
+- Do a weekly review every 3-7 days to keep things current
+
+Graduate to the 30-Day Beginner Plan above for a more structured ramp-up.
+
+---
+
 ## Project Kickoff Checklist
 
 Run this whenever you start a new endeavor to recycle past knowledge before starting from scratch.
@@ -144,6 +200,76 @@ Perform to evaluate big-picture priorities and ensure alignment.
 
 5. **Reprioritize tasks**
    - Based on this holistic review, adjust day-to-day priorities
+
+---
+
+## Project List Audit
+
+A guided exercise for when you feel overwhelmed, unfocused, or suspect your project
+list has drifted. Run this quarterly or whenever things feel off.
+
+### Step 1: List Everything
+
+Write down every "project" you're currently tracking — formal or informal. Include
+work projects, personal projects, side hustles, creative endeavors, home improvement,
+learning goals, everything.
+
+### Step 2: Apply the Project Test
+
+For each item, ask two questions:
+1. **Does it have a clear outcome?** (What does "done" look like?)
+2. **Does it have a deadline?** (When does it need to be done by?)
+
+If YES to both → it's a real Project. Keep it.
+If missing a clear outcome → it might be an **Area** (ongoing responsibility) or a
+**vague aspiration**. Demote it.
+If missing a deadline → add one, or demote to Area/Resource.
+
+### Step 3: Identify False Projects
+
+Common false projects:
+- "Get healthy" → This is an Area (Health). A project would be: "Complete 12-week
+  strength program by June 15"
+- "Learn Spanish" → This is a Resource interest. A project would be: "Complete
+  Duolingo Spanish tree by March 30"
+- "Organize photos" → Without a deadline, this languishes forever. Either set a
+  deadline or admit it's a someday/maybe item.
+
+Move false projects to Areas, Resources, or a dedicated "Someday/Maybe" list.
+
+### Step 4: Identify Mega-Projects
+
+Mega-projects are items so large they should be broken into phases:
+- "Renovate house" → Phase 1: Kitchen (by April), Phase 2: Bathroom (by July)
+- "Launch business" → Phase 1: Business plan (by March), Phase 2: MVP (by May)
+- "Write book" → Phase 1: Outline (by April), Phase 2: First draft (by August)
+
+Break mega-projects into individual project folders with their own deadlines.
+
+### Step 5: Check the 10-15 Rule
+
+Count your real projects. Then:
+- **More than 15:** Your attention is too fragmented. Identify 3-5 projects to
+  pause (write a Hemingway Bridge for each) or archive.
+- **Fewer than 10:** You have room for more. Check Areas — is any standard slipping
+  that needs a project? Check Someday/Maybe — is anything ready to activate?
+- **10-15:** You're in the sweet spot.
+
+### Step 6: Prioritize
+
+From your refined list, identify:
+- **Top 3 projects** — These get your best energy and most time this month
+- **Active but lower priority** — These you advance when the top 3 are blocked
+- **On deck** — Ready to start when a slot opens up
+
+### Output
+
+You should now have:
+- A clean project list of 10-15 items
+- Each with a clear outcome and deadline
+- False projects demoted
+- Mega-projects broken into phases
+- A top 3 priority ranking
 
 ---
 
