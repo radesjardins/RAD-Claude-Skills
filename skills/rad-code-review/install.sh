@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Ultimate Code Review — Unix/macOS/Git Bash Installer
+# RAD Code Review — Unix/macOS/Git Bash Installer
 #
 # Installs the UCR skill and supporting files to the correct locations.
 #
 # Usage:
 #   ./install.sh
-#   curl -sSL https://raw.githubusercontent.com/[owner]/ultimate-code-review/main/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/[owner]/rad-code-review/main/install.sh | bash
 #
 # Locations:
-#   ~/.claude/skills/ultimate-code-review/   — Skill definition (SKILL.md)
+#   ~/.claude/skills/rad-code-review/   — Skill definition (SKILL.md)
 #   ~/.ai-shared/ucr/                        — Reference docs, scripts, templates, etc.
 
 set -euo pipefail
@@ -54,7 +54,7 @@ PLATFORM="$(detect_platform)"
 # ---------------------------------------------------------------------------
 # Target directories
 # ---------------------------------------------------------------------------
-SKILL_DIR="${HOME_DIR}/.claude/skills/ultimate-code-review"
+SKILL_DIR="${HOME_DIR}/.claude/skills/rad-code-review"
 UCR_DIR="${HOME_DIR}/.ai-shared/ucr"
 
 # ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ check_source() {
 # ---------------------------------------------------------------------------
 # Install
 # ---------------------------------------------------------------------------
-info "Installing Ultimate Code Review v${UCR_VERSION}"
+info "Installing RAD Code Review v${UCR_VERSION}"
 info "Platform: ${PLATFORM}"
 info "Home: ${HOME_DIR}"
 echo ""
@@ -197,7 +197,7 @@ fi
 # ---------------------------------------------------------------------------
 echo ""
 if [[ "$ERRORS" -eq 0 ]]; then
-  bold "Ultimate Code Review v${UCR_VERSION} installed successfully!"
+  bold "RAD Code Review v${UCR_VERSION} installed successfully!"
 else
   warn "Installation completed with ${ERRORS} warning(s)."
 fi
@@ -216,7 +216,7 @@ echo "    /review --scope repo       # Review entire repo"
 echo "    /review --strictness public # Strict public-release review"
 echo ""
 echo "  To add the GitHub Action to a project:"
-echo "    cp ${UCR_DIR}/.github/workflows/ultimate-code-review.yml .github/workflows/"
+echo "    cp ${UCR_DIR}/.github/workflows/rad-code-review.yml .github/workflows/"
 echo ""
 echo "  To run audit scripts directly:"
 echo "    ${UCR_DIR}/scripts/dep-audit.sh ."

@@ -1,7 +1,7 @@
-# Ultimate Code Review Report
+# RAD Code Review Report
 
 <!-- UCR Report Template v1.0.0
-     This template is populated by the Ultimate Code Review skill.
+     This template is populated by the RAD Code Review skill.
      Placeholder variables use {{curly_braces}} syntax.
      Do not remove section headers — the report parser depends on them.
      Sections with no findings should render "None." rather than being omitted. -->

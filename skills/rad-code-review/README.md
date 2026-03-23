@@ -1,4 +1,4 @@
-# Ultimate Code Review
+# RAD Code Review
 
 Professional-grade code review skill for Claude Code and Codex that catches AI slop, security issues, architecture problems, and release blockers.
 
@@ -27,8 +27,8 @@ UCR is the harsh reviewer that runs AFTER the build phase. It is intentionally a
 **From GitHub (recommended):**
 
 ```bash
-git clone https://github.com/[owner]/ultimate-code-review.git
-cd ultimate-code-review
+git clone https://github.com/[owner]/rad-code-review.git
+cd rad-code-review
 
 # Unix / macOS / Git Bash
 ./install.sh
@@ -41,8 +41,8 @@ cd ultimate-code-review
 
 ```bash
 # Copy the skill file
-mkdir -p ~/.claude/skills/ultimate-code-review
-cp skill/SKILL.md ~/.claude/skills/ultimate-code-review/
+mkdir -p ~/.claude/skills/rad-code-review
+cp skill/SKILL.md ~/.claude/skills/rad-code-review/
 
 # Copy supporting files
 mkdir -p ~/.ai-shared/ucr
@@ -184,7 +184,7 @@ Add automated code review to your CI/CD pipeline.
 
 ```bash
 mkdir -p .github/workflows
-cp ~/.ai-shared/ucr/.github/workflows/ultimate-code-review.yml .github/workflows/
+cp ~/.ai-shared/ucr/.github/workflows/rad-code-review.yml .github/workflows/
 ```
 
 2. Add required secrets to your GitHub repository:
@@ -269,7 +269,7 @@ User triggers review
 ## Project Structure
 
 ```
-ultimate-code-review/
+rad-code-review/
   skill/
     SKILL.md                  # Main skill definition (the orchestrator)
   references/
@@ -298,7 +298,7 @@ ultimate-code-review/
     secrets-scan.sh           # Secrets detection
   .github/
     workflows/
-      ultimate-code-review.yml  # GitHub Action workflow
+      rad-code-review.yml  # GitHub Action workflow
   install.sh                  # Unix/macOS/Git Bash installer
   install.ps1                 # Windows PowerShell installer
   README.md                   # This file

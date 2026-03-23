@@ -1,7 +1,7 @@
 # UCR Findings Schema v1.0.0
 
 This document defines the exact format for individual findings produced by the
-Ultimate Code Review skill. All reviewers must structure their output using
+RAD Code Review skill. All reviewers must structure their output using
 these formats. The Markdown format is used in the human-readable report. The
 JSON format is used in the companion `.json` output file.
 

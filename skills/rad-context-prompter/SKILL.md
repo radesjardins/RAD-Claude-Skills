@@ -1,5 +1,5 @@
 ---
-name: context-prompt-master
+name: rad-context-prompter
 version: 2.0.0
 description: >
   Generates optimized, paste-ready prompts for any AI tool and designs production

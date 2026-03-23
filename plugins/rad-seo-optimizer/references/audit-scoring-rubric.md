@@ -1,6 +1,6 @@
 # SEO Audit Scoring Rubric
 
-This rubric defines how the Ultimate SEO Optimizer calculates scores across all audit categories. The unified score (0-100) is a weighted composite of category scores.
+This rubric defines how the RAD SEO Optimizer calculates scores across all audit categories. The unified score (0-100) is a weighted composite of category scores.
 
 ## Category Weights
 

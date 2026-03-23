@@ -1,6 +1,6 @@
 # Fix Application Protocol
 
-This workflow governs how the orchestrator applies fixes for findings produced by the Ultimate Code Review. It is invoked when the user accepts the offer to apply fixes, or requests fixes explicitly.
+This workflow governs how the orchestrator applies fixes for findings produced by the RAD Code Review. It is invoked when the user accepts the offer to apply fixes, or requests fixes explicitly.
 
 ---
 

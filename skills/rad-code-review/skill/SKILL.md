@@ -1,5 +1,5 @@
 ---
-name: ultimate-code-review
+name: rad-code-review
 description: "Professional-grade code review for AI-generated code, security, architecture, and release readiness. Three review roles: bug finder, architecture reviewer, and release gate. Covers 10 categories including AI slop detection, security (OWASP), UX/accessibility, and performance. Supports whole-repo, diff, commit, or working-tree scope. Produces severity-ranked findings with code evidence, release verdicts, and optional fix application. Includes adversarial review pass, report history, local-only mode, and 8 project-type modules (web app, API, Chrome extension, CLI, library, Electron, mobile, SaaS)."
 argument-hint: "[repo|diff|commit|tree] [--strictness mvp|production|public] [--engine claude|codex|both] [--local-only] [--fix blockers|critical-major|IDs]"
 allowed-tools:

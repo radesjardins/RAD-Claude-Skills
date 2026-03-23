@@ -1,6 +1,6 @@
 # Report Generation Protocol
 
-This workflow governs how the orchestrator assembles, masks, and writes the final Ultimate Code Review report. It is invoked after all review phases and any fix application have completed.
+This workflow governs how the orchestrator assembles, masks, and writes the final RAD Code Review report. It is invoked after all review phases and any fix application have completed.
 
 ---
 
@@ -8,7 +8,7 @@ This workflow governs how the orchestrator assembles, masks, and writes the fina
 
 ### Primary report
 
-- **Filename**: `ultimate-code-review-report.md`
+- **Filename**: `rad-code-review-report.md`
 - **Location**: Repository root
 - **Overwrites**: Yes, if a previous report exists at this path
 
@@ -24,13 +24,13 @@ The `scope` segment reflects the review scope (e.g., `full`, `src-only`, `api-ro
 
 ### JSON companion (optional)
 
-- **Filename**: `ultimate-code-review-report.json`
+- **Filename**: `rad-code-review-report.json`
 - **Location**: Repository root, alongside the markdown report
 - **Purpose**: Structured findings for programmatic consumption (CI integration, dashboards, tracking)
 
 ### Triage report (conditional)
 
-- **Filename**: `ultimate-code-review-triage.md`
+- **Filename**: `rad-code-review-triage.md`
 - **Location**: Repository root
 - **Triggered when**: The review determines the codebase is in a systemic failure state (e.g., majority of findings are Critical, no tests exist, fundamental architecture issues)
 
@@ -91,7 +91,7 @@ The report follows this exact section order. Every section is mandatory unless m
 ### 3.1 Title Block
 
 ```markdown
-# Ultimate Code Review Report
+# RAD Code Review Report
 
 **Date**: {YYYY-MM-DD}
 **Commit**: `{full commit hash}`
@@ -486,7 +486,7 @@ The triage report is a shorter, recovery-focused document generated when the cod
 ### Triage report structure
 
 ```markdown
-# Ultimate Code Review — Triage Report
+# RAD Code Review — Triage Report
 
 **Date**: {YYYY-MM-DD}
 **Commit**: `{hash}`

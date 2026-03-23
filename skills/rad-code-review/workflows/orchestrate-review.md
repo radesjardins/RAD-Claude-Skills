@@ -1,4 +1,4 @@
-# Ultimate Code Review — Main Workflow
+# RAD Code Review — Main Workflow
 
 This workflow is loaded by the orchestrator SKILL.md and executed end-to-end.
 
@@ -562,7 +562,7 @@ What would you like to do?
    a. Blockers only (N findings)
    b. Critical + Major (N findings)
    c. Select specific finding IDs
-3. Generate full report (saves to ultimate-code-review-report.md)
+3. Generate full report (saves to rad-code-review-report.md)
 4. Generate report and apply fixes
 ```
 
@@ -602,7 +602,7 @@ Load the report workflow:
 
 ### Report Generation Summary:
 
-Generate `ultimate-code-review-report.md` in the repository root using the report template.
+Generate `rad-code-review-report.md` in the repository root using the report template.
 
 The report must include:
 1. Executive summary
@@ -671,7 +671,7 @@ Generate a triage report instead of the full report:
 5. **What works**: Be honest about what IS good. Don't make it a wall of negativity.
 6. **Realistic assessment**: How much work would it take to reach each strictness level?
 
-Save triage report as `ultimate-code-review-triage.md` in repo root.
+Save triage report as `rad-code-review-triage.md` in repo root.
 
 ## Step 13: Wrap Up
 
@@ -686,7 +686,7 @@ After report generation:
 ```
 ## Review Complete
 
-Report saved: ultimate-code-review-report.md
+Report saved: rad-code-review-report.md
 History saved: .ucr/history/{filename}
 
 Reviewed at commit: {hash}

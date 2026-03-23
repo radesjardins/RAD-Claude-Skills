@@ -1,13 +1,13 @@
-# Ultimate Code Review — Windows PowerShell Installer
+# RAD Code Review — Windows PowerShell Installer
 #
 # Installs the UCR skill and supporting files to the correct locations.
 #
 # Usage:
 #   .\install.ps1
-#   irm https://raw.githubusercontent.com/[owner]/ultimate-code-review/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/[owner]/rad-code-review/main/install.ps1 | iex
 #
 # Locations:
-#   ~\.claude\skills\ultimate-code-review\   — Skill definition (SKILL.md)
+#   ~\.claude\skills\rad-code-review\   — Skill definition (SKILL.md)
 #   ~\.ai-shared\ucr\                        — Reference docs, scripts, templates, etc.
 
 #Requires -Version 5.1
@@ -42,7 +42,7 @@ if (-not $HomeDir) {
 # ---------------------------------------------------------------------------
 # Target directories
 # ---------------------------------------------------------------------------
-$SkillDir = Join-Path $HomeDir ".claude\skills\ultimate-code-review"
+$SkillDir = Join-Path $HomeDir ".claude\skills\rad-code-review"
 $UcrDir   = Join-Path $HomeDir ".ai-shared\ucr"
 
 # ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ if (-not (Test-Path $ScriptDir)) {
 # Install
 # ---------------------------------------------------------------------------
 Write-Host ""
-Write-UCR "Installing Ultimate Code Review v$UCR_VERSION"
+Write-UCR "Installing RAD Code Review v$UCR_VERSION"
 Write-UCR "Platform: Windows"
 Write-UCR "Home: $HomeDir"
 Write-Host ""
@@ -246,7 +246,7 @@ foreach ($subdir in $subdirs) {
 # ---------------------------------------------------------------------------
 Write-Host ""
 if ($errors -eq 0) {
-    Write-Host "Ultimate Code Review v$UCR_VERSION installed successfully!" -ForegroundColor Green -NoNewline
+    Write-Host "RAD Code Review v$UCR_VERSION installed successfully!" -ForegroundColor Green -NoNewline
     Write-Host ""
 } else {
     Write-UCRWarn "Installation completed with $errors warning(s)."
@@ -266,7 +266,7 @@ Write-Host "    /review --scope repo        # Review entire repo"
 Write-Host "    /review --strictness public # Strict public-release review"
 Write-Host ""
 Write-Host "  To add the GitHub Action to a project:"
-Write-Host "    Copy-Item `"$UcrDir\.github\workflows\ultimate-code-review.yml`" .github\workflows\"
+Write-Host "    Copy-Item `"$UcrDir\.github\workflows\rad-code-review.yml`" .github\workflows\"
 Write-Host ""
 Write-Host "  To run audit scripts (Git Bash / WSL):"
 Write-Host "    bash $UcrDir/scripts/dep-audit.sh ."
