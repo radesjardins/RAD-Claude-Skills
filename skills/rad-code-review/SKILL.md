@@ -1,20 +1,13 @@
 ---
 name: rad-code-review
-description: "Professional-grade code review covering security (OWASP), architecture, AI slop detection, performance, UX/accessibility, and release readiness. Three roles: bug finder, architecture reviewer, release gate. Supports whole-repo, diff, commit, or working-tree scope with severity-ranked findings and optional fix application."
+description: >
+  This skill should be used when the user says "review my code", "code review", "is this
+  ready to ship", "check for bugs", "security audit", "review this PR", "check code quality",
+  or wants professional-grade code review. Covers security (OWASP), architecture, AI slop
+  detection, performance, UX/accessibility, and release readiness with severity-ranked findings
+  and optional fix application. Use even for small changes — bugs hide in simple code too.
 argument-hint: "[repo|diff|commit|tree] [--strictness mvp|production|public] [--engine claude|codex|both] [--local-only] [--fix blockers|critical-major|IDs]"
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Glob
-  - Grep
-  - Agent
-  - AskUserQuestion
-  - WebSearch
-  - WebFetch
-  - mcp__context7__resolve-library-id
-  - mcp__context7__query-docs
+allowed-tools: Read Write Edit Bash Glob Grep Agent AskUserQuestion WebSearch WebFetch mcp__context7__resolve-library-id mcp__context7__query-docs
 ---
 
 <objective>
@@ -37,9 +30,9 @@ privacy/secrets handling.
 
 <execution_context>
 **Load these files NOW before proceeding:**
-- @{{UCR_DIR}}/workflows/orchestrate-review.md (main workflow)
-- @{{UCR_DIR}}/references/severity-model.md (severity classification)
-- @{{UCR_DIR}}/references/trust-model.md (trust boundaries)
+- ${CLAUDE_SKILL_DIR}/workflows/orchestrate-review.md (main workflow)
+- ${CLAUDE_SKILL_DIR}/references/severity-model.md (severity classification)
+- ${CLAUDE_SKILL_DIR}/references/trust-model.md (trust boundaries)
 </execution_context>
 
 <context>
@@ -70,7 +63,7 @@ Arguments: $ARGUMENTS
 
 <process>
 Execute the orchestrate-review workflow from
-@{{UCR_DIR}}/workflows/orchestrate-review.md end-to-end.
+${CLAUDE_SKILL_DIR}/workflows/orchestrate-review.md end-to-end.
 
 Preserve all workflow gates, user checkpoints, and subagent boundaries.
 </process>

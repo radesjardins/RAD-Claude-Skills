@@ -1,15 +1,10 @@
 ---
 name: rad-gem-creator
 description: >
-  Guided workflow for creating Google Gemini Gems with well-structured instructions,
-  knowledge base design, and anti-hallucination patterns. Use this skill whenever the
-  user wants to create, build, design, configure, or improve a Gemini Gem, custom Gemini
-  assistant, or asks about writing Gem instructions. Also trigger when the user mentions
-  "Gem," "Gems," "Gemini Gem," "custom Gemini," or asks how to set up a specialized AI
-  assistant inside Google Gemini. Trigger even if the user says something casual like
-  "I need a Gem for X" or "help me make a Gemini expert for Y." If the user is talking
-  about building or updating any kind of persistent custom agent in Google Gemini, use
-  this skill.
+  This skill should be used when the user says "create a Gem", "Gemini assistant",
+  "build a Gem", "Gem instructions", "Google Gem", "custom Gemini", or wants to create,
+  improve, or configure a Google Gemini Gem. Provides a guided interview workflow for
+  well-structured instructions, knowledge base design, and anti-hallucination patterns.
 ---
 
 # RAD Gem Creator — Guided Gemini Gem Instruction Builder
@@ -18,7 +13,7 @@ This skill walks a user through creating or updating a complete, best-practice-a
 set of instructions for a Google Gemini Gem. The output is a ready-to-paste Markdown
 instruction set delivered as both a code block in chat and a downloadable `.md` file.
 
-## Before You Begin
+## Before Beginning
 
 Read these two reference files at the start of every Gem session — they are needed
 throughout the workflow:
@@ -43,7 +38,7 @@ These rules govern every Gem creation session.
 - After asking a question, do not volunteer the next question in the same message.
 - If the user's answer is weak, vague, or ambiguous: offer 2-3 concrete example answers
   for that question, then ask the user to pick one or refine their own answer.
-- If after one clarification attempt the answer is still unclear, accept what you have
+- If after one clarification attempt the answer is still unclear, accept the response
   and move on. Do not stall the workflow.
 - If the user asks for examples at any point, provide them immediately for the current
   question.
@@ -117,53 +112,28 @@ This explanation helps the user understand why the Source Focus Level question (
 
 ## Step 1 — Focus Area
 
-Ask the user what the Gem's focus area or domain is. This defines the Gem's specialty.
+Ask what the Gem's focus area or domain is. Detect weak answers ("general helper",
+"everything") and push for a single-purpose specialty.
 
-**What to ask:**
 > "What is the focus area or specialty of this Gem? For example: Brand Design,
 > Quality Assurance, Code Review, Research Synthesis, Content Writing, etc."
 
-**Detecting weak answers:** If the user says something like "general helper" or
-"everything," explain that Gems perform best as single-purpose specialists and ask
-them to narrow the scope.
-
-**Example answers to offer if needed:**
-- "Quality Assurance document reviewer for 911 dispatch protocols"
-- "Brand voice enforcer for marketing copy"
-- "Python code reviewer following PEP 8 and our internal style guide"
-- "Research synthesizer for competitive market analysis"
-
-**Capture:** The Gem's domain and specialty. This feeds into the Purpose/Role and
-Scope sections of the final instructions.
+**Capture:** Domain and specialty → Purpose/Role and Scope sections.
 
 ---
 
 ## Step 2 — Knowledge Base Document Types
 
-Ask what types of documents the user will upload to the Gem's knowledge base.
+Ask what file types will be uploaded. Share if relevant: Google Docs/Sheets auto-sync
+from Drive; all other types are static snapshots requiring manual re-upload. NotebookLM
+notebooks hold up to 300 sources and bypass the 10-file limit. Gems support up to 10
+knowledge files (100 MB each).
 
-**What to ask:**
 > "What types of documents will you add to this Gem's knowledge base? Options include:
 > Google Docs, Google Sheets, NotebookLM notebooks, PDFs, Markdown files, plain text,
 > CSV, DOCX, or others."
 
-**Why it matters (share with user if they seem unsure):** Google Docs and Sheets
-auto-sync from Drive — edits are reflected in the Gem automatically. All other file
-types are static snapshots that require manual re-upload when changed. NotebookLM
-notebooks can hold up to 300 sources and bypass the Gem's 10-file limit.
-
-**Gem limits to mention if relevant:** Gems support up to 10 knowledge files (100 MB
-each). Free-plan users are also limited to a small number of total Gems — if the user
-is on a free plan and near their Gem count limit, note that they may need to delete an
-existing Gem before saving a new one.
-
-**Example answers to offer if needed:**
-- "Two Google Docs (style guide and SOPs) plus one NotebookLM notebook with all our policy PDFs"
-- "Three Markdown files with our coding standards, linting rules, and API reference"
-- "A mix: one Google Sheet with our product catalog, two PDFs of vendor contracts"
-
-**Capture:** File types and whether live-sync (Google Docs/Sheets) or static uploads
-are involved. This feeds into the Source Policy section.
+**Capture:** File types and live-sync vs. static → Source Policy section.
 
 ---
 
@@ -202,92 +172,50 @@ Skip this step entirely. The Gem will use general training and web search by def
 
 ## Step 4 — Document and Notebook Names
 
-Ask for the specific names of the documents or notebooks that will be included.
+Ask for specific file/notebook names. Naming them in the instructions significantly
+improves retrieval targeting.
 
-**What to ask:**
 > "What are the names of the specific documents or notebooks you'll add to the
 > knowledge base? These names may be referenced directly in the Gem's instructions
 > to improve retrieval accuracy."
 
-**Why it matters:** Naming specific files in the instructions (e.g., "Refer to the
-Brand Voice Guide when reviewing tone") significantly improves how well the Gem
-targets the right document for a given query.
-
-**Example answers to offer if needed:**
-- "Brand Voice Guide, Q1 2026 Marketing Playbook, Product Messaging Matrix"
-- "AQUA 7 Review Standards, EMD Protocol Reference, QI Staff Handbook"
-- "Company API Reference v3, Frontend Style Guide, Error Code Dictionary"
-
-**Capture:** Exact document names. These will be referenced by name in the Source
-Policy and Workflow sections of the instructions.
+**Capture:** Exact document names → referenced by name in Source Policy and Workflow.
 
 ---
 
 ## Step 5 — Goal and Purpose
 
-Ask what the user wants to accomplish with this Gem.
+Ask what the Gem should accomplish. Push past vague answers ("help me with stuff") —
+Gems exist to perform a specific repeatable task with consistent results.
 
-**What to ask:**
 > "What is your primary goal for this Gem? What problem does it solve or what task
 > does it perform for you repeatedly?"
 
-**Detecting weak answers:** If the user says "help me with stuff" or "answer questions,"
-push for the specific repeatable task. Gems exist because you do something over and over
-and want consistent results.
-
-**Example answers to offer if needed:**
-- "Review QA case files against our standards and produce a structured findings report"
-- "Take rough marketing copy and rewrite it to match our brand voice and style guide"
-- "Analyze uploaded Python files for security vulnerabilities and produce a severity-ranked report"
-- "Generate lesson plans aligned to my uploaded syllabus and state standards"
-
-**Capture:** The Gem's primary objective. This becomes the core of the Purpose section
-and shapes the Workflow section.
+**Capture:** Primary objective → core of Purpose section, shapes Workflow.
 
 ---
 
 ## Step 6 — Must-Have Behaviors
 
-Ask what behaviors the Gem absolutely must exhibit.
+Ask what non-negotiable behaviors the Gem must always follow. Offer examples if needed
+(e.g., "always cite sources", "always read X file first", "output in table format").
 
-**What to ask:**
 > "What 'must-have' behaviors should this Gem always follow? These are non-negotiable
 > rules — things it must do every time."
 
-**Example answers to offer if needed:**
-- "Always read the Brand Voice Guide before generating any copy"
-- "Only use the uploaded knowledge files to answer — never use general training knowledge"
-- "Always cite which document and section the answer comes from"
-- "Ask clarifying questions before starting if the user's request is ambiguous"
-- "Always output findings in a three-column table: Issue, Severity, Recommendation"
-- "Start every response by stating which knowledge file(s) are relevant to the query"
-
-**Capture:** Required behaviors. These feed into the Behaviors/Rules and Workflow
-sections. If the user specifies source-grounding requirements, they also strengthen
-the Source Policy section.
+**Capture:** Required behaviors → Behaviors/Rules, Workflow, and Source Policy sections.
 
 ---
 
 ## Step 7 — Must-Not-Do Behaviors
 
-Ask what the Gem should never do.
+Ask what the Gem should never do. Offer examples if needed (e.g., "don't use web
+search", "don't make up data", "don't discuss off-topic subjects").
 
-**What to ask:**
 > "What should this Gem absolutely never do? These are explicit prohibitions —
 > behaviors you want to block."
 
-**Example answers to offer if needed:**
-- "Do not search the web for answers"
-- "Do not use general training knowledge to fill gaps — say 'I don't know' instead"
-- "Do not be sycophantic or use filler praise"
-- "Do not make up data, statistics, or citations"
-- "Do not discuss topics outside the defined scope"
-- "Do not rewrite submitted code — only flag issues"
-- "Do not provide legal, medical, or financial advice"
-
-**Capture:** Explicit prohibitions. These feed into the Constraints section and
-reinforce the negative constraints at the end of the instructions (exploiting
-LLM recency bias).
+**Capture:** Prohibitions → Constraints section (placed last for LLM recency bias).
 
 ---
 
@@ -343,43 +271,11 @@ section:
 **C. Source Policy** (from Steps 2, 3, 4, 5 — anchored by the Source Focus Level from Step 3)
 
 This is the most critical section for knowledge-grounded Gems. Use the focus level
-chosen in Step 3 to select the right template:
-
-**Knowledge-Only (Level 1):**
-- Use the strict SOURCE-ONLY MODE pattern
-- Include: Grounding Directive ("Always reference attached files before answering")
-- Include: Verification Fence ("Before writing, confirm every claim appears in your files")
-- Include: No-Match Path ("If not found: 'This information is not in my reference documents.'")
-- Include: Explicit Source Blocking ("Do not use general training knowledge. Do not search the web.")
-- Optional: Visible Receipt pattern ("List matched documents before answering")
-- Reference specific document names from Step 4
-
-**Knowledge-First (Level 2):**
-- Use the "Source of Truth First" pattern
-- Include: Grounding Directive
-- Include: Priority order (1. Knowledge files, 2. User-provided text, 3. General knowledge with disclosure)
-- Include: Disclosure requirement ("If answering from general knowledge, say so explicitly")
-- Include: No-Match Path with fallback offer ("Not found in my files. Would you like me to answer from general knowledge?")
-- Reference specific document names from Step 4
-
-**Balanced (Level 3):**
-- List knowledge files as a primary reference alongside training and web search
-- Include: Citation requirement when using knowledge files
-- Include: No special grounding restrictions
-- Reference document names from Step 4 as available resources
-
-**Training-Primary (Level 4):**
-- Mention knowledge files as supplementary reference only
-- Include: Directive to check files when the topic directly matches a document's scope
-- No grounding restrictions or source-blocking language
-
-For Levels 1 and 2, also consider the **Fact Registry** technique: if the user has a
-small set of critical data points (under ~50 items), embed them directly in the
-instructions rather than relying on knowledge file retrieval. Data in instructions is
-always visible to the model; data in knowledge files depends on retrieval matching.
-
-If NotebookLM notebooks are part of the knowledge base, strengthen the grounding
-language with the notebook-specific patterns from `references/best-practices.md`.
+chosen in Step 3 to select the right template from `references/source-policy-templates.md`.
+Four levels are defined: Knowledge-Only (strict), Knowledge-First, Balanced, and
+Training-Primary. The reference also covers the Fact Registry technique for Levels 1-2
+and NotebookLM-specific grounding patterns. Always reference specific document names
+from Step 4.
 
 **D. Knowledge File Reference** (from Step 4)
 - List every attached file by name with a one-line description of what it contains.
@@ -417,41 +313,17 @@ these sections.
 
 After all sections are approved:
 
-1. **Assemble** the complete instruction set by combining all approved sections into
-   the template from `references/gem-instruction-template.md`.
-
-2. **Present in chat** as a single Markdown code block with a brief intro:
-   > "Here are your complete Gem instructions. Copy everything inside the code block
-   > and paste it into the Instructions field of your Gem builder at gemini.google.com."
-
-3. **Write to a file** named after the Gem in kebab-case (e.g., `qa-document-reviewer-gem.md`)
-   and deliver it as a downloadable file.
-
-4. **Provide next steps** in two groups:
-
-   **Required setup (do these now):**
-   - Paste the instructions into the Instructions field: gemini.google.com → Explore Gems → New Gem
-   - Add knowledge files through the Gem editor's Knowledge section — not through the chat
-   - Click Save after adding files (the preview pane does not auto-save)
-   - IMPORTANT: When editing an existing Gem's knowledge files, you MUST click the blue
-     "Update" button. Without this, changes are not saved. This is the most common cause
-     of "my Gem forgot my documents."
-
-   **Recommended before deploying:**
-   - Test with the preview pane using normal prompts and at least 2-3 adversarial prompts
-     (off-topic requests, questions not in your knowledge files, attempts to break the output format)
-   - Iterate one change at a time when debugging — changing multiple things simultaneously
-     makes it impossible to identify what fixed or broke a behavior
-   - If you plan to share this Gem with others, be aware that recipients can see your
-     instruction text and knowledge file names. Never embed passwords, API keys, proprietary
-     processes, or sensitive data in the instructions or file names of a Gem you intend to share.
-
-   **Optional:**
-   - The "magic wand" rewrite button can suggest additions, but your instructions are
-     already well-structured — review any suggestions critically before accepting
-   - If you're using Google Docs in your knowledge base, the Memory Card workaround
-     (a running Google Doc summarizing past sessions) can provide cross-session continuity
-     since Gems do not have native cross-chat memory
+1. **Assemble** the complete instruction set using `references/gem-instruction-template.md`.
+2. **Present in chat** as a single Markdown code block with a paste-into-Gem-builder intro.
+3. **Write to file** in kebab-case (e.g., `qa-document-reviewer-gem.md`).
+4. **Provide next steps:**
+   - Required: paste instructions at gemini.google.com → Explore Gems → New Gem, add
+     knowledge files via the Knowledge section (not chat), click Save. When editing an
+     existing Gem, click the blue "Update" button or changes are lost.
+   - Recommended: test with preview pane using normal + adversarial prompts, iterate one
+     change at a time. If sharing, warn that recipients can see instruction text and file names.
+   - Optional: "magic wand" rewrite button for suggestions, Memory Card workaround
+     (running Google Doc) for cross-session continuity.
 
 ---
 

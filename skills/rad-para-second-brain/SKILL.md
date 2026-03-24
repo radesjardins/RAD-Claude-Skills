@@ -1,17 +1,11 @@
 ---
 name: rad-para-second-brain
 description: >
-  Guide users in building, maintaining, and actively using a PARA-based Second Brain
-  with AI-enhanced workflows. Use this skill whenever the user asks where to file or
-  save anything, feels overwhelmed by information or digital clutter, mentions notes
-  apps, productivity systems, PARA, Tiago Forte, or Second Brain, wants to do a review,
-  start or complete a project, or asks how to capture and organize their knowledge —
-  even if they don't use the term "PARA" or "Second Brain." Also activate when the user
-  mentions Intermediate Packets, Archipelago of Ideas, Hemingway Bridge, Progressive
-  Summarization, 12 Favorite Problems, or asks about weekly/monthly reviews, project
-  kickoffs, or digital resets. This is NOT for: general file management without a
-  productivity context, database design, CRM setup, or project management tool
-  configuration (Jira, Asana, etc.).
+  This skill should be used when the user says "organize my notes", "PARA method", "second
+  brain", "weekly review", "digital organization", "I'm overwhelmed with files", "productivity
+  system", "knowledge management", or wants to build a personal knowledge management system.
+  Covers PARA organization, capture workflows, Progressive Summarization, reviews, project
+  kickoffs, and digital resets.
 ---
 
 # RAD PARA & Second Brain Assistant

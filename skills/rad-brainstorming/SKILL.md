@@ -1,13 +1,18 @@
 ---
 name: rad-brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: >
+  This skill should be used when the user wants to brainstorm, explore ideas, design a
+  feature, plan a component, or do any creative work before implementation. Use whenever
+  the user says "let's brainstorm", "I need ideas", "help me design", "what should I build",
+  "how should I approach this", or is about to start building something without exploring
+  alternatives first. Even seemingly simple features benefit from a quick brainstorming pass.
 ---
 
 # Brainstorming Ideas Into Designs
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+Start by understanding the current project context, then ask questions one at a time to refine the idea. Once the design is understood, present it and get user approval.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
@@ -19,7 +24,7 @@ Every project goes through this process. A todo list, a single-function utility,
 
 ## Checklist
 
-You MUST create a task for each of these items and complete them in order:
+Create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
@@ -88,7 +93,7 @@ digraph brainstorming {
 
 **Presenting the design:**
 
-- Once you believe you understand what you're building, present the design
+- Once the design is clear, present it
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
@@ -97,9 +102,9 @@ digraph brainstorming {
 **Design for isolation and clarity:**
 
 - Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
-- For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
-- Can someone understand what a unit does without reading its internals? Can you change the internals without breaking consumers? If not, the boundaries need work.
-- Smaller, well-bounded units are also easier for you to work with - you reason better about code you can hold in context at once, and your edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
+- For each unit, be able to answer: what does it do, how is it used, and what does it depend on?
+- Can someone understand what a unit does without reading its internals? Can the internals change without breaking consumers? If not, the boundaries need work.
+- Smaller, well-bounded units are also easier to work with - reasoning is more reliable about code that fits in context at once, and edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
 
 **Working in existing codebases:**
 
