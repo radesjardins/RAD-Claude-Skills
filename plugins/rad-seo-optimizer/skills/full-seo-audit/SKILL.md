@@ -1,18 +1,9 @@
 ---
 name: full-seo-audit
 description: >
-  Runs a full-site SEO audit across technical, on-page, content, schema, links, and AI
-  visibility — producing a single scored report with prioritized fixes. Use when the user
-  wants a broad, multi-category SEO review of their website, not just one narrow area.
-  Triggers when someone asks to audit their site's SEO, check overall SEO health, grade
-  or score a website, figure out why their site isn't ranking, get a comprehensive SEO
-  analysis, or wants "everything checked." Also triggers on vague requests like "look at
-  my site and tell me what's wrong" or "I'm getting zero organic traffic, what do I fix?"
-  when no specific SEO sub-topic is named. Produces a scored, plain-English report with
-  actionable fix commands. This is NOT for: writing code or scripts, Google Ads, social
-  media, email marketing, analytics setup, or single-element fixes like updating one meta
-  tag. If the user only asks about one specific area (e.g., just Core Web Vitals, just
-  keywords, just schema), route to the specialized skill instead.
+  Full-site SEO audit across technical, on-page, content, schema, links, and AI
+  visibility. Produces a scored report with prioritized fixes. For broad multi-category
+  reviews; route single-area requests to the specialized skill instead.
 ---
 
 # Full SEO Audit — Master Orchestrator
@@ -150,7 +141,7 @@ AI search engines extract answers from content. Score readiness based on:
 - Verify content uses structured data to help AI understand context.
 - Look for "People Also Ask"-style content that directly answers related queries.
 
-For deeper content analysis, delegate to the **content-optimizer** skill.
+For deeper content analysis, delegate to the **on-page-optimizer** skill.
 For keyword opportunities, delegate to the **keyword-discovery** skill.
 
 ---
@@ -185,7 +176,7 @@ Why schema matters: Structured data does not directly boost rankings, but it ear
 rich snippets that dramatically increase click-through rates. A rich result can double
 your clicks without changing your ranking position.
 
-For detailed schema implementation, delegate to the **schema-markup** skill.
+For detailed schema implementation, delegate to the **schema-architect** skill.
 
 ---
 
@@ -245,7 +236,7 @@ feed into the prioritization of all other categories.
 - Compare page speed and Core Web Vitals scores.
 - Note any rich results competitors earn that the audited site does not.
 
-For deeper competitive analysis, delegate to the **competitor-analysis** skill.
+For deeper competitive analysis, delegate to the **competitor-intelligence** skill.
 
 ---
 
@@ -373,10 +364,10 @@ Then provide:
 - **Skills to run next**: List the specific plugin skills for deeper dives:
   - "For deeper technical fixes, run the **technical-seo** skill."
   - "For keyword research and content planning, run the **keyword-discovery** skill."
-  - "For content improvements, run the **content-optimizer** skill."
-  - "For schema implementation, run the **schema-markup** skill."
-  - "For competitive deep-dive, run the **competitor-analysis** skill."
-  - "For ongoing monitoring, run the **seo-monitor** skill."
+  - "For content improvements, run the **on-page-optimizer** skill."
+  - "For schema implementation, run the **schema-architect** skill."
+  - "For competitive deep-dive, run the **competitor-intelligence** skill."
+  - "For ongoing monitoring, set up scheduled audits using the **full-seo-audit** skill on a regular cadence."
 ```
 
 ---
@@ -427,10 +418,10 @@ the user to the appropriate specialist skill:
 |---|---|---|
 | Complex crawl issues, redirect chains, server config | **technical-seo** | Deep technical crawl and infrastructure analysis |
 | Need keyword targets for content | **keyword-discovery** | Keyword research, search volume, difficulty scoring |
-| Content needs rewriting or expanding | **content-optimizer** | Content quality improvement and optimization |
-| Schema needs to be written or fixed | **schema-markup** | Schema.org implementation and validation |
-| Need detailed competitor breakdown | **competitor-analysis** | In-depth competitive gap analysis |
-| Ongoing rank and traffic tracking | **seo-monitor** | Continuous monitoring and alerting |
+| Content needs rewriting or expanding | **on-page-optimizer** | Content quality improvement and optimization |
+| Schema needs to be written or fixed | **schema-architect** | Schema.org implementation and validation |
+| Need detailed competitor breakdown | **competitor-intelligence** | In-depth competitive gap analysis |
+| Ongoing auditing on a schedule | **full-seo-audit** | Run this skill on a regular cadence for continuous monitoring |
 
 Always complete the full audit first. Delegate to specialist skills for implementation,
 not for the audit itself.
