@@ -1,18 +1,10 @@
 ---
 name: seo-report-generator
 description: >
-  Aggregates findings from all completed SEO audit skills into a single prioritized
-  report with scores, executive summary, category dashboards, and a 30/60/90 day
-  roadmap with fix commands. Use when the user wants to compile or export SEO audit
-  results into a report, needs a prioritized implementation plan from audit findings,
-  asks for an SEO scorecard or summary document, wants to know "what should I fix
-  first," or needs a formatted report for stakeholders or a board presentation.
-  Triggers on "generate an SEO report," "summarize the audit findings," "create an
-  action plan," "export recommendations," or "give me a 30/60/90 day SEO roadmap."
-  This skill should run AFTER other audit skills have produced findings — it
-  aggregates, it does not perform the audits itself. This is NOT for: running the
-  actual audits (use specific skills first), building analytics dashboards, creating
-  Google Data Studio reports, or writing general business reports.
+  This skill should be used when the user says "SEO report", "generate audit report",
+  "summarize SEO findings", "SEO dashboard", "create SEO roadmap", or wants to aggregate
+  findings from completed audits into a single prioritized report. Runs AFTER audit skills,
+  not instead of them. Produces scores, executive summary, and 30/60/90 day roadmap.
 ---
 
 # SEO Report Generator

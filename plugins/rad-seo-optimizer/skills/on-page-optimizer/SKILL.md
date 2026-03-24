@@ -1,17 +1,11 @@
 ---
 name: on-page-optimizer
 description: >
-  Performs a deep on-page SEO audit of a specific page — analyzing title tags, meta
-  descriptions, heading hierarchy, keyword usage, content quality, E-E-A-T signals,
-  image alt text, internal linking, and AEO-ready formatting. Scores the page 0-100
-  and provides fix commands. Use when the user wants to optimize a particular page or
-  URL for search, improve a page's rankings for specific keywords, audit on-page
-  elements across a page, check E-E-A-T compliance, evaluate content quality for SEO,
-  or asks "why isn't this page ranking?" or "how do I improve this page's SEO?" This
-  skill handles multi-element page-level optimization, not single quick fixes. This is
-  NOT for: updating just one meta tag in isolation, writing new content from scratch,
-  site-wide audits (use full-seo-audit), keyword research (use keyword-discovery),
-  generating schema markup (use schema-architect), or non-SEO content writing.
+  This skill should be used when the user says "optimize this page", "improve my title tags",
+  "fix meta descriptions", "heading structure", "E-E-A-T", "content quality score", "on-page
+  SEO", or wants to optimize a specific page for search visibility. Covers title tags, meta
+  descriptions, headings, keyword usage, content quality, E-E-A-T signals, and image alt text.
+argument-hint: "[URL or page to optimize]"
 ---
 
 # On-Page SEO + E-E-A-T Optimizer

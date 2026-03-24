@@ -1,20 +1,11 @@
 ---
 name: competitor-intelligence
 description: >
-  Performs a deep SEO competitor analysis — comparing your site against competitors
-  on content gaps, technical SEO, backlink profiles, SERP features, and AI search
-  visibility. Produces a prioritized action plan to outrank them. Use when the user
-  wants to compare their SEO against competitors, find content gaps, discover why
-  competitors rank higher, identify who their real search competitors are, analyze
-  competitor backlink or content strategies, benchmark SEO performance, or spy on
-  what competitors do differently. Triggers on "what are my competitors doing,"
-  "why do they outrank me," "competitive SEO audit," "content gap analysis vs
-  competitors," or requests for a competitive breakdown for stakeholders. This is
-  NOT for: product feature comparisons, business plan competitive analysis, pricing
-  intelligence, UX/UI reviews of competitor apps, building scrapers, keyword
-  research without a competitor focus (use keyword-discovery), or fixing your own
-  Core Web Vitals (use technical-seo). The key differentiator is the user wants to
-  compare their site's SEO against specific competitor sites.
+  This skill should be used when the user says "competitor analysis", "who ranks for",
+  "what are competitors doing", "competitive audit", "compare my SEO", "competitor gap",
+  or wants to understand how they stack up against competitors in search. Covers content gaps,
+  technical comparison, backlink profiles, SERP features, and AI search visibility.
+argument-hint: "[competitor URL or domain]"
 ---
 
 # Competitor Intelligence Skill
@@ -28,14 +19,14 @@ and AI/LLM search visibility. Every finding includes a concrete, prioritized act
 
 Before starting, collect the following from the user. Do not proceed until you have all three.
 
-1. **Their site URL** — the domain to benchmark.
-2. **2-3 known competitors** — direct business competitors they already know about.
+1. **Target site URL** — the domain to benchmark.
+2. **2-3 known competitors** — direct business competitors the user already knows about.
 3. **5-10 target keywords** — the queries they most want to win.
 
 If the user provides only a URL, ask:
-> "Give me 2-3 competitors you already know about, plus 5-10 keywords you want to rank for.
-> I will also discover your *digital* competitors — the sites actually beating you in search,
-> which are often different from your business competitors."
+> "Provide 2-3 competitors already known, plus 5-10 keywords to rank for.
+> The analysis will also discover *digital* competitors — the sites actually beating the
+> target site in search, which are often different from direct business competitors."
 
 ---
 
@@ -411,8 +402,8 @@ Sorted by (Impact / Effort) ratio. Execute in this order.
 
 ## Execution Notes
 
-- **Be specific**: Never say "improve your content." Say "add a comparison table with
-  pricing columns to your /crm-guide page, matching the format comp1.com uses at /pricing."
+- **Be specific**: Never say "improve the content." Say "add a comparison table with
+  pricing columns to the /crm-guide page, matching the format comp1.com uses at /pricing."
 - **Cite sources**: When referencing a competitor's page, include the URL.
 - **Quantify when possible**: Estimated traffic, word counts, number of backlinks.
 - **Cross-reference plugin resources**: Point the user to `aeo-playbook.md` for AI search

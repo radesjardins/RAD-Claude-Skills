@@ -1,6 +1,6 @@
 ---
 name: competitor-spy
-description: "Deep competitor SEO research agent. Use when user asks to 'analyze competitors', 'competitor analysis', 'who are my competitors', 'compare my SEO with competitors', 'competitive audit', 'spy on competitors', 'what are competitors doing', 'competitive research', or wants to understand their competitive SEO landscape. Autonomously researches competitors, analyzes their content, link profiles, SERP features, and AI search visibility, then delivers an actionable opportunity report."
+description: "Autonomous competitor SEO research. Analyzes competitor content, links, SERP features, and AI visibility. Returns actionable opportunity report."
 tools:
   - Bash
   - Read

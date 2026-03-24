@@ -1,23 +1,16 @@
 ---
 name: broken-link-fixer
 description: >
-  Scans an entire site's codebase and live URLs to find and fix all broken links,
-  404 errors, redirect chains, and mixed-content issues. Also discovers link
-  reclamation opportunities via unlinked brand mentions. Produces a prioritized
-  report with fix commands. Use when the user wants a site-wide broken link audit,
-  needs to find all 404s and dead links across their site, wants to clean up
-  redirect chains, check for link rot, or discover link reclamation opportunities.
-  Triggers on "find all broken links on my site," "link audit," "site has lots of
-  404s," or "check all my links." This is NOT for: fixing a single known broken
-  image or link (that is a quick code fix), building a Python link-checking script,
-  backlink acquisition strategy (use link-building-strategy), or general redirect
-  setup during site migrations. The key differentiator is the user wants a
-  comprehensive scan of all links across the site, not a one-off fix.
+  This skill should be used when the user says "broken links", "404 errors", "dead links",
+  "fix links", "link checker", "redirect chains", or wants to find and fix links that lead
+  to non-existent pages. Scans for broken internal and external links, redirect chains,
+  mixed-content issues, and unlinked brand mention opportunities.
+argument-hint: "[URL or path to check]"
 ---
 
 # Broken Link Fixer Skill
 
-Find every broken link on your site, trace redirect chains, uncover link reclamation opportunities, and generate exact fix commands for every issue.
+Find every broken link on the target site, trace redirect chains, uncover link reclamation opportunities, and generate exact fix commands for every issue.
 
 ---
 
@@ -112,7 +105,7 @@ These are outreach targets — contact the site owner and request a link.
 
 ### 4.2 Competitor Broken Link Building
 
-Identify broken outbound links on competitor sites that pointed to content similar to yours:
+Identify broken outbound links on competitor sites that pointed to content similar to the target site's:
 
 ```
 claude "Use WebSearch to find pages in {niche} that link to now-dead resources. Use WebFetch to verify the links are truly broken (404/410). Cross-reference with our content to find suitable replacement pages."
@@ -125,7 +118,7 @@ This is a proven link-building tactic. See `link-building-tactics.md` for outrea
 Rank reclamation opportunities by:
 
 1. Domain authority of the linking site.
-2. Relevance of the linking page to your content.
+2. Relevance of the linking page to the target site's content.
 3. Likelihood of success (editorial sites are more responsive than forums).
 
 ---
@@ -265,7 +258,7 @@ Present results using this structure:
 
 Fix issues in this order:
 
-1. **Internal 404s** — you control these and they directly hurt user experience and crawl efficiency.
+1. **Internal 404s** — these are fully controllable and directly hurt user experience and crawl efficiency.
 2. **Redirect chains** — each hop leaks PageRank and adds latency.
 3. **Mixed content** — triggers browser warnings and undermines HTTPS.
 4. **Soft 404 page** — confuses search engine crawlers.

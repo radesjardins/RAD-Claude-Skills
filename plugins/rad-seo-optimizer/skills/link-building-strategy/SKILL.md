@@ -1,17 +1,10 @@
 ---
 name: link-building-strategy
 description: >
-  Creates a backlink acquisition strategy — assessing your current link profile,
-  finding gaps against competitors, identifying linkable assets, selecting tactics,
-  and producing a 12-week outreach plan with templates. Use when the user wants to
-  build backlinks, improve domain authority, create a link building plan, analyze
-  their backlink profile, find link gaps vs competitors, do outreach or guest
-  posting, pursue digital PR or HARO, reclaim lost links, audit toxic links, or
-  asks "how do I get more backlinks" or "improve my off-page SEO." Produces
-  outreach email templates and weekly targets. This is NOT for: fixing broken
-  internal links on your own site (use broken-link-fixer), competitor analysis
-  beyond link profiles (use competitor-intelligence), content creation, technical
-  SEO fixes, or any non-SEO marketing like social media or email campaigns.
+  This skill should be used when the user says "link building", "get backlinks", "domain
+  authority", "backlink strategy", "link acquisition", "outreach plan", or wants to improve
+  their site's backlink profile. Covers link profile assessment, competitor gap analysis,
+  linkable asset identification, tactic selection, and 12-week outreach plan with templates.
 ---
 
 # Link Building Strategy Skill
@@ -22,7 +15,7 @@ Build a complete link acquisition plan from zero experience to earning high-qual
 
 ## Phase 1: Current Link Profile Assessment
 
-Start by understanding where you stand today.
+Start by understanding where the site stands today.
 
 ### Step 1 — Gather Backlink Data
 
@@ -94,7 +87,7 @@ Build a comparison table:
 
 ### Step 3 — Find the Gap Sites
 
-Identify domains that link to at least 2 competitors but not to the user's site. These are "warm" prospects because they already link to similar content.
+Identify domains that link to at least 2 competitors but not to the target site. These are "warm" prospects because they already link to similar content.
 
 Sort by:
 1. Domain authority (higher = better)
@@ -105,10 +98,10 @@ Sort by:
 
 Rate each opportunity on a 1-5 scale:
 
-- **Relevance** — How closely does the linking site match your niche?
+- **Relevance** — How closely does the linking site match the target niche?
 - **Authority** — What is the site's DA?
 - **Accessibility** — Does the site accept contributions, have a contact form, or list an editor?
-- **Link type potential** — Could you earn a contextual, in-content link?
+- **Link type potential** — Could a contextual, in-content link be earned?
 
 Priority = (Relevance + Authority + Accessibility + Link Type) / 4. Pursue 4.0+ first.
 
@@ -116,7 +109,7 @@ Priority = (Relevance + Authority + Accessibility + Link Type) / 4. Pursue 4.0+ 
 
 ## Phase 3: Linkable Asset Audit
 
-You cannot earn links without something worth linking to.
+Links cannot be earned without something worth linking to.
 
 ### Existing Content Review
 
@@ -157,110 +150,25 @@ Based on the user's available time, budget, and business type, recommend 3-5 tac
 
 ### Tactic Menu
 
-#### 1. Skyscraper Technique
-- **What:** Find top-linked content in your niche, create something significantly better, then reach out to everyone linking to the original.
-- **Time:** 15-20 hours per campaign
-- **Expected DA range:** 20-70
-- **Success rate:** 5-15% of outreach emails convert
-- **Best for:** Any niche with existing popular content
+Select 3-5 tactics from this list based on the user's available time, budget, and business type:
 
-#### 2. Broken Link Building
-- **What:** Find broken outbound links on relevant sites, then offer your content as a replacement.
-- **Time:** 8-12 hours per campaign
-- **Expected DA range:** 20-60
-- **Success rate:** 5-10%
-- **Best for:** Established niches with older content
+1. **Skyscraper Technique** — Create better content, outreach to linkers (15-20 hrs, 5-15% success)
+2. **Broken Link Building** — Offer replacements for dead links (8-12 hrs, 5-10% success)
+3. **Moving Man Method** — Replace rebranded/shut-down resources (10-15 hrs, 10-20% success)
+4. **Resource Page Link Building** — Pitch to "best resources" pages (5-8 hrs, 5-15% success)
+5. **Digital PR / Original Research** — Pitch data studies to journalists (20-40 hrs, DA 50-90+)
+6. **HARO / Media Requests** — Expert quotes for journalist queries (3-5 hrs/week, DA 40-90)
+7. **Strategic Guest Posting** — Write articles for niche sites (8-15 hrs, 10-30% acceptance)
+8. **Link Reclamation** — Convert unlinked brand mentions (2-4 hrs, 20-40% success)
+9. **Competitor Link Gap Outreach** — Pitch to competitor linkers (10-15 hrs, 3-8% success)
+10. **Link Roundups** — Submit to weekly/monthly roundups (2-3 hrs/week, 10-25% success)
+11. **Podcast Guesting** — Appear on niche podcasts for show-note links (3-5 hrs, 20-50% booking)
+12. **Testimonial Link Building** — Write testimonials for tools used (1-2 hrs, 30-50% success)
+13. **Content Transformation** — Repurpose content into new formats (5-10 hrs, passive earning)
+14. **Local Community Links** — Sponsor events, join chambers (2-5 hrs, 50-80% success)
+15. **Affiliate / Partner Programs** — Incentivize partner links (20+ hrs setup, ongoing)
 
-#### 3. Moving Man Method
-- **What:** Find businesses that rebranded, shut down, or moved URLs. Contact sites still linking to the old URL and offer your content as a replacement.
-- **Time:** 10-15 hours per campaign
-- **Expected DA range:** 30-70
-- **Success rate:** 10-20% (higher because you are solving a real problem)
-- **Best for:** Industries with consolidation or frequent changes
-
-#### 4. Resource Page Link Building
-- **What:** Find "best resources" or "useful links" pages in your niche and pitch your content for inclusion.
-- **Time:** 5-8 hours per campaign
-- **Expected DA range:** 20-50
-- **Success rate:** 5-15%
-- **Best for:** Educational, B2B, and how-to niches
-
-#### 5. Digital PR / Original Research
-- **What:** Publish original data or a newsworthy study, then pitch it to journalists and bloggers.
-- **Time:** 20-40 hours per campaign (including research)
-- **Expected DA range:** 50-90+
-- **Success rate:** 3-10% but links are high value
-- **Best for:** Brands with access to unique data
-
-#### 6. HARO / Media Requests
-- **What:** Respond to journalist queries on HARO, Qwoted, or Help a B2B Writer. Provide expert quotes in exchange for links.
-- **Time:** 3-5 hours per week (ongoing)
-- **Expected DA range:** 40-90
-- **Success rate:** 5-20% per pitch
-- **Best for:** Anyone with subject-matter expertise
-
-#### 7. Strategic Guest Posting
-- **What:** Write valuable articles for other sites in your niche with a contextual link back.
-- **Time:** 8-15 hours per post (writing + outreach)
-- **Expected DA range:** 20-60
-- **Success rate:** 10-30% acceptance
-- **Best for:** Strong writers in any niche
-
-#### 8. Link Reclamation (Unlinked Mentions)
-- **What:** Find places your brand is mentioned online without a link, then ask for the link.
-- **Time:** 2-4 hours per batch
-- **Expected DA range:** varies
-- **Success rate:** 20-40% (highest of any tactic)
-- **Best for:** Established brands with some visibility
-
-#### 9. Competitor Link Gap Outreach
-- **What:** Contact sites linking to competitors with a pitch for why your content is better or complementary.
-- **Time:** 10-15 hours per campaign
-- **Expected DA range:** 20-60
-- **Success rate:** 3-8%
-- **Best for:** Sites with strong content that matches or beats competitors
-
-#### 10. Link Roundups
-- **What:** Find weekly or monthly "best of" roundup posts in your niche and submit your content.
-- **Time:** 2-3 hours per week
-- **Expected DA range:** 15-50
-- **Success rate:** 10-25%
-- **Best for:** Niches with active blogging communities
-
-#### 11. Podcast Guesting
-- **What:** Appear as a guest on podcasts in your niche. Show notes almost always include links.
-- **Time:** 3-5 hours per appearance (prep + recording)
-- **Expected DA range:** 20-60
-- **Success rate:** 20-50% booking rate
-- **Best for:** Anyone comfortable speaking
-
-#### 12. Testimonial Link Building
-- **What:** Write testimonials for tools and services you use. Companies often publish them with a link to your site.
-- **Time:** 1-2 hours per testimonial
-- **Expected DA range:** 30-70
-- **Success rate:** 30-50%
-- **Best for:** Quick wins with low effort
-
-#### 13. Content Transformation
-- **What:** Turn a blog post into a video, infographic, slidedeck, or podcast episode. Each format can earn links from different audiences.
-- **Time:** 5-10 hours per transformation
-- **Expected DA range:** 15-50
-- **Success rate:** N/A (passive link earning)
-- **Best for:** Anyone with existing strong content
-
-#### 14. Local Community Links
-- **What:** Sponsor local events, join chambers of commerce, partner with local organizations.
-- **Time:** 2-5 hours per opportunity
-- **Expected DA range:** 20-50
-- **Success rate:** 50-80%
-- **Best for:** Local businesses
-
-#### 15. Affiliate / Partner Programs
-- **What:** Create a program where partners link to you in exchange for commissions or reciprocal value.
-- **Time:** 20+ hours to set up, then ongoing
-- **Expected DA range:** varies widely
-- **Success rate:** varies
-- **Best for:** E-commerce and SaaS
+For detailed descriptions and execution steps for each tactic, consult `references/outreach-templates.md`.
 
 ---
 
@@ -270,17 +178,17 @@ Modern SEO must account for AI-generated answers. Links are not just for Google 
 
 ### Goal: Get Mentioned Alongside Industry Leaders
 
-1. **Publish comparison content** — Create "X vs Y vs [Your Brand]" articles. AI models ingest these and learn to associate your brand with established players.
-2. **Reddit and Quora presence** — Answer questions in your niche threads. Mention your tool/service naturally where relevant. These platforms are heavily used as AI training data.
+1. **Publish comparison content** — Create "X vs Y vs [Brand]" articles. AI models ingest these and learn to associate the brand with established players.
+2. **Reddit and Quora presence** — Answer questions in relevant niche threads. Mention the tool/service naturally where relevant. These platforms are heavily used as AI training data.
 3. **Earn roundup mentions** — Get included in "Top 10 tools for X" and "Best resources for Y" articles. AI models treat these lists as authority signals.
-4. **Third-party reviews** — Encourage users to review you on G2, Capterra, Trustpilot, or niche review sites. AI models reference these aggregators.
-5. **Build cross-platform consensus** — If 5+ independent sources mention your brand in a similar context, AI models are more likely to recommend you. Aim for consistent messaging across all earned mentions.
+4. **Third-party reviews** — Encourage users to leave reviews on G2, Capterra, Trustpilot, or niche review sites. AI models reference these aggregators.
+5. **Build cross-platform consensus** — If 5+ independent sources mention the brand in a similar context, AI models are more likely to recommend it. Aim for consistent messaging across all earned mentions.
 
 ---
 
 ## Phase 6: The 50/50 Plan
 
-Link building fails when you only create content or only do outreach. Split your effort evenly.
+Link building fails when only creating content or only doing outreach. Split effort evenly.
 
 ### 50% — Creating Link-Worthy Content
 
@@ -307,132 +215,9 @@ Link building fails when you only create content or only do outreach. Split your
 
 ## Phase 7: Outreach Templates
 
-Customize these templates with specific details. Never send a generic email.
+Customize templates with specific details. Never send a generic email. Six ready-to-use templates are available for: broken link notification, skyscraper outreach, resource page pitch, guest post pitch, link reclamation request, and roundup submission.
 
-### Template 1: Broken Link Notification
-
-```
-Subject: Quick heads-up — broken link on [Page Title]
-
-Hi [Name],
-
-I was reading your article on [Topic] and noticed that the link to
-[Dead Resource] in the [section name] section appears to be broken.
-
-I recently published a guide on [Similar Topic] that covers [brief
-description]. It might be a good replacement:
-
-[Your URL]
-
-Either way, wanted to flag the broken link. Great article!
-
-[Your Name]
-```
-
-### Template 2: Skyscraper Outreach
-
-```
-Subject: [Topic] — updated resource you might like
-
-Hi [Name],
-
-I saw you linked to [Original Article] in your post about [Topic].
-That piece is solid, but it was published in [Year] and some of the
-information is outdated.
-
-I just published an updated version that includes [new thing 1],
-[new thing 2], and [new thing 3]:
-
-[Your URL]
-
-Thought it might be worth a look if you ever update that post.
-
-Cheers,
-[Your Name]
-```
-
-### Template 3: Resource Page Pitch
-
-```
-Subject: Suggestion for your [Topic] resources page
-
-Hi [Name],
-
-I came across your [Topic] resources page and found it really useful —
-especially the section on [specific section].
-
-I recently published [Content Title], which covers [brief value
-description]. I think it could be a helpful addition for your readers.
-
-Here is the link: [Your URL]
-
-Thanks for curating such a great list!
-
-[Your Name]
-```
-
-### Template 4: Guest Post Pitch
-
-```
-Subject: Guest post idea — [Proposed Title]
-
-Hi [Name],
-
-I have been following [Site Name] and especially enjoyed your recent
-piece on [Recent Article]. It got me thinking about a related angle
-your readers might find valuable.
-
-Proposed topic: [Title]
-
-What I would cover:
-- [Point 1]
-- [Point 2]
-- [Point 3]
-
-About me: [One sentence credential]. You can see my writing at [link].
-
-Would this be a good fit? Happy to adjust the angle.
-
-[Your Name]
-```
-
-### Template 5: Link Reclamation Request
-
-```
-Subject: Thanks for mentioning [Brand Name]!
-
-Hi [Name],
-
-I noticed you mentioned [Brand Name] in your article about [Topic] —
-thank you for the shoutout!
-
-Would you mind adding a link to our site so readers can find us easily?
-Our homepage is [URL], or you could link directly to [relevant page]
-which is most relevant to what you mentioned.
-
-Really appreciate it!
-
-[Your Name]
-```
-
-### Template 6: Roundup Submission
-
-```
-Subject: Submission for your [Topic] roundup
-
-Hi [Name],
-
-I have been reading your [weekly/monthly] roundup and always find great
-stuff through it. I would love to submit a piece for consideration:
-
-Title: [Content Title]
-URL: [Your URL]
-Why it fits: [One sentence explaining the value for their audience]
-
-Thanks for putting these together!
-
-[Your Name]
-```
+For all email templates with full text, consult `references/outreach-templates.md`.
 
 ---
 
@@ -468,9 +253,9 @@ Generate a week-by-week plan tailored to the user's available hours and selected
 - **Milestone:** 5-10 total links earned
 
 ### Weeks 7-8: Diversify
-- Add resource page outreach to your active tactics
+- Add resource page outreach to the active tactics
 - Send first guest post pitches (3-5 pitches)
-- Write and submit 2-3 testimonials for tools you use
+- Write and submit 2-3 testimonials for tools the business uses
 - Analyze what is working — double down on best-converting tactic
 - **Outreach target:** 25-35 emails per week
 - **Milestone:** 10-18 total links earned
@@ -478,14 +263,14 @@ Generate a week-by-week plan tailored to the user's available hours and selected
 ### Weeks 9-10: Optimize
 - Review outreach response rates — refine subject lines and templates
 - Publish third linkable asset (consider original data or a free tool)
-- Pitch 2-3 podcasts in your niche
+- Pitch 2-3 podcasts in the niche
 - Create comparison content for LLM co-citation (Phase 5)
 - **Outreach target:** 25-35 emails per week
 - **Content target:** 1 new asset + 1 content transformation
 - **Milestone:** 18-28 total links earned
 
 ### Weeks 11-12: Systematize
-- Document your repeatable process for each tactic
+- Document the repeatable process for each tactic
 - Build a recurring monthly calendar of outreach activities
 - Set up Google Alerts for brand mentions (link reclamation pipeline)
 - Plan next quarter's linkable assets based on what earned the most links
@@ -506,8 +291,8 @@ Generate a week-by-week plan tailored to the user's available hours and selected
 
 ## Key Reminders
 
-1. **Personalize every email.** Mention something specific about their site. Generic mass emails get ignored and damage your reputation.
-2. **Track everything.** You cannot improve what you do not measure. Log every outreach email and its outcome.
+1. **Personalize every email.** Mention something specific about their site. Generic mass emails get ignored and damage reputation.
+2. **Track everything.** Progress cannot be measured without data. Log every outreach email and its outcome.
 3. **Follow up once.** A single follow-up 5-7 days later is acceptable. More than that is spam.
 4. **Focus on relevance over authority.** A DA 30 link from a perfectly relevant site often outperforms a DA 60 link from an unrelated one.
 5. **Be patient.** Link building compounds. Months 1-2 feel slow. Months 3-6 is where momentum builds.

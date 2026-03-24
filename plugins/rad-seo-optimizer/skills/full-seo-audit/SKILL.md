@@ -1,16 +1,18 @@
 ---
 name: full-seo-audit
 description: >
-  Full-site SEO audit across technical, on-page, content, schema, links, and AI
-  visibility. Produces a scored report with prioritized fixes. For broad multi-category
-  reviews; route single-area requests to the specialized skill instead.
+  This skill should be used when the user says "audit my SEO", "check my site's SEO",
+  "run an SEO audit", "SEO score", "SEO health check", "what SEO issues does my site have",
+  or wants a comprehensive multi-category SEO analysis. Performs a full 6-phase audit across
+  technical, on-page, content, schema, links, and AI visibility. For single-area requests,
+  route to the specialized skill instead.
+argument-hint: "[URL or path to audit]"
 ---
 
 # Full SEO Audit — Master Orchestrator
 
-You are the master orchestrator for a comprehensive SEO audit. Your job is to coordinate
-a complete analysis of a website across six phases, produce a unified score, and deliver
-a plain-English report with prioritized, actionable fixes.
+Coordinate a complete analysis of a website across six phases, produce a unified score,
+and deliver a plain-English report with prioritized, actionable fixes.
 
 Every recommendation must explain WHY it matters in business terms, not just what to do.
 Write for a business owner who does not know what a canonical tag is.
@@ -207,7 +209,7 @@ users and search engines navigate. This category is worth **10% of the total sco
 - Flag deep pages (4+ clicks from home) that target important keywords.
 
 Why internal linking matters: Internal links are one of the few ranking factors
-entirely within your control. They tell search engines which pages are most important
+entirely within the site owner's control. They tell search engines which pages are most important
 and help distribute ranking authority from strong pages to weaker ones.
 
 ---
@@ -242,7 +244,7 @@ For deeper competitive analysis, delegate to the **competitor-intelligence** ski
 
 ## Scoring System
 
-Reference `audit-scoring-rubric.md` for detailed scoring criteria. Apply these weights:
+Reference `audit-scoring-rubric.md` for detailed scoring criteria and `google-ranking-systems.md` for current Google ranking systems and signals. Apply these weights:
 
 | Category | Weight | What It Measures |
 |---|---|---|
@@ -349,7 +351,7 @@ Now pursue growth opportunities — close competitor gaps and optimize for AI se
 ### AEO Readiness Score
 [Dedicated section on AI search visibility. Explain what AEO is in one sentence:
 "AEO measures how likely AI tools like ChatGPT and Google AI Overviews are to
-reference your content when answering questions."
+reference the site's content when answering questions."
 
 Then provide:
 - Current AEO readiness score and grade.
@@ -382,8 +384,8 @@ Then provide:
    missing meta description or broken schema, fix it during the audit and note it in
    the report under "Quick wins completed during audit."
 
-3. **Be specific, not generic.** Never say "improve your meta descriptions." Instead
-   say "Your /pricing page has no meta description. Add one that includes your primary
+3. **Be specific, not generic.** Never say "improve the meta descriptions." Instead
+   say "The /pricing page has no meta description. Add one that includes the primary
    keyword and a call to action. Here is the exact command to do it."
 
 4. **Rank by impact vs. effort.** A fix that takes 5 minutes and affects every page
@@ -396,9 +398,9 @@ Then provide:
 5. **Provide exact commands.** Every fix should include either a Claude Code command
    the user can run or step-by-step file edits they can copy-paste.
 
-6. **Explain the business impact.** "Your site loads in 8 seconds" means nothing to
-   a business owner. "Your site takes 8 seconds to load, which means roughly 50% of
-   visitors leave before seeing your content — that could be costing you X leads per
+6. **Explain the business impact.** "The site loads in 8 seconds" means nothing to
+   a business owner. "The site takes 8 seconds to load, which means roughly 50% of
+   visitors leave before seeing the content — that could be costing X leads per
    month" tells them why to care.
 
 7. **Use the scoring rubric consistently.** Two audits of the same site should produce

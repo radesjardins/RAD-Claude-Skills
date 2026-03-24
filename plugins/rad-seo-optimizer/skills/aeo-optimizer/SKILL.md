@@ -1,33 +1,25 @@
 ---
 name: aeo-optimizer
 description: >
-  Optimizes a brand's visibility and reputation across AI search engines — ChatGPT,
-  Perplexity, Claude, Google AI Overviews, and agentic search. Produces an AI
-  visibility score, LLM seeding strategy, co-citation plan, and platform-specific
-  tactics. Use when the user wants their brand recommended by AI, asks about AEO,
-  GEO, generative engine optimization, answer engine optimization, or AI search
-  optimization. Triggers on questions like "how do I show up in ChatGPT results,"
-  "Perplexity doesn't mention us," "competitors appear in AI Overviews but we
-  don't," "how do I get cited by LLMs," or "optimize for AI-powered search." Also
-  triggers when users mention AI visibility scoring, LLM seeding, or want to
-  influence what AI says about their brand. This is NOT for: building chatbots or
-  AI integrations, using the Claude/OpenAI API, writing content without an AI
-  search context, traditional Google SEO (use other skills), Google Ads, social
-  media marketing, or general content writing. The key differentiator is the user
-  wants to appear in AI-generated answers, not just traditional search results.
+  This skill should be used when the user says "AI visibility", "how does my brand appear
+  in AI", "AI search optimization", "AEO", "generative engine optimization", "check my AI
+  presence", or wants to improve how a brand appears in AI-generated responses from ChatGPT,
+  Perplexity, or Google AI Overviews. Also use when the user mentions LLM seeding, AI
+  citations, or answer engine optimization.
+argument-hint: "[brand name or URL]"
 ---
 
 # AEO Optimizer — AI Engine Optimization Skill
 
-Make brands discoverable, recommended, and accurately represented by AI search engines.
+Make the target brand discoverable, recommended, and accurately represented by AI search engines.
 
-Traditional SEO gets you ranked on Google. AEO gets you **recommended by AI**. When a user asks ChatGPT "What's the best project management tool?" or Perplexity "Compare CRM platforms" — AEO determines whether your brand appears, how it's described, and whether it's positioned favorably.
+Traditional SEO gets a site ranked on Google. AEO gets the brand **recommended by AI**. When a user asks ChatGPT "What's the best project management tool?" or Perplexity "Compare CRM platforms" — AEO determines whether the brand appears, how it is described, and whether it is positioned favorably.
 
 ---
 
 ## Phase 1: AI Visibility Audit
 
-Score the brand across six dimensions. Each dimension receives a 0-10 rating. The composite AEO Score (0-60) establishes the baseline.
+Score the target brand across six dimensions. Each dimension receives a 0-10 rating. The composite AEO Score (0-60) establishes the baseline.
 
 ### Scoring Dimensions
 
@@ -105,12 +97,12 @@ AI models learn from the open web. Control where and how brand information appea
 
 ### WHERE to Publish (Source Priority)
 
-Publish brand-relevant content on these platforms, ordered by LLM training influence:
+Publish brand-relevant content on these platforms, ordered by LLM training influence. Replace [BRAND] with the target brand name throughout:
 
 | Priority | Platform | Why It Matters | Action |
 |----------|----------|---------------|--------|
-| 1 | **Your Website** | Primary source of truth. Must be crawlable, well-structured, fast. | Ensure clean HTML, proper schema markup, no JS-only rendering. |
-| 2 | **Wikipedia / Wikidata** | Highest-authority factual source for all LLMs. | Create or improve your Wikipedia page. Add Wikidata entity. |
+| 1 | **The Brand Website** | Primary source of truth. Must be crawlable, well-structured, fast. | Ensure clean HTML, proper schema markup, no JS-only rendering. |
+| 2 | **Wikipedia / Wikidata** | Highest-authority factual source for all LLMs. | Create or improve the Wikipedia page. Add Wikidata entity. |
 | 3 | **Reddit** | Massively overweighted in LLM training data. Authentic discussions. | Engage genuinely in relevant subreddits. Never astroturf. |
 | 4 | **Stack Overflow / Quora** | Q&A format is ideal for LLM extraction. | Answer questions where your product is genuinely the solution. |
 | 5 | **Medium / Substack / LinkedIn** | Long-form platforms LLMs crawl heavily. | Publish thought leadership, case studies, tutorials. |
@@ -315,15 +307,15 @@ claude "Rewrite [FILE] following AEO content rules: question headings,
 
 ## Phase 5: Co-Citation Strategy
 
-LLMs associate brands that appear together frequently. Get mentioned **alongside industry leaders** to inherit their authority signal.
+LLMs associate brands that appear together frequently. Get the target brand mentioned **alongside industry leaders** to inherit their authority signal.
 
 ### Tactics
 
 **1. Publish Comparison Content**
-Create honest comparisons between your brand and established players. Title format: "[Your Brand] vs [Leader]: [Specific Differentiator]"
+Create honest comparisons between the target brand and established players. Title format: "[Brand] vs [Leader]: [Specific Differentiator]"
 
 **2. Earn Roundup Mentions**
-Target "best of" and "top tools" articles. Pitch to authors with a clear angle on what makes your product worth including.
+Target "best of" and "top tools" articles. Pitch to authors with a clear angle on what makes the product worth including.
 
 **3. Participate in Industry Panels and Podcasts**
 Transcripts get crawled. Appear alongside recognized names in recorded discussions.
@@ -332,10 +324,12 @@ Transcripts get crawled. Appear alongside recognized names in recorded discussio
 Industry-specific tool directories, awesome-lists on GitHub, and curated resource pages.
 
 **5. Engage on Reddit and Quora**
-When someone asks "What's the best alternative to [Leader]?" provide a genuinely helpful answer mentioning your product **with context and honest trade-offs**. Never shill.
+When someone asks "What's the best alternative to [Leader]?" provide a genuinely helpful answer mentioning the product **with context and honest trade-offs**. Never shill.
 
 **6. Joint Content and Integrations**
 Co-publish content with complementary (non-competing) established brands. Integration partnership pages create bidirectional co-citation.
+
+For detailed phase-by-phase execution steps for Phases 6-8, consult `references/aeo-phases.md`.
 
 ### Co-Citation Audit Command
 
@@ -350,170 +344,25 @@ claude "Search for '[BRAND]' and identify which other brands it is most
 
 ## Phase 6: Platform-Specific Optimization
 
-Each AI platform has different data sources and ranking signals. Optimize for each individually.
+Each AI platform has different data sources and ranking signals. Optimize for Google AI Overviews (structured data + top-10 rankings), ChatGPT (Wikipedia + Reddit + training data), Perplexity (real-time web search + citations), Claude (depth + original research), and Microsoft Copilot (Bing index + social signals).
 
-### Google AI Overviews
-
-Google AI Overviews pull from top-ranking search results and structured data.
-
-| Signal | Action |
-|--------|--------|
-| Search ranking | Must rank in top 10 for target queries (traditional SEO still matters) |
-| Structured data | Implement FAQ, HowTo, Product, Review, and Organization schema |
-| Content freshness | Update key pages quarterly with current data |
-| E-E-A-T signals | Author bios, credentials, cited sources, methodology |
-| Direct answers | First paragraph must answer the query in 1-2 sentences |
-
-```bash
-claude "Audit [URL] for Google AI Overview eligibility. Check:
-        search ranking for [KEYWORDS], structured data implementation,
-        content freshness date, author attribution, and direct-answer
-        formatting in the first paragraph."
-```
-
-### ChatGPT
-
-ChatGPT relies on training data (with a knowledge cutoff) plus web browsing. Heavy Wikipedia and Reddit influence.
-
-| Signal | Action |
-|--------|--------|
-| Wikipedia presence | Create or improve Wikipedia article with citations |
-| Reddit mentions | Genuine engagement in relevant subreddits |
-| Structured content | Clean HTML, clear headings, extractable facts |
-| Consistent facts | Same information across all sources ChatGPT might access |
-| Recency (browsing) | Fresh content on crawlable pages for browsing-enabled queries |
-
-```bash
-claude "Check if [BRAND] has a Wikipedia page. If yes, audit it for
-        accuracy and completeness. If no, assess notability criteria and
-        draft a neutral, well-sourced article outline."
-```
-
-### Perplexity AI
-
-Perplexity performs real-time web search and cites sources directly. Quality and structure matter most.
-
-| Signal | Action |
-|--------|--------|
-| Content quality | Well-written, factual, comprehensive content |
-| Author attribution | Clear author names, bios, and credentials on content |
-| Page structure | Clean headings, short paragraphs, extractable answers |
-| Source diversity | Multiple authoritative pages about your brand |
-| Recency | Recently published or updated content ranks higher |
-
-```bash
-claude "Search Perplexity for '[TARGET QUERY]' and analyze: Is [BRAND]
-        cited? Which sources are used? What content format do cited pages
-        use? Identify what [BRAND] content needs to match."
-```
-
-### Claude
-
-Claude values nuanced, well-reasoned content over keyword density.
-
-| Signal | Action |
-|--------|--------|
-| Depth of analysis | Publish genuinely insightful, non-obvious content |
-| Original research | Unique data, case studies, and first-party findings |
-| Balanced perspective | Acknowledge trade-offs honestly (builds trust signal) |
-| Technical accuracy | Precise, verifiable claims with methodology |
-| Clean writing | Well-structured prose, not keyword-stuffed SEO content |
-
-### Microsoft Copilot / Bing Chat
-
-Copilot uses Bing's index. Bing SEO signals apply.
-
-| Signal | Action |
-|--------|--------|
-| Bing ranking | Optimize for Bing (social signals matter more than on Google) |
-| Social proof | Active social media profiles linked from your site |
-| Schema markup | Full structured data implementation |
-| Bing Webmaster Tools | Submit sitemap, monitor indexing |
+For detailed platform-by-platform signal tables and audit commands, consult `references/aeo-phases.md`.
 
 ---
 
 ## Phase 7: Visual Optimization for AI
 
-Modern AI models process images using vision models (CLIP and similar). Optimize visuals for AI interpretation.
+Optimize visuals for AI interpretation: use real product screenshots, write descriptive full-sentence captions, add keyword-rich alt text, create infographics with embedded text, and add video transcripts.
 
-### Image Optimization Rules
-
-**1. Use Real Product Screenshots**
-AI models can identify and describe UI screenshots. Use actual in-product images rather than stock photography.
-
-**2. Write Descriptive Full-Sentence Captions**
-```html
-<!-- BEFORE -->
-<figcaption>Dashboard</figcaption>
-
-<!-- AFTER -->
-<figcaption>[Brand]'s analytics dashboard showing real-time conversion
-tracking, revenue attribution, and campaign performance metrics.</figcaption>
-```
-
-**3. Write Keyword-Rich Alt Text**
-```html
-<img src="dashboard.png"
-     alt="[Brand] analytics dashboard displaying conversion rates,
-          revenue by channel, and A/B test results for e-commerce campaigns">
-```
-
-**4. Create Infographics with Embedded Text**
-AI vision models read text in images. Infographics with statistics, process flows, and branded data are extractable by multimodal LLMs.
-
-**5. Add Video Transcripts**
-Every video should have an accurate, timestamped transcript. AI cannot watch video but can read transcripts.
-
-```bash
-claude "Audit all images on [URL/DIRECTORY] for AI optimization.
-        Check: alt text quality, caption descriptiveness, image relevance,
-        and whether real product screenshots are used vs stock photos.
-        Generate improved alt text and captions for each image."
-```
+For detailed image optimization rules and code examples, consult `references/aeo-phases.md`.
 
 ---
 
 ## Phase 8: Distribution and Seeding Plan
 
-Systematic content distribution to maximize AI training data coverage.
+Systematic content distribution to maximize AI training data coverage across UGC platforms (Reddit, Quora, forums), digital PR, affiliate/review coverage, expert quote placement, and content syndication.
 
-### UGC Hub Strategy
-
-Build organic brand mentions in user-generated content platforms:
-
-- **Reddit**: Identify 5-10 relevant subreddits. Contribute value for 30+ days before any brand mentions. Answer questions where your product genuinely helps. Never create fake accounts or astroturf.
-- **Quora**: Answer high-traffic questions in your category. Provide detailed, expert answers. Mention your product only when directly relevant.
-- **Industry Forums**: Identify niche forums in your vertical. Become a recognized contributor.
-- **Discord/Slack Communities**: Join relevant communities. Be helpful first. Product mentions come naturally.
-
-### Digital PR for AI Citation Earning
-
-Traditional PR now serves double duty: human readers and AI training data.
-
-- Publish data-driven press releases with quotable statistics
-- Create annual industry reports that journalists and AI will reference
-- Pitch stories to publications that AI platforms crawl (major news, tech press, industry publications)
-- Distribute via newswires that feed into multiple databases
-
-### Affiliate and Review Coverage
-
-- Launch or optimize an affiliate program to incentivize honest review content
-- Send product access to review creators on YouTube, blogs, and podcasts
-- Make reviewer onboarding frictionless (dedicated landing pages, press kits)
-- Respond publicly to all reviews (positive and negative)
-
-### Expert Quote Placement
-
-- Use HARO (Help a Reporter Out) / Connectively / Quoted to place expert quotes in articles
-- Offer expert commentary to journalists covering your industry
-- Create a spokesperson page on your site with ready-to-use quotes and bios
-
-### Content Syndication
-
-Republish and syndicate content to AI-crawled platforms:
-- Syndicate blog posts to Medium, LinkedIn, and industry publications (with canonical tags)
-- Repurpose long-form content into Twitter/X threads, LinkedIn carousels, and short-form video transcripts
-- Submit content to aggregators and newsletters in your vertical
+For detailed distribution tactics and platform-specific strategies, consult `references/aeo-phases.md`.
 
 ---
 
@@ -525,27 +374,27 @@ After completing all phases, generate a prioritized action plan organized by tim
 
 These require no new content creation and have immediate impact:
 
-1. **Fix consistency issues** found in Phase 3 (update all profiles to match canonical information)
-2. **Add FAQ schema markup** to existing high-traffic pages
-3. **Reformat top 5 pages** using Phase 4 conversion rules (question headings, direct answers, bold stats)
-4. **Update image alt text and captions** on key pages per Phase 7
-5. **Claim and optimize** all unclaimed business profiles on review platforms
-6. **Add Speakable schema** to homepage and product pages
-7. **Fix any factual errors** found in AI responses by correcting source content
+1. **Fix consistency issues** found in Phase 3 (update all profiles to match canonical information).
+2. **Add FAQ schema markup** to existing high-traffic pages.
+3. **Reformat top 5 pages** using Phase 4 conversion rules (question headings, direct answers, bold stats).
+4. **Update image alt text and captions** on key pages per Phase 7.
+5. **Claim and optimize** all unclaimed business profiles on review platforms.
+6. **Add Speakable schema** to homepage and product pages.
+7. **Fix any factual errors** found in AI responses by correcting source content.
 
 ### Medium-Term (Month 1-3)
 
 Content creation and platform presence building:
 
-1. **Create 10 FAQ-style pages** targeting questions AI is asked about your category
-2. **Publish 3 comparison pages** (brand vs top competitors) with honest, detailed analysis
-3. **Write an original research piece** with quotable statistics about your industry
-4. **Build Reddit presence** in 5 relevant subreddits (genuine engagement, no shilling)
-5. **Publish 5 guest articles** on industry publications and high-authority platforms
-6. **Create or improve Wikipedia page** (if notability criteria are met)
-7. **Add Wikidata entity** with complete structured data
-8. **Launch a branded framework or methodology** with a memorable name
-9. **Build comparison tables** for all product/pricing pages
+1. **Create 10 FAQ-style pages** targeting questions AI is asked about the target category.
+2. **Publish 3 comparison pages** (brand vs top competitors) with honest, detailed analysis.
+3. **Write an original research piece** with quotable statistics about the industry.
+4. **Build Reddit presence** in 5 relevant subreddits (genuine engagement, no shilling).
+5. **Publish 5 guest articles** on industry publications and high-authority platforms.
+6. **Create or improve Wikipedia page** (if notability criteria are met).
+7. **Add Wikidata entity** with complete structured data.
+8. **Launch a branded framework or methodology** with a memorable name.
+9. **Build comparison tables** for all product/pricing pages.
 
 ### Long-Term (Month 3-12)
 
@@ -588,7 +437,7 @@ Track AEO progress with monthly check-ins and quarterly full audits.
 - First-mention rate (% of queries where brand appears first)
 - Accuracy rate (% of AI responses with zero factual errors)
 - Sentiment ratio (positive vs negative vs neutral mentions)
-- Co-citation partners (which brands you're mentioned alongside)
+- Co-citation partners (which brands the target is mentioned alongside)
 
 ```bash
 claude "Run a monthly AEO check for [BRAND]. Query all 5 AI platforms

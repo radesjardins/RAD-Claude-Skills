@@ -1,19 +1,11 @@
 ---
 name: content-strategist
 description: >
-  Builds a data-driven SEO content strategy — topical authority mapping, content
-  audits, gap analysis, content brief generation, and a 12-week editorial calendar.
-  Produces scored content inventories, pillar/cluster plans, and detailed briefs.
-  Use when the user wants to plan what content to create for SEO, build a blog
-  strategy, create an editorial calendar, audit existing content quality, map
-  topical authority, identify content gaps, generate content briefs, plan pillar
-  pages and topic clusters, or asks "what should I write about to rank?" Also
-  triggers on "content roadmap," "thin content cleanup," "content scoring," or
-  "blog post ideas for SEO." This is NOT for: writing the actual blog posts or
-  articles (just planning them), keyword research in isolation (use keyword-
-  discovery), social media content calendars, email newsletter planning, general
-  copywriting without SEO intent, or one-off content requests like "write me a
-  blog post about X."
+  This skill should be used when the user says "content strategy", "what should I write about",
+  "content gaps", "editorial calendar", "content audit", "topical authority", "content plan",
+  or needs a data-driven plan for what content to create. Covers topical authority mapping,
+  gap analysis, brief generation, and 12-week editorial calendar.
+argument-hint: "[site URL or topic area]"
 ---
 
 # Content Strategist
@@ -314,7 +306,7 @@ Apply to every content brief and review:
 - [ ] **E-E-A-T compliant** — author credentials visible, sources cited,
       claims backed by evidence (see `eeat-checklist.md`)
 - [ ] **AEO-ready** — structured so AI systems can extract accurate, attributed
-      answers from your content
+      answers from the site's content
 - [ ] **Actionable** — reader can implement advice immediately, not just
       understand theory
 - [ ] **Current** — all data, links, and references verified within the last

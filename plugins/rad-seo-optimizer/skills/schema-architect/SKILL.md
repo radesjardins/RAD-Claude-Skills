@@ -1,19 +1,11 @@
 ---
 name: schema-architect
 description: >
-  Generates and validates comprehensive JSON-LD structured data for an entire site
-  or multiple page types — covering schema.org type selection, rich snippet
-  eligibility analysis, validation, and framework-specific integration. Use when
-  the user needs a site-wide schema markup strategy, wants to audit all structured
-  data across their site, needs schema for multiple page types at once, wants rich
-  snippet opportunity analysis, or asks about schema validation errors, knowledge
-  panel optimization, or speakable markup. Also triggers on "structured data
-  strategy," "what schema types do I need," or "audit my schema markup." This is
-  NOT for: generating one simple FAQ or single-type schema snippet in isolation
-  (that is a quick code task, not a full skill invocation), writing code, fixing
-  bugs, or non-SEO data modeling. The key differentiator is the user needs a
-  comprehensive schema plan or multi-type generation, not a single copy-paste
-  JSON-LD block.
+  This skill should be used when the user says "add schema", "structured data", "JSON-LD",
+  "rich snippets", "schema markup", "generate schema", or wants to implement or fix schema.org
+  markup on a page. Generates valid JSON-LD with all required and recommended properties,
+  validates existing markup, and identifies missing schema opportunities.
+argument-hint: "[URL or page for schema]"
 ---
 
 # Schema Architect

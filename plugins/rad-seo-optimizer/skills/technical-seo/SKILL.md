@@ -1,20 +1,12 @@
 ---
 name: technical-seo
 description: >
-  Audits the technical SEO foundation of a website — crawlability, indexation,
-  Core Web Vitals, page speed, mobile-first compliance, robots.txt, sitemaps,
-  canonical tags, redirects, HTTPS, JavaScript rendering, and security headers.
-  Produces a scored report with fix commands for every issue. Use when the user
-  asks about crawl errors, indexing problems, pages not showing in Google,
-  Core Web Vitals failures (LCP, CLS, INP, TTFB), robots.txt or sitemap issues,
-  redirect chains, noindex problems, canonical conflicts, JavaScript SEO, SSR
-  concerns, mobile PageSpeed scores, crawl budget, mixed content, or site
-  migration technical checks. Also triggers on "why aren't my pages indexed" or
-  "Google Search Console shows errors." This is NOT for: writing Python scrapers,
-  CDN/infrastructure setup, database query optimization, adding GTM/analytics
-  tags, general code performance profiling, or simple one-off fixes like
-  "compress this image." If the user wants a broad audit across all SEO
-  categories, use full-seo-audit instead.
+  This skill should be used when the user says "site speed", "core web vitals", "crawlability",
+  "robots.txt", "sitemap issues", "page speed", "mobile-friendly check", "HTTPS issues",
+  "indexation problems", or wants to fix technical factors affecting search rankings. Covers
+  crawlability, indexation, Core Web Vitals, redirects, canonicals, JS rendering, and security
+  headers.
+argument-hint: "[URL or path to audit]"
 ---
 
 # Technical SEO Skill
@@ -157,14 +149,7 @@ Identify the LCP element (usually hero image, heading, or video poster). Check:
 
 **Why it matters:** LCP is a direct Google ranking signal. Pages above 2.5 s lose ranking eligibility for Top Stories and some SERP features.
 
-**Fix commands:**
-
-| Framework | Command |
-|-----------|---------|
-| Next.js | `claude "Use next/image with priority prop on the hero image. Enable next/font to eliminate font-swap delay. Move non-critical CSS to dynamic imports."` |
-| React | `claude "Preload the hero image in index.html. Code-split below-the-fold components with React.lazy. Inline critical CSS with critters."` |
-| WordPress | `claude "Install and configure a caching plugin. Add preload tags for hero images in header.php. Defer non-critical plugins."` |
-| Static HTML | `claude "Convert hero images to WebP. Add preload link tags. Inline above-the-fold CSS. Defer all JS with the defer attribute."` |
+**Fix commands:** See `references/platform-fixes.md` for framework-specific LCP fix commands (Next.js, React, WordPress, Static HTML).
 
 **Expected impact:** High. LCP improvement from 4 s to 2 s can move pages up 2-5 positions.
 
@@ -180,14 +165,7 @@ Identify long-running event handlers (click, keydown, pointerdown). Check:
 
 **Why it matters:** INP replaced FID as a Core Web Vital in March 2024. Poor INP directly reduces rankings.
 
-**Fix commands:**
-
-| Framework | Command |
-|-----------|---------|
-| Next.js | `claude "Wrap expensive event handlers in startTransition. Move analytics to a web worker. Add the Interaction to Next Paint diagnostic to next.config.js."` |
-| React | `claude "Use useTransition for non-urgent state updates. Debounce search input handlers to 150 ms. Lazy-load modal content."` |
-| WordPress | `claude "Defer third-party scripts. Replace jQuery event handlers with vanilla JS. Add async to non-critical enqueued scripts."` |
-| Static HTML | `claude "Move analytics scripts to defer. Break long tasks into chunks using scheduler.yield(). Remove unused JS."` |
+**Fix commands:** See `references/platform-fixes.md` for framework-specific INP fix commands (Next.js, React, WordPress, Static HTML).
 
 **Expected impact:** High. INP violations correlate with higher bounce rates and lower rankings.
 
@@ -203,14 +181,7 @@ Detect layout-shifting elements. Check:
 
 **Why it matters:** CLS is a Core Web Vital. Layout shifts frustrate users and depress rankings.
 
-**Fix commands:**
-
-| Framework | Command |
-|-----------|---------|
-| Next.js | `claude "Add width and height to all next/image components. Configure next/font with adjustFontFallback. Reserve ad slot space with min-height in CSS modules."` |
-| React | `claude "Set explicit dimensions on every img and iframe. Use Skeleton components for async content. Apply will-change: transform to animated elements."` |
-| WordPress | `claude "Add missing width/height attributes to all img tags in theme templates. Preload the primary web font. Set min-height on ad containers in style.css."` |
-| Static HTML | `claude "Add width and height attributes to every img tag. Add aspect-ratio CSS for responsive images. Reserve space for ad containers."` |
+**Fix commands:** See `references/platform-fixes.md` for framework-specific CLS fix commands (Next.js, React, WordPress, Static HTML).
 
 **Expected impact:** Medium-High. CLS fixes produce immediate ranking improvements on mobile.
 
@@ -220,75 +191,29 @@ Detect layout-shifting elements. Check:
 
 ### 3.1 Viewport Meta Tag
 
-Verify `<meta name="viewport" content="width=device-width, initial-scale=1">` is present in `<head>`:
-
-- Flag if missing entirely.
-- Flag if `maximum-scale=1` or `user-scalable=no` is set (accessibility violation).
-
-**Fix command:**
-```
-claude "Add the viewport meta tag to every HTML template. Remove maximum-scale and user-scalable=no restrictions."
-```
+Verify `<meta name="viewport" content="width=device-width, initial-scale=1">` is present in `<head>`. Flag if missing or if `maximum-scale=1` / `user-scalable=no` is set (accessibility violation).
 
 **Expected impact:** Critical. Without the viewport tag, Google treats the page as non-mobile-friendly.
 
 ### 3.2 Mobile Content Parity
 
-Compare rendered content between mobile and desktop user agents:
-
-- Flag text visible on desktop but hidden on mobile (display:none on small screens).
-- Flag images present on desktop but absent on mobile.
-- Flag structured data present on desktop but missing from mobile markup.
-
-**Fix command:**
-```
-claude "Find all CSS rules that hide content on mobile. Replace display:none with responsive layout that preserves content. Ensure structured data is in the server-rendered HTML."
-```
+Compare rendered content between mobile and desktop user agents. Flag hidden mobile content, missing images, or structured data absent from mobile markup.
 
 **Expected impact:** High. Google uses mobile-first indexing; hidden mobile content is invisible to the index.
 
 ### 3.3 Touch Target Sizing
 
-Scan interactive elements (links, buttons, inputs) for:
-
-- Minimum size of 48x48 CSS pixels.
-- Minimum spacing of 8px between adjacent targets.
-
-**Fix command:**
-```
-claude "Set min-height: 48px and min-width: 48px on all buttons and link areas. Add padding to inline links in body text. Ensure 8px gap between adjacent tap targets."
-```
-
-**Expected impact:** Low-Medium. Affects mobile usability score and can trigger manual demotion.
+Scan interactive elements for minimum size of 48x48 CSS pixels and 8px spacing between adjacent targets.
 
 ### 3.4 Font Sizes
 
-Check that body text is at least 16px and that no text block requires zooming to read:
-
-- Flag body font-size below 16px.
-- Flag text containers narrower than viewport causing overflow.
-
-**Fix command:**
-```
-claude "Set base font-size to 16px on the body element. Ensure all text containers use max-width: 100% and overflow-wrap: break-word."
-```
-
-**Expected impact:** Low-Medium. Improves mobile usability score.
+Check that body text is at least 16px and no text block requires zooming to read.
 
 ### 3.5 Horizontal Scrolling
 
-Detect viewport overflow on mobile widths (360px-414px):
+Detect viewport overflow on mobile widths (360px-414px): fixed widths exceeding viewport, tables without scroll wrappers, images without `max-width: 100%`.
 
-- Flag elements with fixed widths exceeding viewport.
-- Flag tables without horizontal scroll wrappers.
-- Flag images without `max-width: 100%`.
-
-**Fix command:**
-```
-claude "Add max-width: 100% to all images. Wrap wide tables in a div with overflow-x: auto. Replace fixed-width elements with responsive equivalents."
-```
-
-**Expected impact:** Low-Medium. Horizontal scrolling triggers mobile usability failures in Search Console.
+See `references/platform-fixes.md` for all mobile-first fix commands.
 
 ---
 
@@ -296,67 +221,25 @@ claude "Add max-width: 100% to all images. Wrap wide tables in a div with overfl
 
 ### 4.1 HTTPS Everywhere
 
-Check every page and resource:
-
-- All pages load over HTTPS.
-- No mixed content (HTTP resources on HTTPS pages).
-- HTTP-to-HTTPS redirect is in place (301, not 302).
-- SSL certificate is valid and not expiring within 30 days.
+Check all pages load over HTTPS, no mixed content, HTTP-to-HTTPS 301 redirect in place, and SSL certificate is valid and not expiring within 30 days.
 
 **Why it matters:** HTTPS is a confirmed ranking signal. Mixed content triggers browser warnings that destroy trust.
 
-**Fix command:**
-```
-claude "Find all HTTP resource references (images, scripts, stylesheets). Rewrite them to HTTPS or protocol-relative URLs. Verify the 301 redirect from HTTP to HTTPS in the server config."
-```
-
-**Expected impact:** Medium. HTTPS is a lightweight signal, but mixed content warnings devastate click-through rates.
-
 ### 4.2 HSTS Header
 
-Check for `Strict-Transport-Security` header:
-
-- Present with `max-age` of at least 31536000 (one year).
-- `includeSubDomains` directive present.
-- `preload` directive present if the site is on the HSTS preload list.
-
-**Fix command:**
-```
-claude "Add Strict-Transport-Security: max-age=31536000; includeSubDomains; preload to the server configuration. For Next.js, add it to next.config.js headers. For WordPress, add it to .htaccess."
-```
-
-**Expected impact:** Low direct ranking impact. Prevents SSL-stripping attacks and builds user trust.
+Check for `Strict-Transport-Security` header with `max-age` of at least 31536000, `includeSubDomains`, and `preload` directives.
 
 ### 4.3 Content-Security-Policy
 
-Check for a `Content-Security-Policy` header:
-
-- Flag if entirely missing.
-- Flag overly permissive directives (`unsafe-inline`, `unsafe-eval`, `*`).
-- Verify `frame-ancestors` is set to prevent clickjacking.
-
-**Fix command:**
-```
-claude "Generate a Content-Security-Policy header based on the site's actual resource origins. Start with a report-only policy, then enforce after verifying no breakage."
-```
-
-**Expected impact:** Low direct ranking impact. Protects against XSS; compromised sites get deindexed.
+Check for CSP header. Flag if missing or overly permissive (`unsafe-inline`, `unsafe-eval`, `*`). Verify `frame-ancestors` is set.
 
 ### 4.4 Sensitive File Exposure
 
-Check for publicly accessible files that should not be exposed:
-
-- `.env`, `.git/`, `wp-config.php`, `config.yml`, `package.json` (with private keys).
-- Database dumps (`.sql`).
-- Backup files (`.bak`, `.old`).
-- `phpinfo.php`.
-
-**Fix command:**
-```
-claude "Add deny rules to the server config for .env, .git, and backup files. Remove any sensitive files from the public directory. Add them to .gitignore."
-```
+Check for publicly accessible `.env`, `.git/`, `wp-config.php`, database dumps, and backup files.
 
 **Expected impact:** Low ranking impact but critical for site safety. Hacked sites get deindexed.
+
+See `references/platform-fixes.md` for all security fix commands.
 
 ---
 
@@ -428,68 +311,25 @@ claude "Add self-referencing canonicals to each paginated page. Add rel=next/pre
 
 ### 6.1 Server-Side Rendering Check
 
-Fetch each key page with JavaScript disabled (or inspect the raw HTML source):
+Fetch each key page with JavaScript disabled. Flag client-side-only rendering (empty `<body>` with only a root `<div>` and `<script>`). Verify title, meta description, headings, and body text are in the initial HTML. Verify internal links are `<a href>` elements.
 
-- Flag pages where the `<body>` contains only a root `<div>` and a `<script>` tag (client-side-only rendering).
-- Verify that title, meta description, headings, and body text are in the initial HTML.
-- Verify that internal links are `<a href="...">` elements, not JavaScript-triggered navigation.
+**Why it matters:** Googlebot queues JS pages for rendering, delaying indexation by hours to weeks.
 
-**Why it matters:** Googlebot can render JavaScript, but it queues pages for rendering, delaying indexation by hours to weeks. Content in the initial HTML is indexed immediately.
-
-**Fix commands:**
-
-| Framework | Command |
-|-----------|---------|
-| Next.js | `claude "Convert client-side pages to use getStaticProps or getServerSideProps. Ensure all pages export server-rendered HTML with full content."` |
-| React | `claude "Set up server-side rendering with ReactDOMServer or migrate to a framework like Next.js. As a quick fix, add react-snap for static pre-rendering."` |
-| WordPress | `claude "Verify that theme content is in PHP templates, not injected by JavaScript. Deactivate plugins that replace server-rendered content with JS widgets."` |
-
-**Expected impact:** Critical. Client-side-only rendering can delay indexation by days and lose content from the index entirely.
+**Expected impact:** Critical. Client-side-only rendering can delay indexation by days.
 
 ### 6.2 Dynamic Rendering Detection
 
-Check whether the server returns different content to Googlebot vs. regular users:
-
-- Detect dynamic rendering setups (Rendertron, Puppeteer, prerender.io).
-- Verify that the rendered output matches the client-side version.
-- Flag if dynamic rendering is used as a permanent solution instead of SSR.
-
-**Fix command:**
-```
-claude "Audit the dynamic rendering layer. Compare Googlebot-rendered output to browser-rendered output. Flag any content discrepancies. Plan migration to native SSR."
-```
-
-**Expected impact:** Medium. Dynamic rendering works but adds fragility. SSR is the long-term solution.
+Detect Rendertron/Puppeteer/prerender.io setups. Verify rendered output matches client-side. Flag if used as a permanent solution instead of SSR.
 
 ### 6.3 JavaScript-Dependent Content
 
-Identify critical content loaded asynchronously:
-
-- Product prices, reviews, and availability loaded via API calls.
-- Article body text fetched after initial render.
-- Internal links rendered by JavaScript frameworks.
-
-**Fix command:**
-```
-claude "Move critical content (prices, reviews, article text) to the server-rendered HTML. Use progressive enhancement: load the HTML first, then hydrate interactivity."
-```
-
-**Expected impact:** High for e-commerce and content sites. Search engines may miss JS-dependent content.
+Identify critical content loaded asynchronously (prices, reviews, article text, internal links rendered by JS frameworks).
 
 ### 6.4 Lazy-Loading Implementation
 
-Check image and iframe lazy-loading:
+Above-the-fold images must NOT be lazy-loaded (harms LCP). Below-the-fold images should use `loading="lazy"`. Verify lazy-loaded images have `<noscript>` fallbacks.
 
-- Above-the-fold images must NOT be lazy-loaded (harms LCP).
-- Below-the-fold images should use `loading="lazy"`.
-- Verify that lazy-loaded images have `<noscript>` fallbacks or are in the HTML source.
-
-**Fix command:**
-```
-claude "Remove loading=lazy from the first 2 images (above the fold). Add loading=lazy to all other images. Ensure lazy-loaded images have width and height attributes."
-```
-
-**Expected impact:** Medium. Correct lazy-loading improves LCP while reducing bandwidth.
+See `references/platform-fixes.md` for all JavaScript SEO fix commands by framework.
 
 ---
 
@@ -590,13 +430,4 @@ Sort issues by expected impact:
 
 ## Framework Detection
 
-Auto-detect the framework before running checks:
-
-| Signal | Framework |
-|--------|-----------|
-| `next.config.js` or `next.config.mjs` in project root | Next.js |
-| `package.json` with `react-scripts` or `vite` + `react` | React (SPA) |
-| `wp-config.php` or `wp-content/` directory | WordPress |
-| Only `.html` files, no build tooling | Static HTML |
-
-Tailor fix commands to the detected framework. When the framework is ambiguous, ask before proceeding.
+Auto-detect the framework before running checks. See `references/platform-fixes.md` for framework detection signals and tailored fix commands. When the framework is ambiguous, ask before proceeding.

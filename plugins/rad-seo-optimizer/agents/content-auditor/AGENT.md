@@ -1,6 +1,6 @@
 ---
 name: content-auditor
-description: "Content quality and AEO readiness audit agent. Use when user asks to 'audit my content', 'check content quality', 'content audit', 'review my articles', 'are my pages AEO ready', 'content assessment', 'evaluate my content', 'content health check', or wants to assess existing content for quality, E-E-A-T compliance, and AI search readiness. Crawls existing content, scores each page, and recommends refreshes, rewrites, consolidation, or removal."
+description: "Autonomous content quality and AEO readiness audit. Scores pages for quality, E-E-A-T compliance, and AI search readiness. Recommends refreshes, rewrites, or removal."
 tools:
   - Bash
   - Read

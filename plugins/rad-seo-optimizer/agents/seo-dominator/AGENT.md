@@ -1,6 +1,6 @@
 ---
 name: seo-dominator
-description: "Full autonomous SEO audit agent. Use when user asks to 'audit my site', 'run a full SEO audit', 'analyze my website', 'check my SEO health', 'comprehensive site review', or wants a complete hands-off SEO analysis. This agent autonomously crawls the codebase or fetches URLs, runs all audit phases, and delivers a comprehensive scored report with prioritized fix recommendations and Claude Code commands. Launch this agent for any substantial SEO analysis request."
+description: "Autonomous full-site SEO audit. Crawls codebase or fetches URLs, runs all audit phases, delivers scored report with prioritized fixes and Claude Code commands."
 tools:
   - Bash
   - Read

@@ -1,29 +1,20 @@
 ---
 name: keyword-discovery
 description: >
-  Runs a complete keyword research pipeline — seed discovery, keyword expansion,
-  search intent classification, difficulty assessment, topic clustering, and a
-  prioritized keyword plan. Produces 150-300 keywords organized into topic
-  clusters with quick wins, strategic targets, and long-term plays. Use when
-  the user wants to find keywords to target, discover what people search for in
-  their niche, build a keyword strategy, identify long-tail opportunities, map
-  search intent, assess keyword difficulty, create topic clusters, or figure out
-  "what should I rank for." Also triggers on "I don't know what keywords to
-  target," "what search terms should I go after," "find keyword opportunities,"
-  or requests for keyword universe/landscape analysis for a business or niche.
-  This is NOT for: writing blog posts or content (use content-strategist), Google
-  Ads keyword planning or PPC campaigns, building rank tracking dashboards or
-  scripts, fixing title tags, adding schema markup, analyzing competitor
-  backlinks, or site migration. If the user wants a content calendar built from
-  keywords, use content-strategist after this skill.
+  This skill should be used when the user says "keyword research", "find keywords for",
+  "what keywords should I target", "keyword analysis", "search volume", "keyword difficulty",
+  or needs a complete keyword research pipeline. Covers seed discovery, expansion, intent
+  classification, difficulty assessment, and topic clustering. Produces 150-300 prioritized
+  keywords.
+argument-hint: "[topic or seed keyword]"
 ---
 
 # Keyword Discovery Skill
 
-You are an expert SEO keyword researcher. Walk the user through a complete
-keyword research pipeline, producing a prioritized keyword plan they can
-act on immediately. Assume the user has never done keyword research before
--- explain every concept in plain language, but keep the process moving.
+Walk the user through a complete keyword research pipeline, producing a
+prioritized keyword plan they can act on immediately. Assume the user has
+never done keyword research before -- explain every concept in plain
+language, but keep the process moving.
 
 ---
 
@@ -51,14 +42,14 @@ execute without unnecessary interruptions.
 Before generating a single keyword, ask the user these questions. Do not
 skip any. Wait for answers before proceeding.
 
-1. **Business basics**: What does your business do? What products or
-   services do you offer?
-2. **Target audience**: Who are your ideal customers? What language or
-   jargon do they use when talking about your space?
+1. **Business basics**: What does the business do? What products or
+   services does it offer?
+2. **Target audience**: Who are the ideal customers? What language or
+   jargon do they use when talking about this space?
 3. **Top 3 competitors**: Name up to three competitors (websites or
-   brands) you consider your main rivals.
-4. **Existing keywords**: Are you already targeting any keywords? If so,
-   list them. If not, say "none" and we will start fresh.
+   brands) considered the main rivals.
+4. **Existing keywords**: Are there any keywords already being targeted?
+   If so, list them. If not, say "none" and start fresh.
 
 ### Seed Sources
 
@@ -282,10 +273,10 @@ Rate each keyword on these dimensions:
 
 | Criterion | Scale | Description |
 |---|---|---|
-| **Business relevance** | 1-10 | How closely does this keyword relate to your product or service? |
+| **Business relevance** | 1-10 | How closely does this keyword relate to the product or service? |
 | **Search volume indicator** | High / Medium / Low | Estimated relative search volume based on autocomplete prominence and SERP competition |
 | **Competition level** | Easy / Moderate / Hard | From Phase 4 |
-| **Content gap** | Yes / No | Do you already have content targeting this keyword? |
+| **Content gap** | Yes / No | Does the site already have content targeting this keyword? |
 | **Estimated effort** | Low / Medium / High | Time and resources needed to create ranking content |
 
 ### The Three Lists
@@ -342,20 +333,20 @@ For each keyword, recommend the best content format:
 
 ### The 70/20/10 Content Mix
 
-Apply this framework to your content calendar:
+Apply this framework to the content calendar:
 
 - **70% Foundation** (safe, proven formats): How-to guides, tutorials,
   listicles, FAQ content. These reliably attract traffic and build
   topical authority. Start here.
 - **20% Growth** (builds on the foundation, moderate risk): Original
   research, data-driven posts, expert roundups, detailed comparisons.
-  Higher effort but differentiates you from competitors.
+  Higher effort but differentiates the site from competitors.
 - **10% Moonshots** (innovative, high risk): Interactive tools,
   contrarian opinion pieces, original frameworks, viral-potential
   content. Most will underperform but the wins are outsized.
 
-When building your content calendar, tag each piece with its mix
-category so you maintain the balance over time.
+When building the content calendar, tag each piece with its mix
+category to maintain the balance over time.
 
 ---
 
