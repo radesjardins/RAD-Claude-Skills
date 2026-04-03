@@ -2,6 +2,6 @@
   "name": "rad-seo-optimizer",
   "description": "RAD SEO Optimizer — comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization with step-by-step fix guidance.",
   "version": "1.0.0",
-  "author": { "name": "RAD" },
-  "license": "MIT"
+  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "license": "Apache-2.0"
 }

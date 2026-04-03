@@ -1,0 +1,7 @@
+{
+  "name": "rad-tailwind",
+  "description": "RAD Tailwind — comprehensive Tailwind CSS coding standards, architectural guidance, and anti-pattern enforcement. Covers the utility-first mental model, CSS-first configuration with @theme, class ordering conventions, design tokens, mobile-first responsive design, container queries, multi-variant component patterns (CVA, tailwind-merge, cn()), dark mode and theming, v3→v4 migration, production optimization, and accessibility requirements. Built from curated sources including official Tailwind CSS docs, migration guides, Steve Kinney's Tailwind course, and production case studies.",
+  "version": "1.1.0",
+  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "license": "Apache-2.0"
+}

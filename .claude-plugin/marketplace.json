@@ -1,6 +1,5 @@
 {
   "name": "rad-claude-skills",
-  "description": "RAD's custom Claude Code plugins and skills — brainstorming, SEO optimization, code review, prompt engineering, and more.",
   "owner": {
     "name": "RAD"
   },
@@ -16,32 +15,90 @@
       "source": "./plugins/rad-seo-optimizer",
       "description": "Comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization.",
       "category": "productivity"
-    }
-  ],
-  "skills": [
-    {
-      "name": "rad-brainstorming",
-      "source": "./skills/rad-brainstorming"
     },
     {
-      "name": "rad-code-review",
-      "source": "./skills/rad-code-review"
+      "name": "rad-astro",
+      "source": "./plugins/rad-astro",
+      "description": "Astro framework coding standards, security hardening, accessibility (WCAG 2.2), performance optimization, and troubleshooting — Islands architecture, Content Layer API v2, Astro Actions, Server Islands, Core Web Vitals, CSP/XSS/CSRF protection, and anti-pattern enforcement. Updated for Astro 5/6.",
+      "category": "development"
     },
     {
-      "name": "rad-context-prompter",
-      "source": "./skills/rad-context-prompter"
+      "name": "rad-agentic-company-builder",
+      "source": "./plugins/rad-agentic-company-builder",
+      "description": "Scaffold and configure an AI-agent-driven company infrastructure — folder hierarchies, CLAUDE.md files, agent definitions, skills, hooks, MCP configs, and operational patterns based on The Agentic Bible 2026.",
+      "category": "productivity"
     },
     {
-      "name": "rad-gem-creator",
-      "source": "./skills/rad-gem-creator"
+      "name": "rad-google-workspace",
+      "source": "./plugins/rad-google-workspace",
+      "description": "Google Workspace integration — 42 service skills (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Meet, Tasks, Forms, Keep, Classroom), 41 workflow recipes, and 10 role-based personas. Requires the gws CLI.",
+      "category": "productivity"
     },
     {
-      "name": "rad-gpt-creator",
-      "source": "./skills/rad-gpt-creator"
+      "name": "rad-nextjs",
+      "source": "./plugins/rad-nextjs",
+      "description": "Next.js coding standards, security hardening, testing patterns, and troubleshooting — App Router architecture, Server/Client components, data fetching, caching, Core Web Vitals, authentication, OWASP protection, Vitest/Cypress/Playwright, and common bug diagnosis.",
+      "category": "development"
     },
     {
-      "name": "rad-para-second-brain",
-      "source": "./skills/rad-para-second-brain"
+      "name": "rad-react",
+      "source": "./plugins/rad-react",
+      "description": "Modern React best practices — functional components, hooks, JSX, props, state, routing, forms, data fetching, server/client boundaries, accessibility, TypeScript, testing, performance optimization, and code organization. No class components.",
+      "category": "development"
+    },
+    {
+      "name": "rad-fastify",
+      "source": "./plugins/rad-fastify",
+      "description": "Fastify framework coding standards — encapsulation model, plugin DAG, hook lifecycle, JSON Schema validation (Ajv), response serialization (fast-json-stringify), Pino logging, TypeScript type providers, in-process testing, production hardening, and anti-pattern enforcement.",
+      "category": "development"
+    },
+    {
+      "name": "rad-tailwind",
+      "source": "./plugins/rad-tailwind",
+      "description": "Tailwind CSS coding standards — utility-first mental model, CSS-first configuration with @theme, Outside-In class ordering, design tokens, mobile-first responsive design, container queries, multi-variant components (CVA, tailwind-merge, cn()), dark mode and theming, v3→v4 migration, production optimization, and accessibility enforcement. Updated for Tailwind CSS v4 / Oxide engine.",
+      "category": "development"
+    },
+    {
+      "name": "rad-zod",
+      "source": "./plugins/rad-zod",
+      "description": "Expert Zod v4 guidance — schema composition, parse-don't-validate mental model, error handling (treeifyError, flattenError), security review (over-posting, PATCH data-loss, coercion attacks), Zod v4 migration and new APIs (registries, ZodMini, z.file, z.templateLiteral), and framework integrations (Fastify type providers, Next.js Server Actions, React Hook Form, tRPC, monorepo shared schemas).",
+      "category": "development"
+    },
+    {
+      "name": "rad-typescript",
+      "source": "./plugins/rad-typescript",
+      "description": "Production-grade TypeScript standards — strict-mode architecture (noUncheckedIndexedAccess, exactOptionalPropertyTypes, verbatimModuleSyntax), type narrowing and discriminated unions, parse-don't-validate at API boundaries (Zod + Fastify type providers), Result-type error handling (neverthrow, errore), TS 4.9–5.7 modern features (satisfies, const type params, inferred predicates), and AI codegen guardrails. Enforces zero-any policy and engineering backpressure. Built from 34 curated sources.",
+      "category": "development"
+    },
+    {
+      "name": "rad-a11y",
+      "source": "./plugins/rad-a11y",
+      "description": "Digital accessibility toolkit for WCAG 2.2 AA compliance — semantic HTML structure, ARIA authoring practices (APG), keyboard navigation, focus management, color contrast, motion/animation, form accessibility, SVG accessibility, and automated testing with axe-core, jest-axe, and Playwright. Deep coverage for React, Astro, and Tailwind CSS stacks. Built from 56 curated sources.",
+      "category": "development"
+    },
+    {
+      "name": "rad-chrome-extension",
+      "source": "./plugins/rad-chrome-extension",
+      "description": "Comprehensive MV3 Chrome extension development standards — WXT framework architecture, MV3 security (CSP, remote code ban, content script isolation), permission minimization and CWS compliance, typed messaging (Protocol Maps, @webext-core/messaging), storage patterns (chrome.storage vs IndexedDB, write-through cache), service worker lifecycle (top-level listeners, alarms, offscreen documents), React UI (Shadow DOM, portal fixing, rem-to-px), testing (Vitest + fake-browser, Playwright E2E), and Chrome Web Store troubleshooting (rejection codes, pre-release checklist). Built from 50+ curated sources.",
+      "category": "development"
+    },
+    {
+      "name": "rad-docker",
+      "source": "./plugins/rad-docker",
+      "description": "Dockerfile best practices, multi-stage build patterns for Node.js and Next.js, security hardening, image optimization, and anti-pattern enforcement. Covers base image selection, layer caching, secret management via BuildKit, non-root execution, health checks, graceful shutdown, and the PID 1 problem.",
+      "category": "development"
+    },
+    {
+      "name": "rad-stack-detect",
+      "source": "./plugins/rad-stack-detect",
+      "description": "Detects your project's tech stack and maps it to installed rad-* plugins. Creates a lightweight stack profile so the right best-practice skills are applied during development. Includes /review-for-ship to dispatch all relevant review agents before deploying.",
+      "category": "development"
+    },
+    {
+      "name": "rad-stripe-fastify-webhooks",
+      "source": "./plugins/rad-stripe-fastify-webhooks",
+      "description": "Production-grade Stripe webhook handling with Fastify and Zod — signature verification, subscription state machine, idempotent event processing, Zod schema contracts, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries, and testing with fastify.inject().",
+      "category": "development"
     }
   ]
 }

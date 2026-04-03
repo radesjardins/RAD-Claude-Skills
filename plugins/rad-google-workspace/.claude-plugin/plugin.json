@@ -1,0 +1,11 @@
+{
+  "name": "rad-google-workspace",
+  "version": "1.0.0",
+  "description": "Google Workspace integration — 42 service skills (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Meet, Tasks, Forms, Keep, Classroom, Model Armor), 41 workflow recipes, and 10 role-based personas. Requires the gws CLI binary.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["google-workspace", "gmail", "calendar", "drive", "docs", "sheets", "gws", "recipes", "productivity"]
+}

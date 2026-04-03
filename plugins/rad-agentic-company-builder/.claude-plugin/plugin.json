@@ -1,0 +1,11 @@
+{
+  "name": "rad-agentic-company-builder",
+  "version": "1.0.0",
+  "description": "Scaffold and configure an AI-agent-driven company infrastructure — folder hierarchies, CLAUDE.md files, agent definitions, skills, hooks, MCP configs, and operational patterns based on The Agentic Bible 2026.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["agentic", "scaffolding", "company", "agents", "claude-code", "cowork", "automation"]
+}

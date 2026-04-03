@@ -1,0 +1,7 @@
+{
+  "name": "rad-docker",
+  "description": "RAD Docker — comprehensive Dockerfile best practices, multi-stage build patterns for Node.js and Next.js, security hardening, image optimization, and anti-pattern enforcement for production container images. Covers the 'build fat, ship thin' mental model, base image selection, layer caching, secret management via BuildKit, non-root execution, health checks, graceful shutdown, and the PID 1 problem. Built from curated Docker optimization sources.",
+  "version": "1.0.0",
+  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,99 @@
+# docker-compose.yml — Production-style Compose with health checks
+#
+# Key patterns demonstrated:
+# 1. depends_on with condition: service_healthy — waits for readiness, not just start
+# 2. HEALTHCHECK on database and cache services
+# 3. Secret injection via environment (not baked in Dockerfile)
+# 4. Named volumes for data persistence
+# 5. Resource limits to prevent runaway containers
+
+name: my-app
+
+services:
+
+  # ── Application ─────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: my-app:latest
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Secrets: inject at runtime, never hardcoded or in .env committed to git
+      DATABASE_URL: "postgres://appuser:${DB_PASSWORD}@db:5432/myapp"
+      REDIS_URL: "redis://redis:6379"
+    # Wait for all dependencies to be HEALTHY before starting
+    # Without condition: service_healthy, app starts before DB accepts connections
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # Optional: restrict container resources
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Health check: pg_isready confirms the database accepts connections
+    # start_period: 20s — allow time for PostgreSQL initialization on fresh volume
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    # Health check: redis-cli ping confirms Redis is accepting commands
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Database migration job (one-shot) ────────────────────────────────────────
+  # Runs migrations before the app starts; exits 0 on success
+  # The app depends on this completing successfully via service_completed_successfully
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "dist/migrate.js"]
+    environment:
+      DATABASE_URL: "postgres://appuser:${DB_PASSWORD}@db:5432/myapp"
+    depends_on:
+      db:
+        condition: service_healthy
+    # One-shot service: exits after completion, app waits for it
+    restart: "no"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

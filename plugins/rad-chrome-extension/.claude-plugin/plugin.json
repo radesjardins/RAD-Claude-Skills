@@ -1,0 +1,11 @@
+{
+  "name": "rad-chrome-extension",
+  "version": "1.0.0",
+  "description": "RAD Chrome Extension — comprehensive MV3 Chrome extension development standards for WXT, React, and TypeScript stacks. Covers architecture and project structure, MV3 security (CSP, remote code ban, content script isolation), permission minimization and CWS compliance, typed messaging (Protocol Maps, @webext-core/messaging), storage selection (chrome.storage vs IndexedDB, write-through cache), service worker lifecycle (top-level listeners, alarms, offscreen documents), React UI patterns (Shadow DOM, portal fixing, rem-to-px), testing (Vitest + @webext-core/fake-browser, Playwright E2E), and Chrome Web Store troubleshooting (rejection codes, build mistakes, pre-release checklist). Built from 50+ curated sources including official Chrome for Developers docs, WXT framework docs, Chrome Web Store policies, and community best practices.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["chrome-extension", "manifest-v3", "wxt", "react", "typescript", "service-worker", "content-script", "chrome-web-store", "browser-extension", "mv3"]
+}

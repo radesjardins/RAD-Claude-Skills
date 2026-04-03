@@ -1,0 +1,7 @@
+{
+  "name": "rad-astro",
+  "description": "RAD Astro — comprehensive Astro framework coding standards, security hardening, accessibility compliance, performance optimization, and troubleshooting. Covers Islands architecture, Content Layer API v2, Astro Actions, Server Islands, rendering modes (SSG/SSR/hybrid), Core Web Vitals, WCAG 2.2 AA, CSP/XSS/CSRF protection, Pino logging, TypeScript type providers, and anti-pattern enforcement. Updated for Astro 5/6 with Content Layer v2, built-in CSP, Session API, Fonts API, and Vite Environment API.",
+  "version": "2.0.0",
+  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "license": "Apache-2.0"
+}
