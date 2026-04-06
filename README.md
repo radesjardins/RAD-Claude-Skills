@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins and standalone skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 14 plugins, 180+ skills, and 12 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
+A curated marketplace of plugins and standalone skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 15 plugins, 180+ skills, and 13 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
 
 Install everything at once or cherry-pick individual plugins and skills.
 
@@ -16,6 +16,7 @@ RAD-Claude-Skills/
 │   ├── rad-astro/                     # Astro 5/6 framework standards
 │   ├── rad-brainstormer/              # Ideation methodologies & creative tools
 │   ├── rad-chrome-extension/          # MV3 Chrome extension development
+│   ├── rad-code-review/               # Diff-aware adversarial code review
 │   ├── rad-fastify/                   # Fastify framework standards
 │   ├── rad-google-workspace/          # Google Workspace integration (93 skills)
 │   ├── rad-nextjs/                    # Next.js App Router standards
@@ -28,8 +29,6 @@ RAD-Claude-Skills/
 │
 └── skills/                            # Standalone skills (copy & use individually)
     ├── rad-brainstorming/             # Collaborative ideation & design specs
-    ├── rad-code-review/               # Professional code review with AI slop detection (v1.0)
-    ├── rad-code-review-v2/            # Diff-aware adversarial code review (v2.0)
     ├── rad-context-prompter/          # Prompt engineering for any AI platform
     └── rad-para-second-brain/         # PARA method knowledge management
 ```
@@ -52,7 +51,7 @@ git clone https://github.com/radesjardins/RAD-Claude-Skills.git
 # Install any plugin
 claude plugins add ./RAD-Claude-Skills/plugins/rad-react
 claude plugins add ./RAD-Claude-Skills/plugins/rad-typescript
-claude plugins add ./RAD-Claude-Skills/plugins/rad-seo-optimizer
+claude plugins add ./RAD-Claude-Skills/plugins/rad-code-review
 # ... any plugin from the list below
 ```
 
@@ -60,7 +59,7 @@ claude plugins add ./RAD-Claude-Skills/plugins/rad-seo-optimizer
 
 ```bash
 mkdir -p ~/.claude/skills
-cp -r RAD-Claude-Skills/skills/rad-code-review ~/.claude/skills/
+cp -r RAD-Claude-Skills/skills/rad-brainstorming ~/.claude/skills/
 ```
 
 ### Verify Installation
@@ -93,6 +92,7 @@ Start a new Claude Code session and run:
 | Plugin | Skills | Agents | What It Does |
 |--------|--------|--------|-------------|
 | [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core |
+| [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, WCAG 2.2 ARIA state detection, 3 review roles, 8 project type modules |
 | [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection, guidance & review orchestration — auto-detects stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate |
 
 ### Productivity & Business
@@ -116,8 +116,6 @@ Start a new Claude Code session and run:
 
 | Skill | What It Does |
 |-------|-------------|
-| [rad-code-review v2.0](skills/rad-code-review-v2/) | **Diff-aware adversarial code review** — blame-aware scoping (only flags what you changed), `--since <commit>` incremental review, framework-specific IDOR detection (6 frameworks), performance profiling heuristics, dynamic ARIA state detection, 14-pattern AI slop detection, 3 review roles, 8 project type modules. |
-| [rad-code-review v1.0](skills/rad-code-review/) | Professional code review — AI slop detection, security (OWASP), architecture, release readiness. 3 review roles, 8 project type modules. |
 | [rad-brainstorming](skills/rad-brainstorming/) | Collaborative ideation — transforms ideas into design specs before implementation. Enforces design-first discipline. |
 | [rad-context-prompter](skills/rad-context-prompter/) | Prompt engineering for any AI platform — system prompts, tool descriptions, anti-hallucination, cross-model migration. |
 | [rad-para-second-brain](skills/rad-para-second-brain/) | PARA method knowledge management — folder setup, progressive summarization, weekly reviews, creative techniques. |

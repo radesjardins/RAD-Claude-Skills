@@ -1,4 +1,4 @@
-# RAD Code Review v2.0
+# RAD Code Review
 
 **3-role adversarial review with diff-aware scoping and AI slop detection — the only code reviewer that catches what AI wrote badly and only flags what you changed.**
 
@@ -30,9 +30,8 @@ RAD Code Review is the harsh reviewer that runs AFTER the build phase. It is int
 git clone https://github.com/radesjardins/RAD-Claude-Skills.git
 cd RAD-Claude-Skills
 
-# Copy to Claude skills
-mkdir -p ~/.claude/skills
-cp -r skills/rad-code-review-v2 ~/.claude/skills/rad-code-review
+# Install as a plugin
+claude plugins add ./plugins/rad-code-review
 ```
 
 ### Usage
@@ -219,7 +218,7 @@ User triggers review
 ## Project Structure
 
 ```
-rad-code-review-v2/
+rad-code-review/
   SKILL.md                         # Orchestrator with v2.0 flags and blame-aware rules
   README.md                        # This file
   ROADMAP.md                       # Version roadmap
