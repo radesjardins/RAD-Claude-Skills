@@ -117,6 +117,12 @@
       "source": "./plugins/rad-context-prompter",
       "description": "Production-grade prompt engineering toolkit — systematic tool-specific routing across 30+ AI platforms, 35 anti-pattern diagnostic reference, 12 technique selection matrix, prompt decompilation/reverse-engineering (6 analysis modes), autonomous prompt debugging with coded failure taxonomy (F1-F7), context engineering for agentic systems, and 13 reusable templates. Covers Claude, GPT, Gemini, o3, Midjourney, Stable Diffusion, Cursor, Claude Code, n8n, and more.",
       "category": "productivity"
+    },
+    {
+      "name": "rad-code-review",
+      "source": "./plugins/rad-code-review",
+      "description": "3-role adversarial code review with diff-aware scoping and AI slop detection — blame-aware diff filtering, framework-specific IDOR heuristics, 14 AI slop patterns, performance profiling, WCAG 2.2 dynamic ARIA state detection, interactive findings management with accept/filter/fix workflow, and severity-ranked findings with optional fix application. Covers security (OWASP), architecture, tests, UX/accessibility, and release readiness.",
+      "category": "development"
     }
   ]
 }
