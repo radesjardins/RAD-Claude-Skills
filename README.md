@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins and standalone skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 16 plugins, 190+ skills, and 14 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
+A curated marketplace of plugins and standalone skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 14 plugins, 180+ skills, and 12 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
 
 Install everything at once or cherry-pick individual plugins and skills.
 
@@ -16,7 +16,6 @@ RAD-Claude-Skills/
 │   ├── rad-astro/                     # Astro 5/6 framework standards
 │   ├── rad-brainstormer/              # Ideation methodologies & creative tools
 │   ├── rad-chrome-extension/          # MV3 Chrome extension development
-│   ├── rad-docker/                    # Dockerfile best practices & optimization
 │   ├── rad-fastify/                   # Fastify framework standards
 │   ├── rad-google-workspace/          # Google Workspace integration (93 skills)
 │   ├── rad-nextjs/                    # Next.js App Router standards
@@ -24,7 +23,6 @@ RAD-Claude-Skills/
 │   ├── rad-seo-optimizer/             # Complete SEO & AEO toolkit
 │   ├── rad-stack-detect/              # Tech stack detection & review dispatch
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
-│   ├── rad-tailwind/                  # Tailwind CSS v4 standards
 │   ├── rad-typescript/                # Production TypeScript standards
 │   └── rad-zod/                       # Zod v4 validation patterns
 │
@@ -32,8 +30,6 @@ RAD-Claude-Skills/
     ├── rad-brainstorming/             # Collaborative ideation & design specs
     ├── rad-code-review/               # Professional code review with AI slop detection
     ├── rad-context-prompter/          # Prompt engineering for any AI platform
-    ├── rad-gem-creator/               # Google Gemini Gem builder
-    ├── rad-gpt-creator/               # OpenAI Custom GPT builder
     └── rad-para-second-brain/         # PARA method knowledge management
 ```
 
@@ -89,9 +85,7 @@ Start a new Claude Code session and run:
 | [rad-fastify](plugins/rad-fastify/) | 8 | 1 | Fastify — encapsulation model, hook lifecycle, JSON Schema validation, Pino logging, TypeScript providers |
 | [rad-typescript](plugins/rad-typescript/) | 6 | 1 | Production TypeScript — strict mode, type patterns, API boundary safety, error handling, AI codegen guardrails |
 | [rad-zod](plugins/rad-zod/) | 6 | 1 | Zod v4 — schema design, validation patterns, security, framework integrations |
-| [rad-tailwind](plugins/rad-tailwind/) | 6 | 1 | Tailwind CSS v4 — utility-first patterns, CVA components, dark mode, responsive design, v3-to-v4 migration |
 | [rad-chrome-extension](plugins/rad-chrome-extension/) | 9 | 1 | Chrome MV3 extensions — WXT, React, security, messaging, storage, service workers, CWS compliance |
-| [rad-docker](plugins/rad-docker/) | 3 | 1 | Docker — multi-stage builds, image optimization, security hardening, Node.js/Next.js patterns |
 
 ### Quality & Testing
 
@@ -124,8 +118,6 @@ Start a new Claude Code session and run:
 | [rad-code-review](skills/rad-code-review/) | Professional code review — AI slop detection, security (OWASP), architecture, release readiness. 3 review roles, 8 project type modules. |
 | [rad-brainstorming](skills/rad-brainstorming/) | Collaborative ideation — transforms ideas into design specs before implementation. Enforces design-first discipline. |
 | [rad-context-prompter](skills/rad-context-prompter/) | Prompt engineering for any AI platform — system prompts, tool descriptions, anti-hallucination, cross-model migration. |
-| [rad-gem-creator](skills/rad-gem-creator/) | Google Gemini Gem builder — guided interview, knowledge base design, anti-hallucination patterns. |
-| [rad-gpt-creator](skills/rad-gpt-creator/) | OpenAI Custom GPT builder — guided interview, 8K instruction limit management, Actions configuration. |
 | [rad-para-second-brain](skills/rad-para-second-brain/) | PARA method knowledge management — folder setup, progressive summarization, weekly reviews, creative techniques. |
 
 ---

@@ -1,0 +1,24 @@
+{
+  "name": "rad-supabase",
+  "version": "1.0.0",
+  "description": "End-to-end Supabase development and operations — projects, database, migrations, edge functions, auth, storage, realtime, branching, security, and troubleshooting. Covers both Supabase CLI and Supabase MCP tool usage for Claude Code.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "supabase",
+    "postgres",
+    "database",
+    "edge-functions",
+    "auth",
+    "rls",
+    "migrations",
+    "branching",
+    "storage",
+    "mcp",
+    "cli",
+    "baas"
+  ]
+}

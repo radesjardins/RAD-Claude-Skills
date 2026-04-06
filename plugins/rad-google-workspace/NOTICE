@@ -1,0 +1,18 @@
+rad-google-workspace plugin
+Copyright 2025-2026 RAD (https://github.com/radesjardins)
+
+This plugin is a derivative work based on the Google Workspace CLI
+(https://github.com/googleworkspace/cli), licensed under the Apache
+License, Version 2.0.
+
+The original CLI tool definitions have been transformed into Claude Code
+plugin skill format. All skill files in the skills/ directory are derived
+from or inspired by the corresponding CLI commands in the upstream project.
+
+The Google Workspace CLI project states:
+"This is not an officially supported Google product."
+
+Google Workspace, Gmail, Google Calendar, Google Drive, Google Docs,
+Google Sheets, Google Slides, Google Chat, Google Meet, Google Forms,
+Google Keep, Google Classroom, and Google Tasks are trademarks of
+Google LLC.

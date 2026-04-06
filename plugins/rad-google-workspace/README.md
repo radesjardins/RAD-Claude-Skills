@@ -6,7 +6,7 @@ Provides 42 service skills, 41 workflow recipes, and 10 role-based personas for 
 
 ## Skill Categories
 
-### Service Skills (42)
+### Service Skills (44)
 
 Direct API access to Google Workspace services:
 
@@ -26,6 +26,7 @@ Direct API access to Google Workspace services:
 - **People** — contacts and profiles
 - **Events** — workspace event subscriptions
 - **Model Armor** — content safety filtering
+- **Apps Script** — script projects, deployments, push local files
 
 ### Workflow Recipes (41)
 
@@ -40,6 +41,12 @@ Cross-service productivity workflows including:
 ### Role-Based Personas (10)
 
 Pre-configured behavioral profiles: Executive Assistant, Team Lead, Project Manager, Sales Ops, IT Admin, HR Coordinator, Content Creator, Event Coordinator, Customer Support, Researcher.
+
+## Attribution
+
+This plugin is a derivative work based on the [Google Workspace CLI](https://github.com/googleworkspace/cli), licensed under the Apache License 2.0. The original CLI tool definitions have been transformed into Claude Code plugin skill format.
+
+The Google Workspace CLI states: *"This is not an officially supported Google product."*
 
 ## Shared Infrastructure
 

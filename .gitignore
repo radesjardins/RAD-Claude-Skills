@@ -94,3 +94,4 @@ logs/
 *.tar.gz
 *.rar
 *.7z
+.claude/

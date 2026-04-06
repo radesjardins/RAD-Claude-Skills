@@ -53,12 +53,6 @@
       "category": "development"
     },
     {
-      "name": "rad-tailwind",
-      "source": "./plugins/rad-tailwind",
-      "description": "Tailwind CSS coding standards — utility-first mental model, CSS-first configuration with @theme, Outside-In class ordering, design tokens, mobile-first responsive design, container queries, multi-variant components (CVA, tailwind-merge, cn()), dark mode and theming, v3→v4 migration, production optimization, and accessibility enforcement. Updated for Tailwind CSS v4 / Oxide engine.",
-      "category": "development"
-    },
-    {
       "name": "rad-zod",
       "source": "./plugins/rad-zod",
       "description": "Expert Zod v4 guidance — schema composition, parse-don't-validate mental model, error handling (treeifyError, flattenError), security review (over-posting, PATCH data-loss, coercion attacks), Zod v4 migration and new APIs (registries, ZodMini, z.file, z.templateLiteral), and framework integrations (Fastify type providers, Next.js Server Actions, React Hook Form, tRPC, monorepo shared schemas).",
@@ -83,12 +77,6 @@
       "category": "development"
     },
     {
-      "name": "rad-docker",
-      "source": "./plugins/rad-docker",
-      "description": "Dockerfile best practices, multi-stage build patterns for Node.js and Next.js, security hardening, image optimization, and anti-pattern enforcement. Covers base image selection, layer caching, secret management via BuildKit, non-root execution, health checks, graceful shutdown, and the PID 1 problem.",
-      "category": "development"
-    },
-    {
       "name": "rad-stack-detect",
       "source": "./plugins/rad-stack-detect",
       "description": "Detects your project's tech stack and maps it to installed rad-* plugins. Creates a lightweight stack profile so the right best-practice skills are applied during development. Includes /review-for-ship to dispatch all relevant review agents before deploying.",
@@ -99,6 +87,12 @@
       "source": "./plugins/rad-stripe-fastify-webhooks",
       "description": "Production-grade Stripe webhook handling with Fastify and Zod — signature verification, subscription state machine, idempotent event processing, Zod schema contracts, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries, and testing with fastify.inject().",
       "category": "development"
+    },
+    {
+      "name": "rad-coolify-orchestrator",
+      "source": "./plugins/rad-coolify-orchestrator",
+      "description": "End-to-end Coolify self-hosted PaaS management — deployments (Nixpacks/Dockerfile/Compose/pre-built image), databases (provisioning/backups/SSL), security (secrets/RBAC/UFW), CI/CD (REST API/GitHub Actions/GHCR/webhooks), troubleshooting (502/504/SSL/build failures), observability (Sentinel/log drains/Uptime Kuma), and multi-server infrastructure (Swarm/build servers). 7 skills, 14 reference files, 1 reviewer agent. Coolify v4 self-hosted.",
+      "category": "devops"
     }
   ]
 }
