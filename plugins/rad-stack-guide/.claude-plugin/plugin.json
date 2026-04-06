@@ -1,0 +1,7 @@
+{
+  "name": "rad-stack-guide",
+  "description": "Auto-detects your tech stack, recommends and configures the right plugins, injects stack-aware guidance into CLAUDE.md, generates team settings, and orchestrates pre-ship reviews with specialist reviewers + rad-code-review as final gate. The entry point for the rad development stack.",
+  "version": "2.0.0",
+  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "license": "Apache-2.0"
+}

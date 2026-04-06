@@ -1,7 +1,0 @@
-{
-  "name": "rad-stack-detect",
-  "description": "Detects your project's tech stack and maps it to installed rad-* plugins. Creates a lightweight stack profile so the right best-practice skills are applied during development and comprehensive review agents are dispatched before shipping.",
-  "version": "1.0.0",
-  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
-  "license": "Apache-2.0"
-}
