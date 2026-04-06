@@ -93,6 +93,18 @@
       "source": "./plugins/rad-coolify-orchestrator",
       "description": "End-to-end Coolify self-hosted PaaS management — deployments (Nixpacks/Dockerfile/Compose/pre-built image), databases (provisioning/backups/SSL), security (secrets/RBAC/UFW), CI/CD (REST API/GitHub Actions/GHCR/webhooks), troubleshooting (502/504/SSL/build failures), observability (Sentinel/log drains/Uptime Kuma), and multi-server infrastructure (Swarm/build servers). 7 skills, 14 reference files, 1 reviewer agent. Coolify v4 self-hosted.",
       "category": "devops"
+    },
+    {
+      "name": "rad-session",
+      "source": "./plugins/rad-session",
+      "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
+      "category": "productivity"
+    },
+    {
+      "name": "rad-supabase",
+      "source": "./plugins/rad-supabase",
+      "description": "End-to-end Supabase development and operations — projects, database, migrations, edge functions, auth, storage, realtime, branching, security, and troubleshooting. Covers both Supabase CLI and Supabase MCP tool usage.",
+      "category": "development"
     }
   ]
 }
