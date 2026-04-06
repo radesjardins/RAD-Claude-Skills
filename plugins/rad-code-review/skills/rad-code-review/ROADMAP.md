@@ -37,6 +37,7 @@ Diff-aware scoping, actionable detection heuristics, and practical PR workflow s
 
 Deeper domain-specific review capabilities.
 
+- **Interactive findings management** — Numbered end-of-review menu with accept, fix, and filter options. Accept specific findings or all minor findings as intentional; they are persisted to `.ucrconfig.yml` with expiry dates and optional justification notes. Show-new-only mode filters the current report against `.ucr/history/` to surface only findings introduced since the last review. First-run `.ucrconfig.yml` creation with optional `.gitignore` integration.
 - **Threat model mode** — Given an architecture description or diagram, enumerate attack surfaces, trust boundaries, and data flow risks. Produce a lightweight threat model alongside the code review.
 - **API contract review** — Validate that implementation matches OpenAPI/Swagger schema. Detect undocumented endpoints, missing error responses, request/response type mismatches, and breaking changes between schema versions.
 - **Schema/migration review** — Analyze database migrations for: data loss risk, missing rollback, index performance, constraint correctness, and compatibility with ORM models. Support for SQL migrations, Prisma, Alembic, ActiveRecord, and Flyway.

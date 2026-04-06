@@ -719,18 +719,224 @@ that changed code depends on (dependency chain rule).*
 {top 5 findings by severity, one line each with ID, title, severity, file, attribution}
 ```
 
-Then ask:
+Then display the interactive menu:
 
 ```
 What would you like to do?
-1. View full findings (by severity or by category)
-2. Apply fixes — choose preset:
-   a. Blockers only (N findings)
-   b. Critical + Major (N findings)
-   c. Select specific finding IDs
-3. Generate full report (saves to rad-code-review-report.md)
-4. Generate report and apply fixes
+
+Fix Findings
+  1. Fix all blockers
+  2. Fix specific findings          (I'll ask which UCRs)
+  3. Get details on a finding       (I'll ask which one)
+
+Accept Findings  ← marks as intentional; won't affect verdict, tracked in .ucrconfig.yml
+  4. Accept specific findings       (I'll ask which UCRs)
+  5. Accept all minor findings
+
+View
+  6. Show new findings only         (compares against your previous review)
+
+Or type a UCR ID directly (e.g. UCR-003), or ask me anything about the findings.
 ```
+
+### Option 1: Fix all blockers
+Load and execute `${UCR_DIR}/workflows/offer-fixes.md` with preset `blockers`.
+
+### Option 2: Fix specific findings
+Prompt: `Which UCR IDs would you like to fix? Enter IDs separated by commas (e.g. UCR-001, UCR-003).`
+Load and execute `${UCR_DIR}/workflows/offer-fixes.md` with the specified IDs.
+
+### Option 3: Get details on a finding
+Prompt: `Which UCR ID would you like more details on?`
+Display the full finding entry for that ID: description, evidence, impact, recommendation, and references.
+Return to the menu.
+
+### Option 4: Accept specific findings
+
+Prompt:
+```
+Which findings would you like to accept? Enter UCR IDs separated by commas.
+(e.g. UCR-004, UCR-007)
+```
+
+Validate that each provided ID exists in the current report's findings list.
+If any ID is not found, respond:
+```
+These IDs were not found in the current report: UCR-XXX
+Please check the finding IDs above and try again.
+```
+Re-prompt until all IDs are valid or the user cancels.
+
+Then prompt:
+```
+Optional: add a brief note on why these are intentional?
+This helps future-you remember the reasoning.
+(e.g. "auth handled by upstream middleware", "intentional for MVP scope")
+Press Enter to skip.
+```
+
+Capture the justification (or use `"Accepted by reviewer on {today} — no justification provided"` if skipped).
+
+Compute dates:
+- `reviewed_date` = today in ISO 8601 format (YYYY-MM-DD)
+- `expires` = exactly one year from today in ISO 8601 format
+
+For each accepted finding ID, build a `.ucrconfig.yml` entry:
+```yaml
+- id: "{finding-id-lowercased}-{kebab-slug-of-first-5-words-of-title}"
+  description: "{verbatim finding title from report}"
+  justification: "{user note or default justification string}"
+  owner: "self"
+  reviewed_date: "{today}"
+  expires: "{one year from today}"
+  finding_match: "{2-3 key terms extracted from finding title, space-separated}"
+```
+
+**Check for `.ucrconfig.yml`:**
+
+```bash
+ls .ucrconfig.yml 2>/dev/null
+```
+
+**If `.ucrconfig.yml` does NOT exist**, prompt:
+```
+No .ucrconfig.yml found in this project. Want me to create one?
+
+It will store your accepted findings and let you configure exclusions,
+custom rules, and review defaults. Future reviews load it automatically.
+
+  1. Yes, create it
+  2. No thanks — accept for this session only
+```
+
+If user chooses **1 (Yes)**:
+- Read `${UCR_DIR}/templates/ucrconfig-template.yml`
+- Write it to `.ucrconfig.yml` in the repository root
+- Append the accepted findings entries under the `accepted_risks:` key
+- Then prompt:
+  ```
+  Created .ucrconfig.yml in your project root.
+
+    1. Add .ucrconfig.yml to .gitignore
+    2. Leave it as-is (I'll decide later)
+  ```
+- If user chooses **1**: run `echo ".ucrconfig.yml" >> .gitignore` (append only if not already present — check first with grep)
+- Confirm: `.ucrconfig.yml added to .gitignore`
+
+If user chooses **2 (No thanks)**:
+- Do not create `.ucrconfig.yml`
+- Note the accepted findings in the session output:
+  ```
+  Accepted for this session only (not persisted):
+  {list of accepted finding IDs and titles}
+  These will reappear in your next review.
+  ```
+- Return to menu.
+
+**If `.ucrconfig.yml` DOES exist**:
+- Read the file
+- Append the new entries under `accepted_risks:`
+- Write the updated file back
+
+Confirm acceptance:
+```
+Accepted {N} findings and added to .ucrconfig.yml.
+These won't affect your release verdict in future reviews.
+
+Note: accepted risks expire {expires date} and will be re-flagged for
+re-evaluation. You can adjust the expiry in .ucrconfig.yml.
+```
+
+Return to menu.
+
+### Option 5: Accept all minor findings
+
+Identify all findings with severity `minor` in the current report.
+
+If no minor findings exist:
+```
+No minor findings in this review.
+```
+Return to menu.
+
+Otherwise, list them:
+```
+Found {N} minor findings:
+{list of UCR IDs and titles}
+
+Optional: add a brief note on why these are intentional? Press Enter to skip.
+```
+
+Capture justification (same default as Option 4 if skipped).
+
+Apply the same `.ucrconfig.yml` write logic as Option 4 (check exists, create if not, append entries, offer `.gitignore`).
+
+Confirm:
+```
+Accepted {N} minor findings and added to .ucrconfig.yml.
+Note: accepted risks expire {expires date}.
+```
+
+Return to menu.
+
+### Option 6: Show new findings only
+
+```bash
+ls -t .ucr/history/*.md 2>/dev/null | head -1
+```
+
+**If no previous report exists**:
+```
+No previous review found for this project. Showing all findings.
+```
+Return to menu without filtering.
+
+**If a previous report exists**:
+- Read the most recent report file from `.ucr/history/`
+- Extract all UCR IDs present in that report (grep for `UCR-[0-9]+` pattern)
+- Identify the scope and strictness used in the previous report from its filename (format: `YYYY-MM-DD-{scope}-{strictness}.md`)
+- Filter current findings to those whose ID does NOT appear in the previous report
+
+If the previous report used a different scope than the current review, note:
+```
+Note: previous review used {previous_scope} scope. This review used {current_scope}.
+Comparison may not be exact.
+```
+
+Display:
+```
+Filtering to new findings only (comparing against {previous_report_filename})
+
+Previously reviewed: {total_previous} findings
+Already known:       {matched} (not shown)
+New this review:     {new_count}
+
+─────────────────────────────────────────
+{new findings only, formatted as: [SEVERITY] UCR-NNN — Title}
+─────────────────────────────────────────
+```
+
+If all findings are new:
+```
+All {N} findings are new since your last review.
+```
+
+If no new findings:
+```
+No new findings since your last review. All {N} findings were present
+in the previous report.
+```
+
+Redisplay the menu scoped to the new findings (options 1-5 operate on the filtered set).
+
+### UCR ID typed directly
+If the user types a UCR ID (matches pattern `UCR-[0-9]+`), display the full finding detail for that ID (same as Option 3). Return to menu.
+
+### Free text / question
+Answer the question using the current findings as context. Return to menu.
+
+### Exit
+If the user types "done", "exit", "quit", or presses Enter with no input, proceed to Step 11 (Fix Application) if fixes were requested, or Step 12 (Report Generation).
 
 ## Step 11: Fix Application (if requested)
 
