@@ -108,7 +108,7 @@ claude plugins install rad-stack-guide@rad-claude-skills
 
 - Claude Code CLI installed and authenticated
 - Other rad-* plugins installed for specialist reviewers (rad-stack-guide will tell you which ones you need)
-- rad-code-review standalone skill for the final gate
+- rad-code-review plugin for the final gate
 
 ## License
 

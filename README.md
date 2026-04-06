@@ -1,8 +1,8 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins and standalone skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 15 plugins, 180+ skills, and 13 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
+A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 15 plugins, 180+ skills, and 13 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
 
-Install everything at once or cherry-pick individual plugins and skills.
+Install everything at once or cherry-pick individual plugins.
 
 ---
 
@@ -26,17 +26,7 @@ RAD-Claude-Skills/
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
 │   ├── rad-typescript/                # Production TypeScript standards
 │   └── rad-zod/                       # Zod v4 validation patterns
-│
-└── skills/                            # Standalone skills (copy & use individually)
-    ├── rad-brainstorming/             # Collaborative ideation & design specs
-    ├── rad-context-prompter/          # Prompt engineering for any AI platform
-    └── rad-para-second-brain/         # PARA method knowledge management
 ```
-
-### Plugins vs. Skills
-
-- **Plugins** bundle multiple skills, agents, and reference docs into one installable unit. Install the whole thing with one command.
-- **Skills** are standalone — one SKILL.md plus supporting files. Copy a single folder and you're done.
 
 ---
 
@@ -55,21 +45,12 @@ claude plugins add ./RAD-Claude-Skills/plugins/rad-code-review
 # ... any plugin from the list below
 ```
 
-### Install a Standalone Skill
-
-```bash
-mkdir -p ~/.claude/skills
-cp -r RAD-Claude-Skills/skills/rad-brainstorming ~/.claude/skills/
-```
-
 ### Verify Installation
 
 Start a new Claude Code session and run:
 ```
 /skills
 ```
-
-> **Note:** Some skills reference shared files. If you get file-not-found errors, also copy the `references/` directory from the same component.
 
 ---
 
@@ -112,17 +93,7 @@ Start a new Claude Code session and run:
 
 ---
 
-## Standalone Skills
-
-| Skill | What It Does |
-|-------|-------------|
-| [rad-brainstorming](skills/rad-brainstorming/) | Collaborative ideation — transforms ideas into design specs before implementation. Enforces design-first discipline. |
-| [rad-context-prompter](skills/rad-context-prompter/) | Prompt engineering for any AI platform — system prompts, tool descriptions, anti-hallucination, cross-model migration. |
-| [rad-para-second-brain](skills/rad-para-second-brain/) | PARA method knowledge management — folder setup, progressive summarization, weekly reviews, creative techniques. |
-
----
-
-## How Skills Work
+## How It Works
 
 Once installed, skills activate automatically when you ask Claude about relevant topics. Each skill has specific **trigger phrases** — natural language patterns that tell Claude when to use that skill.
 

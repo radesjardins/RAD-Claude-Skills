@@ -141,8 +141,8 @@ Check both `dependencies` and `devDependencies`:
 - **Triggers when:** Always included in review-for-ship as final gate
 - **Tier:** Final Gate (runs after all specialist reviewers)
 - **Scope:** AI slop detection, architecture, release readiness, general security, documentation, dependency audit
-- **Invocation:** Skill tool (not Agent subagent_type) — invoke `rad-code-review`
-- **Note:** This is a standalone skill, not a plugin agent. It runs as the generalist complement to the specialist reviewer agents.
+- **Invocation:** Skill tool — invoke `rad-code-review` for full orchestrated review, or Agent subagent_type `rad-code-review:code-reviewer` for autonomous review
+- **Note:** This is a plugin with both a skill (orchestrated review with user checkpoints) and an agent (autonomous review). Use the skill for the final gate in `/review-for-ship`.
 
 ---
 
