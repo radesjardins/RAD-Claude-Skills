@@ -1,33 +1,43 @@
-# rad-chrome-extension
+# rad-chrome-extension — Build production-ready Chrome MV3 extensions. Security, messaging, storage, and Chrome Web Store compliance handled.
 
-Comprehensive Chrome Extension development toolkit for Claude Code. Built from 50+ curated sources covering the full lifecycle of MV3 Chrome extensions with WXT, React, and TypeScript.
+Chrome's Manifest V3 changed how extensions are built — service workers instead of background pages, stricter CSP, new permission patterns. rad-chrome-extension keeps Claude aligned with MV3 conventions and the WXT framework, with security and Chrome Web Store compliance built into every component it helps you write.
 
-## Skills
+## What You Can Do With This
+
+- Build an extension popup, content script, or service worker with correct MV3 patterns
+- Set up messaging between your background service worker, content scripts, and popup — without the common race conditions
+- Request only the permissions you actually need (and understand why the Store rejects over-permissioned extensions)
+- Review an extension for security issues before submitting to the Chrome Web Store
+
+## How It Works
 
 | Skill | Purpose |
 |-------|---------|
-| `chrome-ext-best-practices` | MV3 architecture, WXT setup, project structure, context boundaries, build/packaging |
-| `chrome-ext-security` | CSP, remote code ban, eval prohibition, content script isolation, DOM safety, Trusted Types |
-| `chrome-ext-permissions` | Permission minimization, optional permissions, host permissions, CWS compliance |
-| `chrome-ext-messaging` | Message passing patterns, Protocol Maps, @webext-core/messaging, ports, async handling |
-| `chrome-ext-storage` | Storage mechanism selection, IndexedDB vs chrome.storage, quotas, write-through cache |
-| `chrome-ext-service-worker` | Service worker lifecycle, top-level listeners, alarms, offscreen documents, state rehydration |
-| `chrome-ext-ui-react` | React in extensions, Shadow DOM, portals, rem-to-px, accessibility patterns |
-| `chrome-ext-testing` | Unit/integration/E2E testing, Vitest + fake-browser, Playwright, test quality |
-| `chrome-ext-troubleshooting` | CWS rejection codes, build mistakes, debugging, pre-release checklist |
-
-## Agent
+| `chrome-ext-best-practices` | MV3 conventions, WXT framework, project structure |
+| `chrome-ext-service-worker` | Service worker lifecycle, persistence patterns, background tasks |
+| `chrome-ext-messaging` | Inter-component messaging, ports, connection patterns |
+| `chrome-ext-storage` | chrome.storage.local/sync, data patterns, migration |
+| `chrome-ext-permissions` | Permission minimization, optional permissions, CWS compliance |
+| `chrome-ext-security` | CSP, eval usage, content script trust boundaries, XSS prevention |
+| `chrome-ext-ui-react` | React UI in popups and side panels, WXT + React patterns |
+| `chrome-ext-testing` | Unit tests, integration tests for extension components |
+| `chrome-ext-troubleshooting` | CWS rejections, service worker issues, messaging bugs |
 
 | Agent | Purpose |
 |-------|---------|
-| `chrome-ext-reviewer` | Reviews Chrome extension code for security, architecture, permissions, messaging, and CWS compliance |
+| `chrome-ext-reviewer` | Reviews extension code for security, messaging patterns, permission over-requesting, and CWS compliance |
 
-## Sources
+## Quick Start
 
-Built from 50+ curated sources including:
-- Chrome for Developers official documentation (extensions, APIs, permissions, CSP)
-- Chrome Web Store program policies and rejection code guides
-- WXT framework documentation (entrypoints, config, content scripts, storage)
-- @webext-core/messaging and @webext-core/fake-browser libraries
-- Vitest, Playwright, and browser testing best practices
-- Community guides on MV3 migration, React in extensions, and service worker patterns
+```bash
+claude plugins add ./RAD-Claude-Skills/plugins/rad-chrome-extension
+```
+
+```
+Review my Chrome extension
+Is my extension ready for the Chrome Web Store?
+Check my extension for security issues
+```
+
+## License
+Apache-2.0

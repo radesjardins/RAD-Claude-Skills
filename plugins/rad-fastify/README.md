@@ -1,71 +1,42 @@
-# rad-fastify
+# rad-fastify — Fastify the way Fastify was designed. Encapsulation, schemas, hooks, and production patterns.
 
-Comprehensive Fastify framework coding standards, architectural guidance, and anti-pattern enforcement for Claude Code.
+Fastify's power comes from its encapsulation model and hook lifecycle — but they're also where most mistakes happen. rad-fastify keeps Claude aligned with Fastify's actual design philosophy: proper plugin scoping, JSON Schema validation on every route, Pino logging configured correctly, and TypeScript type providers that don't leak types across scope boundaries.
 
-Built from curated sources including official Fastify documentation, Node.js production best practices, and real-world case studies.
+## What You Can Do With This
 
-## Skills
+- Structure a Fastify app with correct plugin scoping — no accidental decoration leaks
+- Add JSON Schema validation to route inputs and outputs for both safety and serialization speed
+- Configure structured logging with Pino redaction so sensitive fields never appear in logs
+- Review a Fastify codebase for anti-patterns before shipping
+
+## How It Works
 
 | Skill | Purpose |
 |-------|---------|
-| `fastify-best-practices` | Core architecture: encapsulation model, plugin DAG, decorators, project organization |
-| `fastify-hooks-lifecycle` | Complete hook lifecycle reference with execution order, constraints, and rules |
-| `fastify-schemas-validation` | JSON Schema validation (Ajv), response serialization (fast-json-stringify), shared schemas |
-| `fastify-logging` | Pino configuration, child loggers, redaction, async transports, crash handling |
-| `fastify-typescript` | Type providers, declaration merging, typing plugins and routes |
-| `fastify-testing` | In-process testing with .inject(), app/server separation, plugin isolation |
-| `fastify-production` | Security hardening, graceful shutdown, reverse proxy, deployment checklist |
-| `fastify-troubleshooting` | Anti-patterns, common mistakes, diagnosis table, debugging patterns |
-
-## Agents
+| `fastify-best-practices` | Architecture, plugin encapsulation, project structure |
+| `fastify-hooks-lifecycle` | Hook execution order, onRequest/preParsing/preValidation/onSend |
+| `fastify-schemas-validation` | JSON Schema, Ajv, fast-json-stringify serialization |
+| `fastify-logging` | Pino configuration, child loggers, log redaction |
+| `fastify-typescript` | Type providers, @fastify/type-provider-typebox |
+| `fastify-production` | Security headers, reverse proxy config, graceful shutdown |
+| `fastify-testing` | .inject() HTTP testing, unit tests, integration patterns |
+| `fastify-troubleshooting` | Anti-patterns, common mistakes, diagnostic patterns |
 
 | Agent | Purpose |
 |-------|---------|
-| `fastify-reviewer` | Autonomous code review for Fastify anti-patterns, encapsulation violations, and production readiness |
+| `fastify-reviewer` | Reviews Fastify code for encapsulation violations, anti-patterns, and production readiness |
 
-## What This Plugin Enforces
-
-### Hard Rules (Never Violate)
-
-- Never use reference types in `decorateRequest`/`decorateReply`
-- Never mix async/await with done callbacks in hooks
-- Never use arrow functions for decorators or hooks
-- Never expose Fastify directly to the internet (use reverse proxy)
-- Never pass user-provided schemas (code execution vulnerability)
-- Never use `allErrors: true` in production Ajv config
-- Always define response schemas for serialization performance
-- Always separate app registration from server listening
-- Always use `return reply` after `reply.send()` in async hooks
-
-### Architecture Principles
-
-- Everything is a plugin — the app is a tree of encapsulated contexts
-- Schema-first: define explicit JSON Schema contracts for all routes
-- Fail fast: reject invalid data before business logic executes
-- Deterministic lifecycle: plugins load in registration order via avvio
-
-## Installation
+## Quick Start
 
 ```bash
-claude /install-plugin C:/Dev/rad-skills-repo/plugins/rad-fastify
+claude plugins add ./RAD-Claude-Skills/plugins/rad-fastify
 ```
 
-Or add to your project's `.claude/settings.json`:
-
-```json
-{
-  "plugins": ["C:/Dev/rad-skills-repo/plugins/rad-fastify"]
-}
+```
+Review my Fastify code
+Is my Fastify app production ready?
+Check for Fastify anti-patterns
 ```
 
-## Usage
-
-Skills activate automatically when working on Fastify projects. The agent can be invoked with:
-
-- "Review my Fastify code"
-- "Check for Fastify anti-patterns"
-- "Is my Fastify app production ready?"
-
-## Author
-
-RAD
+## License
+Apache-2.0
