@@ -1,6 +1,6 @@
-# rad-stripe-fastify-webhooks
+# rad-stripe-fastify-webhooks — Stripe webhooks with Fastify. Signature verification, subscription state machines, and idempotent processing done right.
 
-Production-grade Stripe webhook handling with Fastify and Zod for Claude Code.
+Stripe webhooks fail in specific, hard-to-debug ways — signature verification races, duplicate event processing, subscription state inconsistencies. rad-stripe-fastify-webhooks covers all of it: the correct verification flow, idempotency patterns, and state machine logic for subscription lifecycle events.
 
 ## What This Plugin Does
 

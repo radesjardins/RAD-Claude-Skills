@@ -1,6 +1,6 @@
-# rad-context-prompter
+# rad-context-prompter — Write, debug, and optimize prompts for 30+ AI platforms. No guessing.
 
-Production-grade prompt engineering toolkit for Claude Code. Write, debug, decompile, and optimize prompts for 30+ AI platforms.
+Different AI models need different prompting strategies — what works for Claude degrades output on o3, and vice versa. rad-context-prompter maps your task type to the right technique for the right model, diagnoses why a prompt is failing with a coded taxonomy, and can reverse-engineer existing prompts to translate them across platforms.
 
 ## Features
 

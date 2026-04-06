@@ -1,8 +1,6 @@
-# rad-supabase
+# rad-supabase — Full-stack Supabase development. Local CLI workflows, remote MCP operations, and production patterns.
 
-End-to-end Supabase development and operations for Claude Code. Covers both the **Supabase CLI** (local development, CI/CD) and **Supabase MCP tools** (remote project operations).
-
-**Target:** Supabase platform (hosted projects). Compatible with Supabase CLI v1.x+ and the official Supabase MCP server.
+Supabase has two interfaces — the CLI for local development and migrations, and the MCP server for remote project operations — and knowing when to use which is half the battle. rad-supabase covers both, plus the non-negotiables: RLS on every public table, service role keys never on the client, and cost confirmation before creating branches or projects.
 
 ## Skills
 

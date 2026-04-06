@@ -1,8 +1,6 @@
-# rad-para-second-brain
+# rad-para-second-brain — An AI that actively manages your PARA second brain. Not just knowledge about it.
 
-Active PARA system management for Claude Code — not just knowledge about PARA, but an AI that manages your PARA system for you.
-
-Based on Tiago Forte's Building a Second Brain methodology (PARA method + CODE framework).
+Most PARA tools tell you about the methodology. rad-para-second-brain implements it for you — organizing notes, running weekly reviews, distilling raw captures into usable knowledge, and maintaining continuity between sessions via the Hemingway Bridge pattern. Based on Tiago Forte's Building a Second Brain.
 
 ## What's Included
 

@@ -1,6 +1,6 @@
-# rad-zod
+# rad-zod — Zod v4 schemas that are secure, composable, and framework-ready.
 
-Expert Zod v4 guidance for TypeScript projects — schema design, validation patterns, security, error handling, and framework integrations.
+Zod is the standard for TypeScript runtime validation — but it's easy to write schemas that look safe and aren't. rad-zod covers coercion attacks, schema composition patterns, and integrations with Fastify, Next.js, and React Hook Form so your validation layer is actually a security layer.
 
 ## Overview
 
