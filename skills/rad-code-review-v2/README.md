@@ -1,0 +1,258 @@
+# RAD Code Review v2.0
+
+**3-role adversarial review with diff-aware scoping and AI slop detection — the only code reviewer that catches what AI wrote badly and only flags what you changed.**
+
+## What's New in v2.0
+
+| Feature | v1.0 | v2.0 |
+|---------|------|------|
+| **Diff-aware scoping** | Reviews all files in scope, flags everything | Blame-aware by default for diff/commit scopes — only flags issues on changed lines |
+| **Incremental review** | `diff`, `commit`, `repo`, `tree` | + `--since <commit>` for reviewing changes across multiple commits |
+| **IDOR detection** | Conceptual checklist | Framework-specific grep-able heuristics for Next.js, Express, Fastify, Django, Rails, Go |
+| **Performance detection** | "Check for N+1 queries" | Concrete patterns: N+1 inside loops, re-render triggers, unbounded lists, sync blocking, bundle bloat |
+| **Accessibility** | WCAG checklist | + Dynamic ARIA state detection (hardcoded `aria-expanded`, `aria-selected`, etc.) |
+| **Adversarial pass** | Challenges findings | + Validates blame-scoping decisions (no false filtering) |
+| **Finding attribution** | All findings equal | Each finding tagged `introduced` vs `pre-existing-dependency` |
+
+## Why This Exists
+
+AI-generated code compiles, passes basic tests, and looks correct at a glance. But it has measurable quality issues: hallucinated APIs, shallow error handling, missing edge cases, copy-paste patterns that diverge, IDOR vulnerabilities that pass code review, and N+1 queries that work in dev but crash in production.
+
+RAD Code Review is the harsh reviewer that runs AFTER the build phase. It is intentionally adversarial — it assumes the code is wrong and looks for proof. When it finds nothing, that is a meaningful signal.
+
+**v2.0 adds diff-awareness** so it works naturally in PR workflows. You don't want 50 findings about pre-existing tech debt when you're reviewing a 3-file PR. You want to know: "Did I introduce any problems?"
+
+## Quick Start
+
+### Installation
+
+```bash
+git clone https://github.com/radesjardins/RAD-Claude-Skills.git
+cd RAD-Claude-Skills
+
+# Copy to Claude skills
+mkdir -p ~/.claude/skills
+cp -r skills/rad-code-review-v2 ~/.claude/skills/rad-code-review
+```
+
+### Usage
+
+```bash
+# Review your current diff (blame-aware — only flags your changes)
+/rad-code-review diff
+
+# Review changes since a specific commit
+/rad-code-review --since abc123
+
+# Review last commit before merging
+/rad-code-review commit
+
+# Full repository audit (no blame filtering)
+/rad-code-review repo
+
+# Override blame-aware default — flag everything in the diff
+/rad-code-review diff --full-scan
+
+# Strict mode for public release
+/rad-code-review repo --strictness public
+
+# Dual-engine adversarial review
+/rad-code-review diff --engine both
+```
+
+Or just say it naturally:
+
+```
+Review my PR
+Is this ready to ship?
+Check what I changed for security issues
+Review changes since last release
+```
+
+### Review Scopes
+
+| Scope | What It Reviews | Blame-Aware | When To Use |
+|-------|----------------|-------------|-------------|
+| `diff` | Staged/unstaged changes | Yes (default) | PR review, quick check |
+| `commit` | HEAD commit | Yes (default) | Post-merge verification |
+| `--since <commit>` | All changes since commit | Yes (default) | Sprint review, release delta |
+| `tree` | Working tree changes | No (full scan) | Before committing |
+| `repo` | Entire repository | No (full scan) | Initial audit, periodic deep review |
+
+### Blame-Aware Mode
+
+When reviewing a diff or commit, v2.0 only flags issues on lines you changed. This means:
+
+- **Introduced issues**: Problems in your changed code. Always flagged.
+- **Pre-existing dependencies**: If your new code calls an existing function that has a vulnerability, it's flagged with `[PRE-EXISTING]` tag and explains the dependency chain.
+- **Suppressed**: Pre-existing code quality issues unrelated to your changes. Not flagged.
+- **Override**: Use `--full-scan` to see everything, like v1.0.
+
+### Strictness Levels
+
+| Level | Behavior |
+|-------|----------|
+| `mvp` | Focus on blockers and critical bugs. Skip style, docs, minor issues. Fast. |
+| `production` | Full review across all 12 dimensions. Default. |
+| `public` | Everything in production plus: public API surface, docs completeness, license compliance, security hardening. |
+
+### Engine Options
+
+| Engine | Behavior |
+|--------|----------|
+| `claude` | Single-pass review using Claude. Default. |
+| `codex` | Single-pass review using Codex. |
+| `both` | Sequential adversarial: Claude reviews first, then Codex challenges findings and hunts for what was missed. |
+
+## What It Reviews
+
+### Three Roles, Every Run
+
+1. **Bug Finder** — Functional defects, logic errors, race conditions, edge cases, unhandled errors, and 14 AI slop patterns (hallucinated imports, fake error handling, placeholder stubs, silent failures, cargo-cult patterns, and more).
+
+2. **Architecture Reviewer** — Structure, coupling, naming, abstraction quality, test coverage gaps, performance anti-patterns (N+1 queries, unbounded lists, sync blocking, bundle bloat), and maintainability.
+
+3. **Release Gate** — Security (OWASP + framework-specific IDOR for 6 frameworks), accessibility (WCAG 2.2 + dynamic ARIA state detection), license compliance, dependency vulnerabilities, secret exposure, and documentation completeness.
+
+### 12 Review Dimensions
+
+Functional correctness, security, AI slop detection, architecture, tests, performance, UI/UX, accessibility, release readiness, documentation, dependencies, privacy/secrets handling.
+
+### 8 Project-Type Modules
+
+Web app, API/backend, Chrome extension, CLI tool, library/package, Electron app, mobile (React Native/Flutter), SaaS platform.
+
+## Features
+
+- **Blame-aware diff scoping** (v2.0) — only flag issues you introduced, with dependency chain detection
+- **Incremental `--since` review** (v2.0) — review changes across multiple commits
+- **Framework-specific IDOR detection** (v2.0) — Next.js Server Actions, Express, Fastify, Django, Rails, Go
+- **Performance profiling heuristics** (v2.0) — N+1, re-renders, unbounded lists, sync blocking, bundle bloat
+- **Dynamic ARIA state detection** (v2.0) — hardcoded `aria-expanded`, `aria-selected`, `aria-checked`, `aria-pressed`
+- **14-pattern AI slop detection** — hallucinated imports, fake error handling, placeholder stubs, silent failures, cargo-cult patterns, fabricated comments, fake completeness
+- **3-role adversarial review** — bug finder, architecture reviewer, release gate
+- **Review-of-review calibration** — de-duplication, severity calibration, false positive removal
+- **Fix application with validation** — apply fixes, run tests, verify
+- **Report history and comparison** — track findings over time, diff between runs
+- **8 project-type modules** — type-specific checklists loaded automatically
+- **Local-only mode** — all analysis works offline
+- **Configurable via `.ucrconfig.yml`** — project-level settings
+
+## Configuration
+
+Create a `.ucrconfig.yml` in your project root to customize behavior:
+
+```yaml
+# .ucrconfig.yml
+version: 1
+
+defaults:
+  scope: diff
+  strictness: production
+  engine: claude
+
+project_type: web-app
+
+exclude_paths:
+  - "vendor/**"
+  - "dist/**"
+  - "*.min.js"
+  - "**/*.generated.*"
+
+min_severity: info
+
+licenses:
+  allowed: [MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC]
+  denied: [GPL-3.0, AGPL-3.0]
+
+history:
+  enabled: false
+  directory: .ucr/history
+```
+
+## Architecture
+
+```
+User triggers review
+        |
+        v
+   Orchestrator (SKILL.md)
+        |
+        +-- Parses scope + flags (--since, --full-scan)
+        +-- Detects project type + stack
+        +-- Computes blame-aware diff context (if applicable)
+        |
+        v
+   Pre-review scripts (parallel)
+        +-- dep-audit.sh    -> dependency vulnerabilities
+        +-- license-check.sh -> license compliance
+        +-- secrets-scan.sh  -> secret detection
+        |
+        v
+   Primary review (Engine 1)
+        +-- Receives annotated diff + blame context
+        +-- 12-dimension analysis scoped to changed lines
+        +-- Framework-specific IDOR heuristics
+        +-- Performance profiling patterns
+        +-- Dynamic ARIA state detection
+        +-- AI slop detection (14 patterns)
+        |
+        v
+   Adversarial pass (Engine 2 or self-adversarial)
+        +-- Challenges findings
+        +-- Validates blame-scoping decisions
+        +-- Hunts for missed issues
+        +-- Removes false positives
+        |
+        v
+   Calibration pass
+        +-- Deduplicate + severity calibration
+        +-- Tag findings: introduced vs pre-existing
+        |
+        v
+   Report generation
+        +-- Finding summary with attribution breakdown
+        +-- History comparison
+        +-- Fix suggestions
+```
+
+## Project Structure
+
+```
+rad-code-review-v2/
+  SKILL.md                         # Orchestrator with v2.0 flags and blame-aware rules
+  README.md                        # This file
+  ROADMAP.md                       # Version roadmap
+  LICENSE                          # MIT License
+  references/
+    ai-slop-patterns.md            # 14 AI slop detection patterns
+    security-checklist.md           # Security checklist + IDOR framework heuristics (v2.0)
+    ux-accessibility-checklist.md   # UX/a11y checklist + dynamic ARIA states (v2.0)
+    performance-heuristics.md       # Performance detection patterns (v2.0, new)
+    severity-model.md               # Severity classification
+    trust-model.md                  # Trust boundaries
+    adversarial-protocol.md         # Adversarial review protocol
+    release-readiness.md            # Release readiness checklist
+  workflows/
+    orchestrate-review.md           # Main workflow with blame-aware scoping (v2.0)
+    report-generation.md            # Report generation
+    offer-fixes.md                  # Fix application
+  project-types/
+    web-app.md | api.md | chrome-extension.md | cli-tool.md
+    library.md | electron-app.md | mobile-app.md | saas.md
+  templates/
+    findings-schema.md              # Finding format template
+    report-template.md              # Full report template
+    triage-report-template.md       # Triage report template
+    ucrconfig-template.yml          # Default config template
+  scripts/
+    dep-audit.sh                    # Dependency vulnerability audit
+    license-check.sh                # License compliance check
+    secrets-scan.sh                 # Secrets detection
+  install.sh                        # Unix installer
+  install.ps1                       # Windows installer
+```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
