@@ -77,10 +77,10 @@
       "category": "development"
     },
     {
-      "name": "rad-stack-detect",
-      "source": "./plugins/rad-stack-detect",
-      "description": "Detects your project's tech stack and maps it to installed rad-* plugins. Creates a lightweight stack profile so the right best-practice skills are applied during development. Includes /review-for-ship to dispatch all relevant review agents before deploying.",
-      "category": "development"
+      "name": "rad-stack-guide",
+      "source": "./plugins/rad-stack-guide",
+      "description": "Auto-detects your tech stack, recommends and configures the right plugins, injects stack-aware guidance into CLAUDE.md, generates team settings, and orchestrates pre-ship reviews with specialist reviewers + rad-code-review as final gate. The entry point for the rad development stack.",
+      "category": "orchestration"
     },
     {
       "name": "rad-stripe-fastify-webhooks",
@@ -95,6 +95,12 @@
       "category": "devops"
     },
     {
+      "name": "rad-para-second-brain",
+      "source": "./plugins/rad-para-second-brain",
+      "description": "Active PARA system management — weekly review automation, folder structure auditing, Progressive Summarization, Intermediate Packet assembly, Hemingway Bridge session handoffs, and 12 Favorite Problems workshop. 5 skills, 2 agents, 4 reference files. Based on Tiago Forte's Building a Second Brain.",
+      "category": "productivity"
+    },
+    {
       "name": "rad-session",
       "source": "./plugins/rad-session",
       "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
@@ -105,6 +111,12 @@
       "source": "./plugins/rad-supabase",
       "description": "End-to-end Supabase development and operations — projects, database, migrations, edge functions, auth, storage, realtime, branching, security, and troubleshooting. Covers both Supabase CLI and Supabase MCP tool usage.",
       "category": "development"
+    },
+    {
+      "name": "rad-context-prompter",
+      "source": "./plugins/rad-context-prompter",
+      "description": "Production-grade prompt engineering toolkit — systematic tool-specific routing across 30+ AI platforms, 35 anti-pattern diagnostic reference, 12 technique selection matrix, prompt decompilation/reverse-engineering (6 analysis modes), autonomous prompt debugging with coded failure taxonomy (F1-F7), context engineering for agentic systems, and 13 reusable templates. Covers Claude, GPT, Gemini, o3, Midjourney, Stable Diffusion, Cursor, Claude Code, n8n, and more.",
+      "category": "productivity"
     }
   ]
 }

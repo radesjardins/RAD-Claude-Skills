@@ -21,14 +21,15 @@ RAD-Claude-Skills/
 │   ├── rad-nextjs/                    # Next.js App Router standards
 │   ├── rad-react/                     # Modern React best practices
 │   ├── rad-seo-optimizer/             # Complete SEO & AEO toolkit
-│   ├── rad-stack-detect/              # Tech stack detection & review dispatch
+│   ├── rad-stack-guide/               # Stack detection, guidance & review orchestration
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
 │   ├── rad-typescript/                # Production TypeScript standards
 │   └── rad-zod/                       # Zod v4 validation patterns
 │
 └── skills/                            # Standalone skills (copy & use individually)
     ├── rad-brainstorming/             # Collaborative ideation & design specs
-    ├── rad-code-review/               # Professional code review with AI slop detection
+    ├── rad-code-review/               # Professional code review with AI slop detection (v1.0)
+    ├── rad-code-review-v2/            # Diff-aware adversarial code review (v2.0)
     ├── rad-context-prompter/          # Prompt engineering for any AI platform
     └── rad-para-second-brain/         # PARA method knowledge management
 ```
@@ -92,7 +93,7 @@ Start a new Claude Code session and run:
 | Plugin | Skills | Agents | What It Does |
 |--------|--------|--------|-------------|
 | [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core |
-| [rad-stack-detect](plugins/rad-stack-detect/) | 2 | 0 | Tech stack detection — scans your project and dispatches the right review agents before shipping |
+| [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection, guidance & review orchestration — auto-detects stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate |
 
 ### Productivity & Business
 
@@ -115,7 +116,8 @@ Start a new Claude Code session and run:
 
 | Skill | What It Does |
 |-------|-------------|
-| [rad-code-review](skills/rad-code-review/) | Professional code review — AI slop detection, security (OWASP), architecture, release readiness. 3 review roles, 8 project type modules. |
+| [rad-code-review v2.0](skills/rad-code-review-v2/) | **Diff-aware adversarial code review** — blame-aware scoping (only flags what you changed), `--since <commit>` incremental review, framework-specific IDOR detection (6 frameworks), performance profiling heuristics, dynamic ARIA state detection, 14-pattern AI slop detection, 3 review roles, 8 project type modules. |
+| [rad-code-review v1.0](skills/rad-code-review/) | Professional code review — AI slop detection, security (OWASP), architecture, release readiness. 3 review roles, 8 project type modules. |
 | [rad-brainstorming](skills/rad-brainstorming/) | Collaborative ideation — transforms ideas into design specs before implementation. Enforces design-first discipline. |
 | [rad-context-prompter](skills/rad-context-prompter/) | Prompt engineering for any AI platform — system prompts, tool descriptions, anti-hallucination, cross-model migration. |
 | [rad-para-second-brain](skills/rad-para-second-brain/) | PARA method knowledge management — folder setup, progressive summarization, weekly reviews, creative techniques. |
