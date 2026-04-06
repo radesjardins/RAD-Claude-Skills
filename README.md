@@ -30,6 +30,14 @@ RAD-Claude-Skills/
 
 ---
 
+## Why These Plugins?
+
+Claude Code is powerful out of the box — but it doesn't know your framework's security model, your accessibility requirements, or which code review patterns catch AI-generated mistakes. These plugins fill that gap.
+
+Each one installs in a single command and activates automatically when you ask Claude about relevant topics. No configuration, no manual invocation — just better answers for the specific tools and problems you're working with. Use any plugin on its own, or use `rad-stack-guide` to detect your full stack and connect them all.
+
+---
+
 ## Quick Install
 
 ### Install a Plugin
