@@ -1,0 +1,26 @@
+{
+  "name": "rad-context-prompter",
+  "version": "3.0.0",
+  "description": "Production-grade prompt engineering toolkit. Systematic tool-specific routing across 30+ AI platforms, 35 anti-pattern diagnostic reference, 12 technique selection matrix, context engineering for agentic systems, prompt decompilation/reverse-engineering, and autonomous prompt debugging. Covers Claude, GPT, Gemini, o3, Midjourney, Stable Diffusion, Cursor, Claude Code, n8n, and more.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "prompt-engineering",
+    "context-engineering",
+    "system-prompts",
+    "tool-routing",
+    "anti-patterns",
+    "prompt-debugging",
+    "prompt-decompiler",
+    "claude",
+    "gpt",
+    "midjourney",
+    "agentic-workflows",
+    "few-shot",
+    "chain-of-thought",
+    "claude-md"
+  ]
+}
