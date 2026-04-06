@@ -1,46 +1,39 @@
-# rad-nextjs
+# rad-nextjs — Next.js App Router done right. Server/client boundaries, auth, caching, and security.
 
-Comprehensive Next.js coding standards, security hardening, testing patterns, and troubleshooting guidance for Claude Code.
+The App Router changed how Next.js works at a fundamental level — and Claude's training data includes a lot of Pages Router patterns that silently break things. rad-nextjs keeps Claude aligned with App Router conventions: correct server/client component boundaries, safe Server Actions, data fetching that doesn't over-cache or under-secure, and IDOR prevention built into every route handler.
 
-Built from 58 curated sources including official Next.js documentation, Vercel Academy, security guides, academic papers, Netflix engineering case studies, and web.dev performance research.
+## What You Can Do With This
 
-## Skills
+- Write Server Actions that verify auth before mutating data (not after)
+- Get route handlers and API endpoints with IDOR protection built in
+- Fix hydration errors and client/server boundary mistakes
+- Set up testing for App Router components with the correct Vitest/Cypress patterns
 
-### nextjs-best-practices
-App Router architecture, Server/Client component boundaries, data fetching patterns, caching (`"use cache"`, ISR, revalidation), performance optimization (Core Web Vitals), layout patterns, Partial Prerendering, and deployment.
+## How It Works
 
-**Triggers:** Working on any Next.js project, creating components/pages/layouts, data fetching, caching, performance optimization, deployment.
+| Skill | Purpose |
+|-------|---------|
+| `nextjs-best-practices` | App Router conventions, server/client boundaries, data fetching, caching |
+| `nextjs-security` | IDOR prevention, Server Action auth, CSP, input validation |
+| `nextjs-testing` | Vitest, Cypress, Testing Library for App Router |
+| `nextjs-troubleshooting` | Hydration errors, boundary mistakes, caching bugs |
 
-### nextjs-security
-Authentication with httpOnly cookies, 5-layer Server Action security checklist, CSP headers, CSRF/XSS prevention, environment variable management, Data Access Layer pattern, `server-only` package, React Taint APIs, and middleware security warnings (CVE-2025-29927).
+| Agent | Purpose |
+|-------|---------|
+| `nextjs-reviewer` | Reviews Next.js code for App Router violations, security issues, and performance anti-patterns |
 
-**Triggers:** Implementing auth, writing Server Actions/API routes, configuring security headers, managing secrets, reviewing for OWASP vulnerabilities.
-
-### nextjs-testing
-Testing infrastructure with Vitest (unit), Cypress and Playwright (E2E), testing React Server Components, API route testing, resilient test patterns (`data-testid`, programmatic auth), and common anti-patterns.
-
-**Triggers:** Writing tests, configuring test tools, testing Server Components, testing auth flows, CI/CD test integration.
-
-### nextjs-troubleshooting
-Diagnostic decision tree, serialization failures, hydration mismatches, stale auth in layouts, request waterfalls, memory leaks, Docker OOM crashes, middleware bypass, environment variable issues, and build/deploy debugging.
-
-**Triggers:** Debugging errors, investigating performance issues, fixing build failures, diagnosing unexpected behavior.
-
-## Installation
-
-Add to your Claude Code plugins from the RAD-Claude-Skills marketplace, or install locally:
+## Quick Start
 
 ```bash
-claude plugins add --dir /path/to/rad-nextjs
+claude plugins add ./RAD-Claude-Skills/plugins/rad-nextjs
 ```
 
-## Source Knowledge Base
+```
+Review my Next.js code
+Is my Server Action secure?
+Fix this hydration error
+Check my route handlers for IDOR
+```
 
-All content derived from the "Next.js Guide" NotebookLM notebook containing 58 sources:
-- Official Next.js documentation (App Router, Data Fetching, Caching, Security, Testing)
-- Vercel Academy and Blog
-- Security guides (TurboStarter, Vinta Software, Authgear, Arcjet)
-- Academic papers (arXiv comparative analysis)
-- Performance research (web.dev, DebugBear, Netflix Engineering)
-- Community best practices (Reddit, dev.to)
-- Framework comparisons and case studies
+## License
+Apache-2.0
