@@ -1,0 +1,7 @@
+{
+  "name": "rad-writer",
+  "description": "Domain-smart writing across 9 content types — email, blog, web copy, business reports, research, presentations, prose, technical docs, and social media. AI pattern avoidance baked into every skill. Write from scratch with context-aware drafting, improve existing text with numbered accept/reject suggestions, review documents with structured diagnostics, or run a deep AI pattern audit. Optional voice profiles for persistent writing style on CLI and Desktop. 4 skills, 2 agents, 13 reference files.",
+  "version": "1.0.0",
+  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "license": "Apache-2.0"
+}

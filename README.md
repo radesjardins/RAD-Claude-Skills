@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 15 plugins, 180+ skills, and 13 autonomous agents covering developer frameworks, productivity, accessibility, SEO, and more.
+A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 21 plugins, 210+ skills, and 15 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
 
 Install everything at once or cherry-pick individual plugins.
 
@@ -25,6 +25,7 @@ RAD-Claude-Skills/
 │   ├── rad-stack-guide/               # Stack detection, guidance & review orchestration
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
 │   ├── rad-typescript/                # Production TypeScript standards
+│   ├── rad-writer/                    # Domain-smart writing (9 domains, AI pattern avoidance)
 │   └── rad-zod/                       # Zod v4 validation patterns
 ```
 
@@ -92,6 +93,7 @@ Start a new Claude Code session and run:
 | [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Ideation methodologies — SCAMPER, Six Hats, Five Whys, reverse brainstorming, idea evaluation, design sprints |
 | [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Google Workspace — Gmail, Calendar, Drive, Docs, Sheets, Chat, Meet, Tasks, Forms, plus 41 recipes and 10 personas |
 | [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — scaffolding, agent teams, hooks, MCP configs, operational patterns |
+| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-smart writing across 9 content types — email, blog, web copy, reports, research, presentations, prose, technical docs, social media. AI pattern avoidance, voice profiles, accept/reject suggestions |
 
 ### Specialized
 

@@ -123,6 +123,12 @@
       "source": "./plugins/rad-code-review",
       "description": "3-role adversarial code review with diff-aware scoping and AI slop detection — blame-aware diff filtering, framework-specific IDOR heuristics, 14 AI slop patterns, performance profiling, WCAG 2.2 dynamic ARIA state detection, interactive findings management with accept/filter/fix workflow, and severity-ranked findings with optional fix application. Covers security (OWASP), architecture, tests, UX/accessibility, and release readiness.",
       "category": "development"
+    },
+    {
+      "name": "rad-writer",
+      "source": "./plugins/rad-writer",
+      "description": "Domain-smart writing across 9 content types with AI pattern avoidance — email, blog, web copy, business reports, research, presentations, prose, technical docs, and social media. Write from scratch with context-aware drafting, improve text with numbered accept/reject suggestions, review with structured diagnostics, or run a deep AI pattern audit. Optional voice profiles for persistent writing style. 4 skills, 2 agents, 13 reference files.",
+      "category": "productivity"
     }
   ]
 }
