@@ -6,7 +6,8 @@
 - Cross-platform install scripts (bash + PowerShell)
 
 ## Conventions
-- Plugins live in `plugins/`, standalone skills in `skills/`
+- Plugins live in `plugins/` (for Claude Code CLI, Desktop, Cowork)
+- Claude.ai skills live in `skills/` (importable ZIPs for claude.ai)
 - Each skill has a `SKILL.md` with frontmatter (name, description, argument-hint, allowed-tools)
 - Reference docs go in `references/`, workflows in `workflows/`, templates in `templates/`
-- Design specs go in `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Design specs go in `docs/plans/YYYY-MM-DD-<topic>-design.md`
