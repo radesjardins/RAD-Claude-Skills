@@ -1,8 +1,13 @@
 {
   "name": "rad-session",
-  "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
   "version": "1.0.0",
-  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
   "license": "Apache-2.0",
-  "keywords": ["session", "handoff", "wrapup", "startup", "context", "CLAUDE.md"]
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-session",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["session", "handoff", "wrapup", "startup", "context", "claude-md"]
 }

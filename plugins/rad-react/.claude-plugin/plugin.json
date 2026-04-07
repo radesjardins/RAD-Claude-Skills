@@ -7,5 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-react",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["react", "hooks", "typescript", "accessibility", "performance", "testing", "jsx", "server-components", "security", "react-19", "useeffect", "anti-patterns"]
 }

@@ -1,0 +1,13 @@
+{
+  "name": "rad-gws-core",
+  "version": "1.0.0",
+  "description": "Google Workspace core integration — 14 essential skills covering Gmail (send, read, reply, triage), Docs (write), Sheets (read, append), Slides, Drive, and Calendar. Requires the gws CLI binary.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-gws-core",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["google-workspace", "gmail", "calendar", "drive", "docs", "sheets", "slides", "gws", "productivity"]
+}

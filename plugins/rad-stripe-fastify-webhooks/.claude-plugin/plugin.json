@@ -1,7 +1,13 @@
 {
   "name": "rad-stripe-fastify-webhooks",
-  "description": "RAD Stripe-Fastify Webhooks — production-grade Stripe webhook handling with Fastify and Zod. Covers signature verification with raw body access, subscription state machine management, idempotent event processing, Zod schema contracts for webhook payloads, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries (rate limiting, secret management, log redaction), and testing with fastify.inject(). Built from 55 curated sources including official Stripe docs, Fastify lifecycle references, Zod patterns, SaaS billing architecture guides, and production case studies.",
   "version": "1.0.0",
-  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
-  "license": "Apache-2.0"
+  "description": "RAD Stripe-Fastify Webhooks — production-grade Stripe webhook handling with Fastify and Zod. Covers signature verification with raw body access, subscription state machine management, idempotent event processing, Zod schema contracts for webhook payloads, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries, and testing with fastify.inject().",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-stripe-fastify-webhooks",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["stripe", "webhooks", "fastify", "zod", "subscriptions", "idempotency", "saas", "billing", "entitlements"]
 }

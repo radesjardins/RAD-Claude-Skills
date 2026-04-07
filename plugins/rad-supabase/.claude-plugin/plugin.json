@@ -7,18 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
-  "keywords": [
-    "supabase",
-    "postgres",
-    "database",
-    "edge-functions",
-    "auth",
-    "rls",
-    "migrations",
-    "branching",
-    "storage",
-    "mcp",
-    "cli",
-    "baas"
-  ]
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-supabase",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["supabase", "postgres", "database", "edge-functions", "auth", "rls", "migrations", "branching", "storage", "mcp", "cli", "baas"]
 }

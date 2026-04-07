@@ -7,5 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-code-review",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["code-review", "security", "owasp", "ai-slop", "diff-aware", "architecture", "performance", "accessibility", "release-readiness"]
 }

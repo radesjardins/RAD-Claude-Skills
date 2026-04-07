@@ -1,134 +1,190 @@
 {
   "name": "rad-claude-skills",
   "owner": {
-    "name": "RAD"
+    "name": "RAD",
+    "email": "rad@radesjardins.com"
+  },
+  "metadata": {
+    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more.",
+    "version": "1.1.0",
+    "pluginRoot": "./plugins"
   },
   "plugins": [
     {
-      "name": "rad-brainstormer",
-      "source": "./plugins/rad-brainstormer",
-      "description": "Collaborative ideation using proven methodologies (SCAMPER, Six Hats, Reverse Brainstorming, 5 Whys, HMW), domain research, structured evaluation, and design sprints.",
-      "category": "productivity"
+      "name": "rad-stack-guide",
+      "source": "./plugins/rad-stack-guide",
+      "description": "Auto-detects your tech stack, recommends and configures the right plugins, injects stack-aware guidance into CLAUDE.md, generates team settings, and orchestrates pre-ship reviews with specialist reviewers + rad-code-review as final gate. The entry point for the rad development stack.",
+      "category": "orchestration",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-stack-guide",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-seo-optimizer",
-      "source": "./plugins/rad-seo-optimizer",
-      "description": "Comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization.",
-      "category": "productivity"
-    },
-    {
-      "name": "rad-astro",
-      "source": "./plugins/rad-astro",
-      "description": "Astro framework coding standards, security hardening, accessibility (WCAG 2.2), performance optimization, and troubleshooting — Islands architecture, Content Layer API v2, Astro Actions, Server Islands, Core Web Vitals, CSP/XSS/CSRF protection, and anti-pattern enforcement. Updated for Astro 5/6.",
-      "category": "development"
-    },
-    {
-      "name": "rad-agentic-company-builder",
-      "source": "./plugins/rad-agentic-company-builder",
-      "description": "Scaffold and configure an AI-agent-driven company infrastructure — folder hierarchies, CLAUDE.md files, agent definitions, skills, hooks, MCP configs, and operational patterns based on The Agentic Bible 2026.",
-      "category": "productivity"
-    },
-    {
-      "name": "rad-google-workspace",
-      "source": "./plugins/rad-google-workspace",
-      "description": "Google Workspace integration — 42 service skills (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Meet, Tasks, Forms, Keep, Classroom), 41 workflow recipes, and 10 role-based personas. Requires the gws CLI.",
-      "category": "productivity"
-    },
-    {
-      "name": "rad-nextjs",
-      "source": "./plugins/rad-nextjs",
-      "description": "Next.js coding standards, security hardening, testing patterns, and troubleshooting — App Router architecture, Server/Client components, data fetching, caching, Core Web Vitals, authentication, OWASP protection, Vitest/Cypress/Playwright, and common bug diagnosis.",
-      "category": "development"
+      "name": "rad-code-review",
+      "source": "./plugins/rad-code-review",
+      "description": "3-role adversarial code review with diff-aware scoping and AI slop detection — blame-aware diff filtering, framework-specific IDOR heuristics, 14 AI slop patterns, performance profiling, WCAG 2.2 dynamic ARIA state detection, interactive findings management with accept/filter/fix workflow, and severity-ranked findings with optional fix application.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-code-review",
+      "license": "Apache-2.0"
     },
     {
       "name": "rad-react",
       "source": "./plugins/rad-react",
       "description": "Modern React best practices — functional components, hooks, JSX, props, state, routing, forms, data fetching, server/client boundaries, accessibility, TypeScript, testing, performance optimization, and code organization. No class components.",
-      "category": "development"
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-react",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-fastify",
-      "source": "./plugins/rad-fastify",
-      "description": "Fastify framework coding standards — encapsulation model, plugin DAG, hook lifecycle, JSON Schema validation (Ajv), response serialization (fast-json-stringify), Pino logging, TypeScript type providers, in-process testing, production hardening, and anti-pattern enforcement.",
-      "category": "development"
+      "name": "rad-nextjs",
+      "source": "./plugins/rad-nextjs",
+      "description": "Next.js coding standards, security hardening, testing patterns, and troubleshooting — App Router architecture, Server/Client components, data fetching, caching, Core Web Vitals, authentication, OWASP protection, Vitest/Cypress/Playwright, and common bug diagnosis.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-nextjs",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-zod",
-      "source": "./plugins/rad-zod",
-      "description": "Expert Zod v4 guidance — schema composition, parse-don't-validate mental model, error handling (treeifyError, flattenError), security review (over-posting, PATCH data-loss, coercion attacks), Zod v4 migration and new APIs (registries, ZodMini, z.file, z.templateLiteral), and framework integrations (Fastify type providers, Next.js Server Actions, React Hook Form, tRPC, monorepo shared schemas).",
-      "category": "development"
+      "name": "rad-astro",
+      "source": "./plugins/rad-astro",
+      "description": "Astro framework coding standards, security hardening, accessibility (WCAG 2.2), performance optimization, and troubleshooting — Islands architecture, Content Layer API v2, Astro Actions, Server Islands, Core Web Vitals, CSP/XSS/CSRF protection, and anti-pattern enforcement. Updated for Astro 5/6.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-astro",
+      "license": "Apache-2.0"
     },
     {
       "name": "rad-typescript",
       "source": "./plugins/rad-typescript",
-      "description": "Production-grade TypeScript standards — strict-mode architecture (noUncheckedIndexedAccess, exactOptionalPropertyTypes, verbatimModuleSyntax), type narrowing and discriminated unions, parse-don't-validate at API boundaries (Zod + Fastify type providers), Result-type error handling (neverthrow, errore), TS 4.9–5.7 modern features (satisfies, const type params, inferred predicates), and AI codegen guardrails. Enforces zero-any policy and engineering backpressure. Built from 34 curated sources.",
-      "category": "development"
+      "description": "Production-grade TypeScript standards — strict-mode architecture, type narrowing and discriminated unions, parse-don't-validate at API boundaries, Result-type error handling, TS 4.9-5.7 modern features, and AI codegen guardrails. Enforces zero-any policy.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-typescript",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-a11y",
-      "source": "./plugins/rad-a11y",
-      "description": "Digital accessibility toolkit for WCAG 2.2 AA compliance — semantic HTML structure, ARIA authoring practices (APG), keyboard navigation, focus management, color contrast, motion/animation, form accessibility, SVG accessibility, and automated testing with axe-core, jest-axe, and Playwright. Deep coverage for React, Astro, and Tailwind CSS stacks. Built from 56 curated sources.",
-      "category": "development"
+      "name": "rad-zod",
+      "source": "./plugins/rad-zod",
+      "description": "Expert Zod v4 guidance — schema composition, parse-don't-validate mental model, error handling, security review, Zod v4 migration and new APIs, and framework integrations (Fastify, Next.js, React Hook Form, tRPC).",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-zod",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-fastify",
+      "source": "./plugins/rad-fastify",
+      "description": "Fastify framework coding standards — encapsulation model, plugin DAG, hook lifecycle, JSON Schema validation (Ajv), response serialization, Pino logging, TypeScript type providers, in-process testing, production hardening, and anti-pattern enforcement.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-fastify",
+      "license": "Apache-2.0"
     },
     {
       "name": "rad-chrome-extension",
       "source": "./plugins/rad-chrome-extension",
-      "description": "Comprehensive MV3 Chrome extension development standards — WXT framework architecture, MV3 security (CSP, remote code ban, content script isolation), permission minimization and CWS compliance, typed messaging (Protocol Maps, @webext-core/messaging), storage patterns (chrome.storage vs IndexedDB, write-through cache), service worker lifecycle (top-level listeners, alarms, offscreen documents), React UI (Shadow DOM, portal fixing, rem-to-px), testing (Vitest + fake-browser, Playwright E2E), and Chrome Web Store troubleshooting (rejection codes, pre-release checklist). Built from 50+ curated sources.",
-      "category": "development"
-    },
-    {
-      "name": "rad-stack-guide",
-      "source": "./plugins/rad-stack-guide",
-      "description": "Auto-detects your tech stack, recommends and configures the right plugins, injects stack-aware guidance into CLAUDE.md, generates team settings, and orchestrates pre-ship reviews with specialist reviewers + rad-code-review as final gate. The entry point for the rad development stack.",
-      "category": "orchestration"
+      "description": "Comprehensive MV3 Chrome extension development standards — WXT framework architecture, MV3 security, permission minimization, typed messaging, storage patterns, service worker lifecycle, React UI, testing, and Chrome Web Store troubleshooting.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-chrome-extension",
+      "license": "Apache-2.0"
     },
     {
       "name": "rad-stripe-fastify-webhooks",
       "source": "./plugins/rad-stripe-fastify-webhooks",
-      "description": "Production-grade Stripe webhook handling with Fastify and Zod — signature verification, subscription state machine, idempotent event processing, Zod schema contracts, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries, and testing with fastify.inject().",
-      "category": "development"
+      "description": "Production-grade Stripe webhook handling with Fastify and Zod — signature verification, subscription state machine, idempotent event processing, Zod schema contracts, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries, and testing.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-stripe-fastify-webhooks",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-coolify-orchestrator",
-      "source": "./plugins/rad-coolify-orchestrator",
-      "description": "End-to-end Coolify self-hosted PaaS management — deployments (Nixpacks/Dockerfile/Compose/pre-built image), databases (provisioning/backups/SSL), security (secrets/RBAC/UFW), CI/CD (REST API/GitHub Actions/GHCR/webhooks), troubleshooting (502/504/SSL/build failures), observability (Sentinel/log drains/Uptime Kuma), and multi-server infrastructure (Swarm/build servers). 7 skills, 14 reference files, 1 reviewer agent. Coolify v4 self-hosted.",
-      "category": "devops"
-    },
-    {
-      "name": "rad-para-second-brain",
-      "source": "./plugins/rad-para-second-brain",
-      "description": "Active PARA system management — weekly review automation, folder structure auditing, Progressive Summarization, Intermediate Packet assembly, Hemingway Bridge session handoffs, and 12 Favorite Problems workshop. 5 skills, 2 agents, 4 reference files. Based on Tiago Forte's Building a Second Brain.",
-      "category": "productivity"
-    },
-    {
-      "name": "rad-session",
-      "source": "./plugins/rad-session",
-      "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
-      "category": "productivity"
+      "name": "rad-a11y",
+      "source": "./plugins/rad-a11y",
+      "description": "Digital accessibility toolkit for WCAG 2.2 AA compliance — semantic HTML, ARIA authoring practices, keyboard navigation, focus management, color contrast, motion/animation, form accessibility, SVG accessibility, and automated testing with axe-core.",
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-a11y",
+      "license": "Apache-2.0"
     },
     {
       "name": "rad-supabase",
       "source": "./plugins/rad-supabase",
       "description": "End-to-end Supabase development and operations — projects, database, migrations, edge functions, auth, storage, realtime, branching, security, and troubleshooting. Covers both Supabase CLI and Supabase MCP tool usage.",
-      "category": "development"
+      "category": "development",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-supabase",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-context-prompter",
-      "source": "./plugins/rad-context-prompter",
-      "description": "Production-grade prompt engineering toolkit — systematic tool-specific routing across 30+ AI platforms, 35 anti-pattern diagnostic reference, 12 technique selection matrix, prompt decompilation/reverse-engineering (6 analysis modes), autonomous prompt debugging with coded failure taxonomy (F1-F7), context engineering for agentic systems, and 13 reusable templates. Covers Claude, GPT, Gemini, o3, Midjourney, Stable Diffusion, Cursor, Claude Code, n8n, and more.",
-      "category": "productivity"
+      "name": "rad-coolify-orchestrator",
+      "source": "./plugins/rad-coolify-orchestrator",
+      "description": "End-to-end Coolify self-hosted PaaS management — deployments, databases, security, CI/CD, troubleshooting, observability, and multi-server infrastructure. Coolify v4 self-hosted.",
+      "category": "devops",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-coolify-orchestrator",
+      "license": "Apache-2.0"
     },
     {
-      "name": "rad-code-review",
-      "source": "./plugins/rad-code-review",
-      "description": "3-role adversarial code review with diff-aware scoping and AI slop detection — blame-aware diff filtering, framework-specific IDOR heuristics, 14 AI slop patterns, performance profiling, WCAG 2.2 dynamic ARIA state detection, interactive findings management with accept/filter/fix workflow, and severity-ranked findings with optional fix application. Covers security (OWASP), architecture, tests, UX/accessibility, and release readiness.",
-      "category": "development"
+      "name": "rad-brainstormer",
+      "source": "./plugins/rad-brainstormer",
+      "description": "Collaborative ideation using proven methodologies (SCAMPER, Six Hats, Reverse Brainstorming, 5 Whys, HMW), domain research, structured evaluation, and design sprints.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-brainstormer",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-seo-optimizer",
+      "source": "./plugins/rad-seo-optimizer",
+      "description": "Comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-seo-optimizer",
+      "license": "Apache-2.0"
     },
     {
       "name": "rad-writer",
       "source": "./plugins/rad-writer",
-      "description": "Domain-smart writing across 9 content types with AI pattern avoidance — email, blog, web copy, business reports, research, presentations, prose, technical docs, and social media. Write from scratch with context-aware drafting, improve text with numbered accept/reject suggestions, review with structured diagnostics, or run a deep AI pattern audit. Optional voice profiles for persistent writing style. 4 skills, 2 agents, 13 reference files.",
-      "category": "productivity"
+      "description": "Domain-smart writing across 9 content types with AI pattern avoidance — email, blog, web copy, business reports, research, presentations, prose, technical docs, and social media. 4 skills, 2 agents, 13 reference files.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-writer",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-context-prompter",
+      "source": "./plugins/rad-context-prompter",
+      "description": "Production-grade prompt engineering toolkit — systematic tool-specific routing across 30+ AI platforms, anti-pattern diagnostics, technique selection matrix, prompt decompilation, autonomous debugging, context engineering for agentic systems, and reusable templates.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-context-prompter",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-google-workspace",
+      "source": "./plugins/rad-google-workspace",
+      "description": "Google Workspace integration — 42 service skills (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Meet, Tasks, Forms, Keep, Classroom), 41 workflow recipes, and 10 role-based personas. Requires the gws CLI.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-google-workspace",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-agentic-company-builder",
+      "source": "./plugins/rad-agentic-company-builder",
+      "description": "Scaffold and configure an AI-agent-driven company infrastructure — folder hierarchies, CLAUDE.md files, agent definitions, skills, hooks, MCP configs, and operational patterns based on The Agentic Bible 2026.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-agentic-company-builder",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-para-second-brain",
+      "source": "./plugins/rad-para-second-brain",
+      "description": "Active PARA system management — weekly review automation, folder structure auditing, Progressive Summarization, Intermediate Packet assembly, Hemingway Bridge session handoffs, and 12 Favorite Problems workshop.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-para-second-brain",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-session",
+      "source": "./plugins/rad-session",
+      "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-session",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-gws-core",
+      "source": "./plugins/rad-gws-core",
+      "description": "Google Workspace core integration — 14 essential skills covering Gmail (send, read, reply, triage), Docs (write), Sheets (read, append), Slides, Drive, and Calendar. Requires the gws CLI binary.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-gws-core",
+      "license": "Apache-2.0"
     }
   ]
 }

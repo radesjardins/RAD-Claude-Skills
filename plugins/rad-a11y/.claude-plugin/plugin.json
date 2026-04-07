@@ -7,5 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-a11y",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["accessibility", "wcag", "a11y", "aria", "wcag22", "keyboard", "focus", "contrast", "screen-reader", "axe-core", "react", "astro", "tailwind", "semantic-html", "forms"]
 }

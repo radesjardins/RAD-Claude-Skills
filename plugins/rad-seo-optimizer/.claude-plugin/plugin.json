@@ -1,7 +1,13 @@
 {
   "name": "rad-seo-optimizer",
-  "description": "RAD SEO Optimizer — comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization with step-by-step fix guidance.",
   "version": "1.0.0",
-  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
-  "license": "Apache-2.0"
+  "description": "RAD SEO Optimizer — comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization with step-by-step fix guidance.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-seo-optimizer",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["seo", "aeo", "geo", "schema-markup", "e-e-a-t", "keywords", "link-building", "content-strategy", "serp"]
 }

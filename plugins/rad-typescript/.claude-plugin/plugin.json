@@ -1,11 +1,13 @@
 {
   "name": "rad-typescript",
   "version": "1.0.0",
-  "description": "RAD TypeScript — production-grade TypeScript standards for strict-mode architecture, type safety, API boundary defense, error handling, and AI codegen guardrails. Built from 34 curated sources including official TypeScript 4.9–5.7 docs, TSConfig reference, Zod documentation, neverthrow/errore error handling libraries, Fastify type providers, and community best practices. Enforces zero-any policy, parse-don't-validate at boundaries, discriminated unions, and Result-type error handling.",
+  "description": "RAD TypeScript — production-grade TypeScript standards for strict-mode architecture, type safety, API boundary defense, error handling, and AI codegen guardrails. Built from 34 curated sources including official TypeScript 4.9-5.7 docs, TSConfig reference, Zod documentation, neverthrow/errore error handling libraries, Fastify type providers, and community best practices. Enforces zero-any policy, parse-don't-validate at boundaries, discriminated unions, and Result-type error handling.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-typescript",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["typescript", "strict-mode", "type-safety", "zod", "error-handling", "api-safety", "monorepo", "generics", "narrowing", "result-types"]
 }

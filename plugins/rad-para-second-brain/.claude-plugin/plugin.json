@@ -1,8 +1,13 @@
 {
   "name": "rad-para-second-brain",
-  "description": "Active PARA system management — not just knowledge about PARA, but an AI that manages your PARA system for you. Includes weekly review automation, folder structure auditing, Progressive Summarization, Intermediate Packet assembly, Hemingway Bridge session handoffs, and the 12 Favorite Problems workshop. Based on Tiago Forte's Building a Second Brain methodology.",
   "version": "1.0.0",
-  "author": { "name": "RAD", "url": "https://github.com/radesjardins" },
+  "description": "Active PARA system management — not just knowledge about PARA, but an AI that manages your PARA system for you. Includes weekly review automation, folder structure auditing, Progressive Summarization, Intermediate Packet assembly, Hemingway Bridge session handoffs, and the 12 Favorite Problems workshop. Based on Tiago Forte's Building a Second Brain methodology.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-para-second-brain",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["para", "second-brain", "knowledge-management", "productivity", "progressive-summarization", "pkm", "tiago-forte"]
 }

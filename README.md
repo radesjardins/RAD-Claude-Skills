@@ -41,7 +41,25 @@ Each one installs in a single command and activates automatically when you ask C
 
 ## Quick Install
 
-### Install a Plugin
+### Option 1: Add as a Marketplace (recommended)
+
+Add the entire marketplace to Claude Code or Claude Desktop — browse and install any plugin, with automatic updates on sync.
+
+```bash
+# Add the marketplace
+claude plugin marketplace add https://github.com/radesjardins/RAD-Claude-Skills
+
+# Install any plugin from the marketplace
+claude plugin install rad-react@rad-claude-skills
+claude plugin install rad-typescript@rad-claude-skills
+claude plugin install rad-code-review@rad-claude-skills
+# ... any plugin from the list below
+
+# Update all installed plugins
+claude plugin marketplace update
+```
+
+### Option 2: Install Directly from Git
 
 ```bash
 # Clone the repo

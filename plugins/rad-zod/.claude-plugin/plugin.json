@@ -7,5 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-zod",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["zod", "validation", "typescript", "schema", "runtime-types", "react-hook-form", "fastify", "nextjs"]
 }

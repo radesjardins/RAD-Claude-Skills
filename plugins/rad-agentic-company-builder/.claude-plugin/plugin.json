@@ -7,5 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-agentic-company-builder",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
   "keywords": ["agentic", "scaffolding", "company", "agents", "claude-code", "cowork", "automation"]
 }

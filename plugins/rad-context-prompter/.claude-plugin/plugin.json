@@ -7,20 +7,7 @@
     "url": "https://github.com/radesjardins"
   },
   "license": "Apache-2.0",
-  "keywords": [
-    "prompt-engineering",
-    "context-engineering",
-    "system-prompts",
-    "tool-routing",
-    "anti-patterns",
-    "prompt-debugging",
-    "prompt-decompiler",
-    "claude",
-    "gpt",
-    "midjourney",
-    "agentic-workflows",
-    "few-shot",
-    "chain-of-thought",
-    "claude-md"
-  ]
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-context-prompter",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["prompt-engineering", "context-engineering", "system-prompts", "tool-routing", "anti-patterns", "prompt-debugging", "prompt-decompiler", "claude", "gpt", "midjourney", "agentic-workflows", "few-shot", "chain-of-thought", "claude-md"]
 }
