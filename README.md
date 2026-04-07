@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 21 plugins, 210+ skills, and 15 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
+A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 22 plugins, 220+ skills, and 15 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
 
 Install everything at once or cherry-pick individual plugins.
 
@@ -19,6 +19,7 @@ RAD-Claude-Skills/
 │   ├── rad-code-review/               # Diff-aware adversarial code review
 │   ├── rad-fastify/                   # Fastify framework standards
 │   ├── rad-google-workspace/          # Google Workspace integration (93 skills)
+│   ├── rad-gws-core/                  # Google Workspace core (14 essential skills)
 │   ├── rad-nextjs/                    # Next.js App Router standards
 │   ├── rad-react/                     # Modern React best practices
 │   ├── rad-seo-optimizer/             # Complete SEO & AEO toolkit
@@ -110,6 +111,7 @@ Start a new Claude Code session and run:
 | [rad-seo-optimizer](plugins/rad-seo-optimizer/) | 12 | 3 | Complete SEO toolkit — audits, AEO/AI visibility, keywords, competitors, link building, schema, reports |
 | [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Ideation methodologies — SCAMPER, Six Hats, Five Whys, reverse brainstorming, idea evaluation, design sprints |
 | [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Google Workspace — Gmail, Calendar, Drive, Docs, Sheets, Chat, Meet, Tasks, Forms, plus 41 recipes and 10 personas |
+| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace core — Gmail send/read/reply/triage, Docs, Sheets, Slides, Drive, Calendar. Lightweight alternative to rad-google-workspace |
 | [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — scaffolding, agent teams, hooks, MCP configs, operational patterns |
 | [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-smart writing across 9 content types — email, blog, web copy, reports, research, presentations, prose, technical docs, social media. AI pattern avoidance, voice profiles, accept/reject suggestions |
 
