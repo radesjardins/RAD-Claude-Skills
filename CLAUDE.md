@@ -10,4 +10,4 @@
 - Claude.ai skills live in `skills/` (importable ZIPs for claude.ai)
 - Each skill has a `SKILL.md` with frontmatter (name, description, argument-hint, allowed-tools)
 - Reference docs go in `references/`, workflows in `workflows/`, templates in `templates/`
-- Design specs go in `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Design specs and backburner ideas go in `C:\Dev\plans\YYYY-MM-DD-<topic>-design.md` (local only, not tracked by git)
