@@ -39,6 +39,7 @@ Each skill is self-contained. Upload or provide one, two, or all skills from a f
 |--------|-------------|--------|
 | `rad-seo/` | rad-seo-optimizer | SEO audit, competitor analysis, strategy, and AI visibility optimization |
 | `rad-brainstorm/` | rad-brainstormer | Facilitated ideation, evaluation frameworks, creative unblocking, and design sprint |
+| `rad-writer/` | rad-writer | Domain-smart writing, AI pattern avoidance, voice profiling across 9 content types |
 
 ## Conventions
 
