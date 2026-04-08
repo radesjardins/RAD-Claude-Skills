@@ -16,22 +16,15 @@ These skills are rewritten to maximize those capabilities and work without files
 
 ## How to Use
 
-There are several ways to use these skills on Claude.ai:
+Each skill is packaged as a `.zip` in its folder's `dist/` directory.
 
-### Option 1: Project Knowledge (recommended for repeated use)
-1. Go to [claude.ai](https://claude.ai) and create a new **Project**
-2. Open the Project settings and add **Project Knowledge** files
-3. Upload the skill `.md` file(s) — they persist across all conversations in that project
+**As a Skill (recommended):** Go to **Settings > Customize > Skills** on Claude.ai. Upload the `.zip`. It activates automatically in any conversation.
 
-### Option 2: Conversation attachment (one-off use)
-1. Start a new conversation on claude.ai
-2. Attach the skill `.md` file(s) to your message
-3. Claude will follow the skill instructions for that conversation
+**As Project Knowledge:** Add the `.md` files from the `*-complete/` folder to a Claude.ai Project.
 
-### Option 3: API system prompt
-Use the skill content as a system prompt when calling the Claude API directly.
+**As a conversation attachment:** Attach `SKILL.md` to any conversation for one-off use.
 
-Each skill is self-contained. Upload or provide one, two, or all skills from a folder — no dependencies between files.
+**As an API system prompt:** Use the SKILL.md content as a system prompt when calling the Claude API.
 
 ## Available Skills
 
@@ -45,6 +38,5 @@ Each skill is self-contained. Upload or provide one, two, or all skills from a f
 
 - Each adapted plugin gets its own folder: `skills/<plugin-name>/`
 - Each folder has a `README.md` with setup instructions and example prompts
-- Skill files are named `<plugin-name>-<focus>.md`
-- Optional extras (templates, reference docs) go in `optional/`
-- Skills are fully self-contained — no cross-file dependencies
+- The complete skill lives in `<plugin-name>-complete/` with `SKILL.md` + `resources/`
+- Importable ZIP is in `dist/` (gitignored — regenerable from source)

@@ -1,72 +1,43 @@
-# RAD Writer — Claude.ai Skills
+# RAD Writer — Claude.ai Skill
 
 Domain-smart writing, AI pattern avoidance, voice profiling, and editorial review across 9 content types. Adapted from the [rad-writer plugin](../../plugins/rad-writer/) for Claude.ai.
 
-## Two Options
+## What's Included
 
-### Option A: Complete Suite (recommended)
+Import `dist/rad-writer-complete.zip` via **Settings > Customize > Skills** on Claude.ai.
 
-One skill with everything. Import `dist/rad-writer-complete.zip` via **Settings > Customize > Skills**.
+The skill includes a SKILL.md with 5 modes (write, improve, review, AI audit, voice analysis) plus 13 resource files:
 
-Includes the full SKILL.md (write, improve, review, AI audit, voice analysis) plus 13 resource files: AI pattern detection framework, word blocklist (275+ tells), sentence craft guide, voice profile schema, and 9 deep domain guides.
-
-### Option B: Modular Skills
-
-Import only the modes you need. Each is a separate ZIP in `dist/`:
-
-| ZIP File | What It Does | Use When You Want To... |
-|----------|-------------|------------------------|
-| `rad-writer-write.zip` | Domain-smart drafting with AI avoidance | Write something from scratch |
-| `rad-writer-improve.zip` | Tracked changes with accept/reject | Polish existing text |
-| `rad-writer-review.zip` | Scored diagnostic with three-pass option | Get feedback on your writing |
-| `rad-writer-ai-audit.zip` | Pattern-by-pattern AI diagnostic | Check if text sounds like AI |
-
-Modular skills detect each other and offer natural transitions (write → review → improve → audit).
+- AI writing patterns framework (structural detection, not cosmetic)
+- Word blocklist (275+ lexical tells by severity)
+- Sentence craft guide (burstiness, transitions, paragraph techniques)
+- Voice profile schema (for learning and matching your writing style)
+- 9 domain guides: email, blog, web copy, business report, research/academic, presentation, prose/essay, technical docs, social media
 
 ## How to Import
 
-**As a Skill (recommended):** Go to **Settings > Customize > Skills** on Claude.ai. Upload the `.zip` file(s).
+**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-writer-complete.zip`. Activates automatically in any conversation.
 
-**As Project Knowledge:** Create a Claude.ai Project, add the `.md` file(s) directly.
+**As Project Knowledge:** Add the `.md` files to a Claude.ai Project for project-scoped use.
 
-**As a conversation attachment:** Attach the `.md` file to any conversation for one-off use.
+**As a conversation attachment:** Attach `SKILL.md` to any conversation for one-off use.
 
 ## Example Prompts
 
-### Writing
 - "Write me a cold outreach email to [person]"
 - "Draft a blog post about [topic]"
+- "Improve this — it sounds too robotic" [paste text]
+- "Review this writing and tell me what to fix"
+- "Does this sound like AI?" [paste text]
+- "Analyze my writing voice" [paste 3-5 samples]
 - "Create web copy for my landing page"
 - "Write a LinkedIn post about [topic]"
-- "Draft a technical README for this project"
-
-### Improving
-- "Improve this email" [paste text]
-- "Make this blog post better"
-- "Polish this — it sounds too robotic"
-- "Tighten up this report"
-
-### Reviewing
-- "Review this writing and tell me what to fix"
-- "Give me feedback on this essay"
-- "How's my writing?"
-- "Do a thorough review of this document"
-
-### AI Auditing
-- "Does this sound like AI?"
-- "Check this for AI patterns"
-- "Run an AI audit on this draft"
-- "How can I make this sound more human?"
-
-### Voice Profiling
-- "Analyze my writing voice" [paste 3-5 samples]
-- "Learn my writing style from these samples"
-- "Create a voice profile for my blog writing"
 
 ## How It Works
 
-- **9 writing domains:** Email, blog, web copy, business report, research/academic, presentation, prose/essay, technical docs, social media — each with deep convention knowledge
-- **AI avoidance baked in:** 275+ lexical tells tracked, burstiness scoring, structural analysis. Avoidance is structural during generation, not cosmetic post-processing.
-- **Voice profiles:** Provide 3-5 writing samples → get a downloadable voice profile. Upload to a Project for persistent voice matching, or attach to any conversation.
-- **Three-pass review:** Structure & flow → sentence & word craft → AI pattern scan. Deduplicated, severity-ranked findings.
-- **Tracked changes:** Every improvement is numbered. Accept all, review individually, or cherry-pick by number.
+- **9 writing domains**: Each with deep convention knowledge, anti-patterns, and domain-specific AI tells
+- **AI avoidance baked in**: 275+ lexical tells tracked, burstiness scoring, structural analysis — avoidance is structural during generation, not cosmetic post-processing
+- **Voice profiles**: Provide 3-5 writing samples → get a downloadable voice profile artifact. Upload to a Project for persistent voice matching, or attach to any conversation.
+- **Three-pass review**: Structure & flow → sentence & word craft → AI pattern scan. Deduplicated, severity-ranked findings.
+- **Tracked changes**: Every improvement is numbered. Accept all, review individually, or cherry-pick by number.
+- **Not an AI detector**: The AI audit reports patterns with fixes, not verdicts. Every "AI tell" is also a craft problem — fix the writing quality, detectability solves itself.
