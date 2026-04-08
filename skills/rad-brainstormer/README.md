@@ -1,10 +1,10 @@
-# RAD Brainstorm — Claude.ai Skill
+# RAD Brainstormer — Claude.ai Skill
 
 Collaborative ideation using proven methodologies (SCAMPER, Six Hats, Reverse Brainstorming, Five Whys, and more), structured evaluation, creative unblocking, and design sprint. Adapted from the [rad-brainstormer plugin](../../plugins/rad-brainstormer/) for Claude.ai.
 
 ## What's Included
 
-Import `dist/rad-brainstorm-complete.zip` via **Settings > Customize > Skills** on Claude.ai.
+Import `rad-brainstormer.zip` via **Settings > Customize > Skills** on Claude.ai.
 
 The skill includes a SKILL.md orchestrator covering 3 workflows (ideation, evaluation, design sprint) plus 5 resource files:
 
@@ -16,7 +16,7 @@ The skill includes a SKILL.md orchestrator covering 3 workflows (ideation, evalu
 
 ## How to Import
 
-**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-brainstorm-complete.zip`. Activates automatically in any conversation.
+**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-brainstormer.zip`. Activates automatically in any conversation.
 
 **As Project Knowledge:** Add the `.md` files to a Claude.ai Project for project-scoped use.
 

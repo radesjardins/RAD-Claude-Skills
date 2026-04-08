@@ -1,5 +1,5 @@
 ---
-name: "RAD Writer Complete"
+name: "RAD Writer"
 description: "Full writing suite: domain-smart drafting, improvement with tracked changes, diagnostic review, AI pattern auditing, and voice profiling across 9 content types."
 ---
 

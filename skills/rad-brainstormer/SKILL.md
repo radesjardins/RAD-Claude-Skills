@@ -1,5 +1,5 @@
 ---
-name: "RAD Brainstorm Complete"
+name: "RAD Brainstormer"
 description: "Full brainstorming suite: facilitated ideation with proven methodologies, creative unblocking, structured evaluation, idea stress-testing, and design sprint for turning ideas into specs."
 ---
 

@@ -4,7 +4,7 @@ Domain-smart writing, AI pattern avoidance, voice profiling, and editorial revie
 
 ## What's Included
 
-Import `dist/rad-writer-complete.zip` via **Settings > Customize > Skills** on Claude.ai.
+Import `rad-writer.zip` via **Settings > Customize > Skills** on Claude.ai.
 
 The skill includes a SKILL.md with 5 modes (write, improve, review, AI audit, voice analysis) plus 13 resource files:
 
@@ -16,7 +16,7 @@ The skill includes a SKILL.md with 5 modes (write, improve, review, AI audit, vo
 
 ## How to Import
 
-**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-writer-complete.zip`. Activates automatically in any conversation.
+**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-writer.zip`. Activates automatically in any conversation.
 
 **As Project Knowledge:** Add the `.md` files to a Claude.ai Project for project-scoped use.
 

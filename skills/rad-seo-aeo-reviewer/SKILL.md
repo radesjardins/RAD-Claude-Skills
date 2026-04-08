@@ -1,5 +1,5 @@
 ---
-name: "RAD SEO Complete"
+name: "RAD SEO AEO Reviewer"
 description: "Full SEO suite: site audit, competitor intelligence, keyword/content strategy, AI visibility optimization, and schema markup. Proactively analyzes sites and produces scored reports."
 ---
 

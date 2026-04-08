@@ -16,11 +16,9 @@ These skills are rewritten to maximize those capabilities and work without files
 
 ## How to Use
 
-Each skill is packaged as a `.zip` in its folder's `dist/` directory.
+**As a Skill (recommended):** Go to **Settings > Customize > Skills** on Claude.ai. Upload the `.zip` from the skill's folder. It activates automatically in any conversation.
 
-**As a Skill (recommended):** Go to **Settings > Customize > Skills** on Claude.ai. Upload the `.zip`. It activates automatically in any conversation.
-
-**As Project Knowledge:** Add the `.md` files from the `*-complete/` folder to a Claude.ai Project.
+**As Project Knowledge:** Add `SKILL.md` and the `resources/` files to a Claude.ai Project.
 
 **As a conversation attachment:** Attach `SKILL.md` to any conversation for one-off use.
 
@@ -28,15 +26,13 @@ Each skill is packaged as a `.zip` in its folder's `dist/` directory.
 
 ## Available Skills
 
-| Folder | Source Plugin | Skills |
-|--------|-------------|--------|
-| `rad-seo/` | rad-seo-optimizer | SEO audit, competitor analysis, strategy, and AI visibility optimization |
-| `rad-brainstorm/` | rad-brainstormer | Facilitated ideation, evaluation frameworks, creative unblocking, and design sprint |
-| `rad-writer/` | rad-writer | Domain-smart writing, AI pattern avoidance, voice profiling across 9 content types |
+| Folder | ZIP Name | Description |
+|--------|----------|-------------|
+| `rad-seo-aeo-reviewer/` | `rad-seo-aeo-reviewer.zip` | SEO audit, competitor analysis, content strategy, AI visibility, schema markup |
+| `rad-brainstormer/` | `rad-brainstormer.zip` | Facilitated ideation, evaluation frameworks, creative unblocking, design sprint |
+| `rad-writer/` | `rad-writer.zip` | Domain-smart writing, AI pattern avoidance, voice profiling across 9 content types |
 
 ## Conventions
 
-- Each adapted plugin gets its own folder: `skills/<plugin-name>/`
-- Each folder has a `README.md` with setup instructions and example prompts
-- The complete skill lives in `<plugin-name>-complete/` with `SKILL.md` + `resources/`
-- Importable ZIP is in `dist/` (gitignored — regenerable from source)
+- Each skill gets its own folder: `skills/<skill-name>/`
+- Each folder has `README.md`, `SKILL.md`, and `resources/`

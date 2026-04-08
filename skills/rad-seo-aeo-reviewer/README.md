@@ -1,10 +1,10 @@
-# RAD SEO — Claude.ai Skill
+# RAD SEO AEO Reviewer — Claude.ai Skill
 
 Comprehensive SEO auditing, competitor intelligence, content strategy, and AI visibility optimization. Adapted from the [rad-seo-optimizer plugin](../../plugins/rad-seo-optimizer/) for Claude.ai.
 
 ## What's Included
 
-Import `dist/rad-seo-complete.zip` via **Settings > Customize > Skills** on Claude.ai.
+Import `rad-seo-aeo-reviewer.zip` via **Settings > Customize > Skills** on Claude.ai.
 
 The skill includes a SKILL.md orchestrator covering 4 workflows (audit, competitors, strategy, AEO) plus 8 resource files:
 
@@ -18,7 +18,7 @@ The skill includes a SKILL.md orchestrator covering 4 workflows (audit, competit
 
 ## How to Import
 
-**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-seo-complete.zip`. Activates automatically in any conversation.
+**As a Skill (recommended):** Settings > Customize > Skills > upload `rad-seo-aeo-reviewer.zip`. Activates automatically in any conversation.
 
 **As Project Knowledge:** Add the `.md` files to a Claude.ai Project for project-scoped use.
 
