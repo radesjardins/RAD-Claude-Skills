@@ -1,27 +1,27 @@
 # Session Handoff
 
-**Date:** 2026-04-05
-**Status:** rad-code-review v2.0 consolidated as plugin at `plugins/rad-code-review/`
+**Date:** 2026-04-09
+**Status:** New additions committed and pushed — rad-planner plugin, @radoriginllc/coolify-mcp package, coolify-orchestrator MCP integration
 
 ## Last Session Summary
-Consolidated rad-code-review: removed v1.0 from `skills/`, promoted v2.0 to plugin structure at `plugins/rad-code-review/`. v2.0 is a verified strict superset of v1.0 (all 22 shared files byte-identical). Added `code-reviewer` agent. Updated root README (moved from standalone skills table to plugins table).
-
-v2.0 adds: blame-aware diff scoping, `--since <commit>` incremental review, `--full-scan` override, framework-specific IDOR detection (6 frameworks), performance profiling heuristics (8 patterns), dynamic ARIA state detection, finding attribution (introduced vs pre-existing).
+Verified and committed three additions to the repo: (1) rad-planner plugin (5 skills, 3 agents, 8 reference files — structured project planning with dependency-aware DAG tasks, risk assessment, and stack intelligence), (2) @radoriginllc/coolify-mcp npm package (MCP server wrapping the Coolify REST API with 30+ tools), and (3) rad-coolify-orchestrator updates tying it to the new bundled MCP server via .mcp.json. Updated root README.md with new plugin counts, tree entries, and table rows.
 
 ## Where I Left Off
-- Consolidation complete, nothing mid-flight
-- Changes are unstaged — need `git add` and commit
-- Design spec at `docs/plans/2026-04-05-rad-code-review-v2-design.md` (historical)
+- All changes committed and pushed to origin/main
+- rad-planner validated — 18 files, proper plugin structure, all frontmatter correct
+- coolify-mcp package already published to npm as @radoriginllc/coolify-mcp v1.0.0
+- coolify-orchestrator bumped to v1.1.0 with .mcp.json bundling the MCP server
 
 ## Key Decisions
-- **Approach 2 (Scope-First):** Blame context pushed into subagent prompt rather than filtering findings after review — more token-efficient, produces higher-signal output
-- **Blame-aware default for diff/commit only:** `repo` and `tree` scopes stay full-scan. Users can override with `--full-scan`
-- **v1.0 fully retired:** v2.0 is a verified strict superset — all 22 shared files were byte-identical, v2 only added content. No deprecation shim needed.
-- **IDOR heuristics at Option B depth:** Framework-specific grep-able patterns for 6 frameworks, not just conceptual guidance
-- **Dependency chain rule:** Blame-aware mode still flags pre-existing issues when new code depends on broken existing code, tagged as `[PRE-EXISTING]`
+- Added "Planning & Architecture" as a new section in the root README table (between Productivity & Specialized)
+- rad-coolify-orchestrator moved into the "Specialized" table (was previously tracked but not listed in README)
+- packages/ directory added to the repo tree in README to document the npm packages location
 
 ## Modified Files
-- `plugins/rad-code-review/` — v2.0 content as a proper plugin (was `skills/rad-code-review-v2/`)
-- `plugins/rad-code-review/agents/code-reviewer.md` — new autonomous reviewer agent
-- `README.md` — single entry for rad-code-review (v1 line removed, v2 link updated)
-- `HANDOFF.md` — updated to reflect consolidation
+- `README.md` — updated counts (23 plugins, 225+ skills, 18 agents), added tree entries, added table rows
+- `HANDOFF.md` — session state
+- `packages/coolify-mcp/` — new npm package (index.js, package.json, README.md)
+- `plugins/rad-planner/` — new plugin (18 files)
+- `plugins/rad-coolify-orchestrator/.mcp.json` — new MCP server config
+- `plugins/rad-coolify-orchestrator/README.md` — added bundled MCP section
+- `plugins/rad-coolify-orchestrator/skills/coolify-actions/SKILL.md` — updated requires note

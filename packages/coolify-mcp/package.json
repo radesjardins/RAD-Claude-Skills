@@ -1,0 +1,43 @@
+{
+  "name": "@radoriginllc/coolify-mcp",
+  "version": "1.0.0",
+  "description": "MCP server wrapping the Coolify REST API — manage deployments, applications, databases, services, and infrastructure from Claude Code or any MCP client",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "coolify-mcp": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "coolify",
+    "deployment",
+    "self-hosted",
+    "paas",
+    "docker",
+    "devops",
+    "infrastructure",
+    "model-context-protocol",
+    "claude"
+  ],
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radesjardins/RAD-Claude-Skills.git",
+    "directory": "packages/coolify-mcp"
+  },
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/packages/coolify-mcp",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.25.0 || ^4.0.0"
+  }
+}

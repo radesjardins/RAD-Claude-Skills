@@ -1,0 +1,13 @@
+{
+  "name": "rad-planner",
+  "version": "1.0.0",
+  "description": "RAD Planner — structured coding project planner that enforces dependency-aware planning, risk assessment, and stack intelligence before any code is written. Prevents the 'vibe coding doom loop' with read-only exploration, failure state mapping, and machine-readable implementation plans.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-planner",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["planner", "planning", "architecture", "implementation-plan", "dependency-graph", "tech-stack", "risk-assessment", "tdd", "context-management", "project-planning", "coding-planner"]
+}

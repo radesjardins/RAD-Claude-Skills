@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 22 plugins, 220+ skills, and 15 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
+A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 23 plugins, 225+ skills, and 18 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
 
 Install everything at once or cherry-pick individual plugins.
 
@@ -10,6 +10,8 @@ Install everything at once or cherry-pick individual plugins.
 
 ```
 RAD-Claude-Skills/
+├── packages/                          # Standalone npm packages
+│   └── coolify-mcp/                   # @radoriginllc/coolify-mcp — MCP server for Coolify API
 ├── plugins/                           # Full Claude Code plugins (multi-skill bundles)
 │   ├── rad-a11y/                      # WCAG 2.2 AA accessibility toolkit
 │   ├── rad-agentic-company-builder/   # AI-agent-driven company infrastructure
@@ -17,10 +19,12 @@ RAD-Claude-Skills/
 │   ├── rad-brainstormer/              # Ideation methodologies & creative tools
 │   ├── rad-chrome-extension/          # MV3 Chrome extension development
 │   ├── rad-code-review/               # Diff-aware adversarial code review
+│   ├── rad-coolify-orchestrator/      # Coolify self-hosted PaaS management
 │   ├── rad-fastify/                   # Fastify framework standards
 │   ├── rad-google-workspace/          # Google Workspace integration (93 skills)
 │   ├── rad-gws-core/                  # Google Workspace core (14 essential skills)
 │   ├── rad-nextjs/                    # Next.js App Router standards
+│   ├── rad-planner/                   # Structured project planning & risk assessment
 │   ├── rad-react/                     # Modern React best practices
 │   ├── rad-seo-optimizer/             # Complete SEO & AEO toolkit
 │   ├── rad-stack-guide/               # Stack detection, guidance & review orchestration
@@ -115,10 +119,17 @@ Start a new Claude Code session and run:
 | [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — scaffolding, agent teams, hooks, MCP configs, operational patterns |
 | [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-smart writing across 9 content types — email, blog, web copy, reports, research, presentations, prose, technical docs, social media. AI pattern avoidance, voice profiles, accept/reject suggestions |
 
+### Planning & Architecture
+
+| Plugin | Skills | Agents | What It Does |
+|--------|--------|--------|-------------|
+| [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation via Golden Path matrix, risk assessment (14 anti-patterns), failure state mapping, context management |
+
 ### Specialized
 
 | Plugin | Skills | Agents | What It Does |
 |--------|--------|--------|-------------|
+| [rad-coolify-orchestrator](plugins/rad-coolify-orchestrator/) | 8 | 1 | Coolify self-hosted PaaS — deployments (Nixpacks/Dockerfile/Compose), databases, security, CI/CD, troubleshooting, observability, infrastructure. Bundles [`@radoriginllc/coolify-mcp`](packages/coolify-mcp/) |
 | [rad-stripe-fastify-webhooks](plugins/rad-stripe-fastify-webhooks/) | 7 | 1 | Stripe webhooks with Fastify — signature verification, subscription state machines, idempotent processing |
 
 ---

@@ -15,7 +15,7 @@ description: >
 
 Operational playbooks for managing a Coolify instance using MCP tools. Each workflow maps a user intent to a specific sequence of `coolify_*` tool calls.
 
-> **Requires**: The `coolify` MCP server must be configured and connected. If MCP tools are not available, fall back to providing the equivalent `curl` commands from the coolify-cicd skill.
+> **Requires**: The `coolify` MCP server (bundled with this plugin via `@radoriginllc/coolify-mcp`). Set `COOLIFY_URL` and `COOLIFY_API_TOKEN` environment variables. If MCP tools are not available, fall back to providing the equivalent `curl` commands from the coolify-cicd skill.
 
 ## Pre-Flight: Verify Connection
 

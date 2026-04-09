@@ -32,11 +32,24 @@ Coolify is a self-hosted Heroku/Netlify alternative, and it has its own patterns
 claude plugins add ./RAD-Claude-Skills/plugins/rad-coolify-orchestrator
 ```
 
+### Bundled MCP Server
+
+This plugin includes [`@radoriginllc/coolify-mcp`](https://github.com/radesjardins/RAD-Claude-Skills/tree/main/packages/coolify-mcp), an MCP server that gives Claude direct access to your Coolify instance. Set two environment variables and the MCP auto-configures when you install the plugin:
+
+```bash
+export COOLIFY_URL=https://your-coolify-instance.example.com
+export COOLIFY_API_TOKEN=your-api-token
+```
+
+### Example Prompts
+
 ```
 Review my Coolify deployment config
 Why is my deployment failing?
 Set up CI/CD for Coolify
 Is my Dockerfile ready for Coolify?
+Deploy my app to Coolify
+Check what's running on my server
 ```
 
 ## License
