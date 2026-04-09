@@ -68,6 +68,8 @@ Profiles output as artifacts with instructions to add to Project Knowledge. Ever
 claude plugins add ./RAD-Claude-Skills/plugins/rad-writer
 ```
 
+> **Using Claude.ai instead of CLI?** See [`skills/rad-writer/`](../../skills/rad-writer/) for the Claude.ai skill version — a single ZIP upload that works in any claude.ai conversation or Project, using web search and artifact output instead of the CLI plugin system.
+
 Then just ask naturally:
 
 ```

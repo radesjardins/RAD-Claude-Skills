@@ -36,6 +36,8 @@ Brainstorming alone loops back to the same ideas. rad-brainstormer brings 10 pro
 claude plugins add ./RAD-Claude-Skills/plugins/rad-brainstormer
 ```
 
+> **Using Claude.ai instead of CLI?** See [`skills/rad-brainstormer/`](../../skills/rad-brainstormer/) for the Claude.ai skill version — a single ZIP covering 3 consolidated workflows, with domain research via web search and deliverables as artifacts.
+
 Then just say:
 
 ```

@@ -12,7 +12,7 @@ Install everything at once or cherry-pick individual plugins.
 RAD-Claude-Skills/
 ├── packages/                          # Standalone npm packages
 │   └── coolify-mcp/                   # @radoriginllc/coolify-mcp — MCP server for Coolify API
-├── plugins/                           # Full Claude Code plugins (multi-skill bundles)
+├── plugins/                           # Claude Code CLI & Desktop plugins (multi-skill bundles)
 │   ├── rad-a11y/                      # WCAG 2.2 AA accessibility toolkit
 │   ├── rad-agentic-company-builder/   # AI-agent-driven company infrastructure
 │   ├── rad-astro/                     # Astro 5/6 framework standards
@@ -36,7 +36,25 @@ RAD-Claude-Skills/
 │   ├── rad-typescript/                # Production TypeScript standards
 │   ├── rad-writer/                    # Domain-aware writing (9 domains, AI pattern removal)
 │   └── rad-zod/                       # Zod v4 validation patterns
+└── skills/                            # Claude.ai skills (ZIP upload / Project Knowledge)
+    ├── rad-brainstormer/              # Ideation — Claude.ai adaptation of rad-brainstormer
+    ├── rad-seo-aeo-reviewer/          # SEO/AEO — Claude.ai adaptation of rad-seo-optimizer
+    └── rad-writer/                    # Writing — Claude.ai adaptation of rad-writer
 ```
+
+---
+
+## Plugins vs Skills — Two Formats, Two Environments
+
+You'll notice that some names appear in both `plugins/` and `skills/` (rad-writer, rad-brainstormer). They cover the same knowledge, but they're built for different environments:
+
+**`plugins/` — Claude Code CLI & Claude Desktop**
+Full plugin bundles with multiple skills, autonomous agents, reference files, and automatic routing. They activate when you're working in a Claude Code session — they can read your filesystem, spawn subagents, and chain tools together. Install with `claude plugins add`.
+
+**`skills/` — Claude.ai (the web app)**
+Single-file skills designed for [claude.ai](https://claude.ai). They work as uploadable ZIP files via **Settings > Customize > Skills**, as Project Knowledge, or as conversation attachments. They consolidate plugin knowledge into one skill, use web search and URL fetching instead of filesystem tools, and output deliverables as artifacts. No CLI needed.
+
+Three plugins have Claude.ai counterparts: `rad-writer`, `rad-brainstormer`, and `rad-seo-optimizer` (as `rad-seo-aeo-reviewer`). The table column **Works with** shows which environments each plugin supports.
 
 ---
 
@@ -94,13 +112,13 @@ Start a new Claude Code session and run:
 
 Not sure which plugins to install first? These five deliver the most value across the widest range of projects:
 
-| Plugin | Why install it |
-|--------|---------------|
-| [rad-code-review](plugins/rad-code-review/) | Catches bugs, AI anti-patterns, and security issues in your current diff — regardless of language or framework |
-| [rad-session](plugins/rad-session/) | `/wrapup` and `/startup` — structured handoffs that preserve context between sessions |
-| [rad-typescript](plugins/rad-typescript/) | Enforces strict mode and catches the 14 most common AI-generated TypeScript mistakes |
-| [rad-writer](plugins/rad-writer/) | Domain-aware writing across 9 content types, with structured review and AI pattern removal |
-| [rad-stack-guide](plugins/rad-stack-guide/) | Detects your full stack, recommends which rad-* plugins to install, and orchestrates pre-ship reviews |
+| Plugin | Why install it | Works with |
+|--------|---------------|-----------|
+| [rad-code-review](plugins/rad-code-review/) | Catches bugs, AI anti-patterns, and security issues in your current diff — regardless of language or framework | CLI, Desktop |
+| [rad-session](plugins/rad-session/) | `/wrapup` and `/startup` — structured handoffs that preserve context between sessions | CLI, Desktop |
+| [rad-typescript](plugins/rad-typescript/) | Enforces strict mode and catches the 14 most common AI-generated TypeScript mistakes | CLI, Desktop |
+| [rad-writer](plugins/rad-writer/) | Domain-aware writing across 9 content types, with structured review and AI pattern removal | CLI, Desktop, Claude.ai |
+| [rad-stack-guide](plugins/rad-stack-guide/) | Detects your full stack, recommends which rad-* plugins to install, and orchestrates pre-ship reviews | CLI, Desktop |
 
 Install all five in one pass, or pick the ones that match your current work.
 
@@ -110,56 +128,70 @@ Install all five in one pass, or pick the ones that match your current work.
 
 ### Developer Frameworks
 
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-react](plugins/rad-react/) | 6 | 1 | Modern React — hooks, JSX, routing, forms, React 19 patterns, security (XSS, IDOR), performance, accessibility |
-| [rad-nextjs](plugins/rad-nextjs/) | 4 | 1 | Next.js App Router — server/client boundaries, data fetching, caching, security, testing, troubleshooting |
-| [rad-astro](plugins/rad-astro/) | 5 | 1 | Astro 5/6 — Islands architecture, Content Layer v2, Server Islands, performance, security, accessibility |
-| [rad-fastify](plugins/rad-fastify/) | 8 | 1 | Fastify — encapsulation model, hook lifecycle, JSON Schema validation, Pino logging, TypeScript providers |
-| [rad-typescript](plugins/rad-typescript/) | 6 | 1 | Production TypeScript — strict mode, type patterns, API boundary safety, error handling, AI codegen guardrails |
-| [rad-zod](plugins/rad-zod/) | 6 | 1 | Zod v4 — schema design, validation patterns, security, framework integrations |
-| [rad-chrome-extension](plugins/rad-chrome-extension/) | 9 | 1 | Chrome MV3 extensions — WXT, React, security, messaging, storage, service workers, CWS compliance |
+| Plugin | Skills | Agents | What It Does | Works with |
+|--------|--------|--------|-------------|-----------|
+| [rad-react](plugins/rad-react/) | 6 | 1 | Modern React — hooks, JSX, routing, forms, React 19 patterns, security (XSS, IDOR), performance, accessibility | CLI, Desktop |
+| [rad-nextjs](plugins/rad-nextjs/) | 4 | 1 | Next.js App Router — server/client boundaries, data fetching, caching, security, testing, troubleshooting | CLI, Desktop |
+| [rad-astro](plugins/rad-astro/) | 5 | 1 | Astro 5/6 — Islands architecture, Content Layer v2, Server Islands, performance, security, accessibility | CLI, Desktop |
+| [rad-fastify](plugins/rad-fastify/) | 8 | 1 | Fastify — encapsulation model, hook lifecycle, JSON Schema validation, Pino logging, TypeScript providers | CLI, Desktop |
+| [rad-typescript](plugins/rad-typescript/) | 6 | 1 | Production TypeScript — strict mode, type patterns, API boundary safety, error handling, AI codegen guardrails | CLI, Desktop |
+| [rad-zod](plugins/rad-zod/) | 6 | 1 | Zod v4 — schema design, validation patterns, security, framework integrations | CLI, Desktop |
+| [rad-chrome-extension](plugins/rad-chrome-extension/) | 9 | 1 | Chrome MV3 extensions — WXT, React, security, messaging, storage, service workers, CWS compliance | CLI, Desktop |
 
 ### Code Quality & Developer Workflow
 
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core |
-| [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, 3 review roles |
-| [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection & review orchestration — detects your stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate |
-| [rad-session](plugins/rad-session/) | 2 | 0 | Session continuity — `/wrapup` captures where you left off, `/startup` orients the next session. Maintains HANDOFF.md, session log, and CLAUDE.md |
-| [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation, risk assessment (14 anti-patterns), failure state mapping, context management |
+| Plugin | Skills | Agents | What It Does | Works with |
+|--------|--------|--------|-------------|-----------|
+| [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core | CLI, Desktop |
+| [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, 3 review roles | CLI, Desktop |
+| [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection & review orchestration — detects your stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate | CLI, Desktop |
+| [rad-session](plugins/rad-session/) | 2 | 0 | Session continuity — `/wrapup` captures where you left off, `/startup` orients the next session. Maintains HANDOFF.md, session log, and CLAUDE.md | CLI, Desktop |
+| [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation, risk assessment (14 anti-patterns), failure state mapping, context management | CLI, Desktop |
 
 ### Productivity & Content
 
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-seo-optimizer](plugins/rad-seo-optimizer/) | 12 | 3 | Full SEO toolkit — site audits, AEO/AI visibility, keyword research, competitor analysis, link building, schema, technical SEO |
-| [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Structured ideation — SCAMPER, Six Hats, Five Whys, reverse brainstorming, design sprints, pre-mortem analysis |
-| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-aware writing across 9 content types — email, blog, web copy, reports, technical docs, social media. Structured review, AI pattern removal, voice profiles |
-| [rad-para-second-brain](plugins/rad-para-second-brain/) | 5 | 2 | PARA second brain — organize notes, run weekly reviews, progressive summarization, session handoffs, 12 favorite problems |
-| [rad-context-prompter](plugins/rad-context-prompter/) | 2 | 1 | Prompt engineering — write, debug, and optimize prompts for 30+ AI platforms. Includes decompiler for reverse-engineering existing prompts |
+| Plugin | Skills | Agents | What It Does | Works with |
+|--------|--------|--------|-------------|-----------|
+| [rad-seo-optimizer](plugins/rad-seo-optimizer/) | 12 | 3 | Full SEO toolkit — site audits, AEO/AI visibility, keyword research, competitor analysis, link building, schema, technical SEO | CLI, Desktop, Claude.ai |
+| [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Structured ideation — SCAMPER, Six Hats, Five Whys, reverse brainstorming, design sprints, pre-mortem analysis | CLI, Desktop, Claude.ai |
+| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-aware writing across 9 content types — email, blog, web copy, reports, technical docs, social media. Structured review, AI pattern removal, voice profiles | CLI, Desktop, Claude.ai |
+| [rad-para-second-brain](plugins/rad-para-second-brain/) | 5 | 2 | PARA second brain — organize notes, run weekly reviews, progressive summarization, session handoffs, 12 favorite problems | CLI, Desktop |
+| [rad-context-prompter](plugins/rad-context-prompter/) | 2 | 1 | Prompt engineering — write, debug, and optimize prompts for 30+ AI platforms. Includes decompiler for reverse-engineering existing prompts | CLI, Desktop |
 
 ### Backend & Infrastructure
 
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-supabase](plugins/rad-supabase/) | 11 | 1 | Full-stack Supabase — local CLI workflows, MCP remote operations, RLS, migrations, auth, storage, edge functions, branching |
-| [rad-coolify-orchestrator](plugins/rad-coolify-orchestrator/) | 8 | 1 | Coolify self-hosted PaaS — deployments (Nixpacks/Dockerfile/Compose), databases, security, CI/CD, troubleshooting, observability, infrastructure. Bundles [`@radoriginllc/coolify-mcp`](packages/coolify-mcp/) |
-| [rad-stripe-fastify-webhooks](plugins/rad-stripe-fastify-webhooks/) | 7 | 1 | Stripe webhooks with Fastify — signature verification, subscription state machines, idempotent processing |
+| Plugin | Skills | Agents | What It Does | Works with |
+|--------|--------|--------|-------------|-----------|
+| [rad-supabase](plugins/rad-supabase/) | 11 | 1 | Full-stack Supabase — local CLI workflows, MCP remote operations, RLS, migrations, auth, storage, edge functions, branching | CLI, Desktop |
+| [rad-coolify-orchestrator](plugins/rad-coolify-orchestrator/) | 8 | 1 | Coolify self-hosted PaaS — deployments (Nixpacks/Dockerfile/Compose), databases, security, CI/CD, troubleshooting, observability, infrastructure. Bundles [`@radoriginllc/coolify-mcp`](packages/coolify-mcp/) | CLI, Desktop |
+| [rad-stripe-fastify-webhooks](plugins/rad-stripe-fastify-webhooks/) | 7 | 1 | Stripe webhooks with Fastify — signature verification, subscription state machines, idempotent processing | CLI, Desktop |
 
 ### Google Workspace
 
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace essentials — Gmail send/read/reply/triage, Docs, Sheets, Slides, Drive, Calendar. Lightweight starting point |
-| [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Full Google Workspace — 44 service skills, 41 workflow recipes, 10 role-based personas. Requires `gws` CLI |
+| Plugin | Skills | Agents | What It Does | Works with |
+|--------|--------|--------|-------------|-----------|
+| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace essentials — Gmail send/read/reply/triage, Docs, Sheets, Slides, Drive, Calendar. Lightweight starting point | CLI, Desktop |
+| [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Full Google Workspace — 44 service skills, 41 workflow recipes, 10 role-based personas. Requires `gws` CLI | CLI, Desktop |
 
 ### Agentic Systems
 
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — company scaffolding, agent team generation, hooks, MCP configs, operational patterns |
+| Plugin | Skills | Agents | What It Does | Works with |
+|--------|--------|--------|-------------|-----------|
+| [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — company scaffolding, agent team generation, hooks, MCP configs, operational patterns | CLI, Desktop |
+
+---
+
+## Claude.ai Skills
+
+Three plugins have been adapted as standalone Claude.ai skills. Import as a ZIP via **Settings > Customize > Skills**, add to a Project, or attach to any conversation.
+
+| Skill | Based on | ZIP | What It Does |
+|-------|----------|-----|-------------|
+| [rad-writer](skills/rad-writer/) | rad-writer | `rad-writer.zip` | Domain-aware writing and editorial review across 9 content types, AI pattern avoidance, voice profiling |
+| [rad-brainstormer](skills/rad-brainstormer/) | rad-brainstormer | `rad-brainstormer.zip` | Facilitated ideation, SCAMPER/Six Hats/Five Whys, pre-mortem analysis, design sprint |
+| [rad-seo-aeo-reviewer](skills/rad-seo-aeo-reviewer/) | rad-seo-optimizer | `rad-seo-aeo-reviewer.zip` | SEO audit (URL or GitHub mode), competitor research, content strategy, AI search visibility |
+
+See [`skills/README.md`](skills/README.md) for import instructions and how these differ from the plugin versions.
 
 ---
 

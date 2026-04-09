@@ -38,6 +38,8 @@ SEO has always meant switching tools, switching contexts, and waiting for separa
 claude plugins add ./RAD-Claude-Skills/plugins/rad-seo-optimizer
 ```
 
+> **Using Claude.ai instead of CLI?** See [`skills/rad-seo-aeo-reviewer/`](../../skills/rad-seo-aeo-reviewer/) for the Claude.ai skill version — a single ZIP with 4 consolidated workflows, URL fetching, web search, and artifact output. No CLI required.
+
 Then just ask:
 
 ```
