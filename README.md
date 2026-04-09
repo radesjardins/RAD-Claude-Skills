@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 23 plugins, 225+ skills, and 18 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
+A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 23 plugins, 233+ skills, and 27 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
 
 Install everything at once or cherry-pick individual plugins.
 
@@ -19,18 +19,22 @@ RAD-Claude-Skills/
 │   ├── rad-brainstormer/              # Ideation methodologies & creative tools
 │   ├── rad-chrome-extension/          # MV3 Chrome extension development
 │   ├── rad-code-review/               # Diff-aware adversarial code review
+│   ├── rad-context-prompter/          # Prompt engineering for 30+ AI platforms
 │   ├── rad-coolify-orchestrator/      # Coolify self-hosted PaaS management
 │   ├── rad-fastify/                   # Fastify framework standards
 │   ├── rad-google-workspace/          # Google Workspace integration (93 skills)
 │   ├── rad-gws-core/                  # Google Workspace core (14 essential skills)
 │   ├── rad-nextjs/                    # Next.js App Router standards
+│   ├── rad-para-second-brain/         # PARA second brain — organize, review, distill
 │   ├── rad-planner/                   # Structured project planning & risk assessment
 │   ├── rad-react/                     # Modern React best practices
 │   ├── rad-seo-optimizer/             # Complete SEO & AEO toolkit
+│   ├── rad-session/                   # Session continuity — wrapup & startup
 │   ├── rad-stack-guide/               # Stack detection, guidance & review orchestration
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
+│   ├── rad-supabase/                  # Full-stack Supabase development
 │   ├── rad-typescript/                # Production TypeScript standards
-│   ├── rad-writer/                    # Domain-smart writing (9 domains, AI pattern avoidance)
+│   ├── rad-writer/                    # Domain-aware writing (9 domains, AI pattern removal)
 │   └── rad-zod/                       # Zod v4 validation patterns
 ```
 
@@ -86,6 +90,22 @@ Start a new Claude Code session and run:
 
 ---
 
+## Where to Start
+
+Not sure which plugins to install first? These five deliver the most value across the widest range of projects:
+
+| Plugin | Why install it |
+|--------|---------------|
+| [rad-code-review](plugins/rad-code-review/) | Catches bugs, AI anti-patterns, and security issues in your current diff — regardless of language or framework |
+| [rad-session](plugins/rad-session/) | `/wrapup` and `/startup` — structured handoffs that preserve context between sessions |
+| [rad-typescript](plugins/rad-typescript/) | Enforces strict mode and catches the 14 most common AI-generated TypeScript mistakes |
+| [rad-writer](plugins/rad-writer/) | Domain-aware writing across 9 content types, with structured review and AI pattern removal |
+| [rad-stack-guide](plugins/rad-stack-guide/) | Detects your full stack, recommends which rad-* plugins to install, and orchestrates pre-ship reviews |
+
+Install all five in one pass, or pick the ones that match your current work.
+
+---
+
 ## Plugins
 
 ### Developer Frameworks
@@ -100,37 +120,46 @@ Start a new Claude Code session and run:
 | [rad-zod](plugins/rad-zod/) | 6 | 1 | Zod v4 — schema design, validation patterns, security, framework integrations |
 | [rad-chrome-extension](plugins/rad-chrome-extension/) | 9 | 1 | Chrome MV3 extensions — WXT, React, security, messaging, storage, service workers, CWS compliance |
 
-### Quality & Testing
+### Code Quality & Developer Workflow
 
 | Plugin | Skills | Agents | What It Does |
 |--------|--------|--------|-------------|
 | [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core |
-| [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, WCAG 2.2 ARIA state detection, 3 review roles, 8 project type modules |
-| [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection, guidance & review orchestration — auto-detects stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate |
+| [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, 3 review roles |
+| [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection & review orchestration — detects your stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate |
+| [rad-session](plugins/rad-session/) | 2 | 0 | Session continuity — `/wrapup` captures where you left off, `/startup` orients the next session. Maintains HANDOFF.md, session log, and CLAUDE.md |
+| [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation, risk assessment (14 anti-patterns), failure state mapping, context management |
 
-### Productivity & Business
-
-| Plugin | Skills | Agents | What It Does |
-|--------|--------|--------|-------------|
-| [rad-seo-optimizer](plugins/rad-seo-optimizer/) | 12 | 3 | Complete SEO toolkit — audits, AEO/AI visibility, keywords, competitors, link building, schema, reports |
-| [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Ideation methodologies — SCAMPER, Six Hats, Five Whys, reverse brainstorming, idea evaluation, design sprints |
-| [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Google Workspace — Gmail, Calendar, Drive, Docs, Sheets, Chat, Meet, Tasks, Forms, plus 41 recipes and 10 personas |
-| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace core — Gmail send/read/reply/triage, Docs, Sheets, Slides, Drive, Calendar. Lightweight alternative to rad-google-workspace |
-| [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — scaffolding, agent teams, hooks, MCP configs, operational patterns |
-| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-smart writing across 9 content types — email, blog, web copy, reports, research, presentations, prose, technical docs, social media. AI pattern avoidance, voice profiles, accept/reject suggestions |
-
-### Planning & Architecture
+### Productivity & Content
 
 | Plugin | Skills | Agents | What It Does |
 |--------|--------|--------|-------------|
-| [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation via Golden Path matrix, risk assessment (14 anti-patterns), failure state mapping, context management |
+| [rad-seo-optimizer](plugins/rad-seo-optimizer/) | 12 | 3 | Full SEO toolkit — site audits, AEO/AI visibility, keyword research, competitor analysis, link building, schema, technical SEO |
+| [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Structured ideation — SCAMPER, Six Hats, Five Whys, reverse brainstorming, design sprints, pre-mortem analysis |
+| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-aware writing across 9 content types — email, blog, web copy, reports, technical docs, social media. Structured review, AI pattern removal, voice profiles |
+| [rad-para-second-brain](plugins/rad-para-second-brain/) | 5 | 2 | PARA second brain — organize notes, run weekly reviews, progressive summarization, session handoffs, 12 favorite problems |
+| [rad-context-prompter](plugins/rad-context-prompter/) | 2 | 1 | Prompt engineering — write, debug, and optimize prompts for 30+ AI platforms. Includes decompiler for reverse-engineering existing prompts |
 
-### Specialized
+### Backend & Infrastructure
 
 | Plugin | Skills | Agents | What It Does |
 |--------|--------|--------|-------------|
+| [rad-supabase](plugins/rad-supabase/) | 11 | 1 | Full-stack Supabase — local CLI workflows, MCP remote operations, RLS, migrations, auth, storage, edge functions, branching |
 | [rad-coolify-orchestrator](plugins/rad-coolify-orchestrator/) | 8 | 1 | Coolify self-hosted PaaS — deployments (Nixpacks/Dockerfile/Compose), databases, security, CI/CD, troubleshooting, observability, infrastructure. Bundles [`@radoriginllc/coolify-mcp`](packages/coolify-mcp/) |
 | [rad-stripe-fastify-webhooks](plugins/rad-stripe-fastify-webhooks/) | 7 | 1 | Stripe webhooks with Fastify — signature verification, subscription state machines, idempotent processing |
+
+### Google Workspace
+
+| Plugin | Skills | Agents | What It Does |
+|--------|--------|--------|-------------|
+| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace essentials — Gmail send/read/reply/triage, Docs, Sheets, Slides, Drive, Calendar. Lightweight starting point |
+| [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Full Google Workspace — 44 service skills, 41 workflow recipes, 10 role-based personas. Requires `gws` CLI |
+
+### Agentic Systems
+
+| Plugin | Skills | Agents | What It Does |
+|--------|--------|--------|-------------|
+| [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — company scaffolding, agent team generation, hooks, MCP configs, operational patterns |
 
 ---
 

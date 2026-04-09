@@ -1,6 +1,6 @@
 # rad-writer — Domain-smart writing that doesn't read like AI.
 
-Every AI writing tool either tries to trick detectors (and fails) or checks grammar (and misses everything else). rad-writer does what neither can: it knows what good email writing looks like versus good research writing versus good web copy — nine domains, each with their own conventions, anti-patterns, and quality criteria. And it knows the 50+ lexical tells, structural patterns, and rhetorical crutches that mark text as AI-generated, fixing them not by disguising them but by replacing them with genuinely better writing. Four skills, two agents, thirteen reference files built from curated research.
+Most AI writing assistance defaults to grammar checking or generic tone adjustments. rad-writer goes further: it knows what good email writing looks like versus good research writing versus good web copy — nine domains, each with their own conventions, anti-patterns, and quality criteria. And it knows the 50+ lexical tells, structural patterns, and rhetorical crutches that mark text as AI-generated, fixing them not by disguising them but by replacing them with genuinely better writing. Four skills, two agents, thirteen reference files built from curated research.
 
 ## What You Can Do With This
 

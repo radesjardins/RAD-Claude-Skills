@@ -26,12 +26,7 @@ Most PARA tools tell you about the methodology. rad-para-second-brain implements
 ## Installation
 
 ```bash
-claude plugins add rad-para-second-brain
-```
-
-Or install from the marketplace:
-```bash
-claude plugins add rad-claude-skills/rad-para-second-brain
+claude plugins add ./RAD-Claude-Skills/plugins/rad-para-second-brain
 ```
 
 ## Usage Examples

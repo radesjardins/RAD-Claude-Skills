@@ -27,7 +27,7 @@ Guides AI assistants and developers in building resilient Stripe webhook handler
 ## Installation
 
 ```bash
-claude --plugin-dir /path/to/rad-stripe-fastify-webhooks
+claude plugins add ./RAD-Claude-Skills/plugins/rad-stripe-fastify-webhooks
 ```
 
 ## The 5 Backend Rules
@@ -41,3 +41,6 @@ claude --plugin-dir /path/to/rad-stripe-fastify-webhooks
 ## Built From
 
 55 curated sources including Stripe official docs, Fastify lifecycle references, Zod documentation, SaaS billing architecture guides, JWT/JOSE specifications, SQLite WAL mode references, and production case studies.
+
+## License
+Apache-2.0

@@ -58,10 +58,8 @@ Diagnostic framework:
 ## Installation
 
 ```bash
-claude plugins:add /path/to/rad-context-prompter
+claude plugins add ./RAD-Claude-Skills/plugins/rad-context-prompter
 ```
-
-Or add to your marketplace configuration.
 
 ## License
 

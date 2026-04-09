@@ -29,7 +29,7 @@ Supabase has two interfaces — the CLI for local development and migrations, an
 ### From Plugin Directory
 
 ```bash
-claude --plugin-dir /path/to/rad-supabase
+claude plugins add ./RAD-Claude-Skills/plugins/rad-supabase
 ```
 
 ### Prerequisites

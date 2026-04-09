@@ -1,13 +1,13 @@
 # rad-agentic-company-builder — Scaffold an AI-agent-driven company structure in a single session.
 
-Running a company with AI agents requires a specific infrastructure: folder hierarchies that agents can navigate, CLAUDE.md files that give each agent its context, hooks that enforce quality gates, and MCP configs that connect agents to the tools they need. rad-agentic-company-builder creates all of that from scratch — based on *The Agentic Bible 2026* — so you can start operating with a full agent team instead of building scaffolding by hand.
+Running a company with AI agents requires a specific infrastructure: folder hierarchies that agents can navigate, CLAUDE.md files that give each agent its context, hooks that enforce quality gates, and MCP configs that connect agents to the tools they need. rad-agentic-company-builder creates all of that from scratch so you can start operating with a full agent team instead of building scaffolding by hand.
 
 ## What You Can Do With This
 
 - Scaffold a full company folder hierarchy with CLAUDE.md files for each function
 - Generate a standard 6-agent team: architect, implementer, reviewer, tester, deployer, docs-writer
 - Configure quality gate hooks and MCP connections (GitHub, Coolify, PostgreSQL, Google Workspace, and more)
-- Audit your existing agentic structure for gaps against Agentic Bible best practices
+- Audit your existing agentic structure for gaps against the plugin's best practice patterns
 
 ## How It Works
 
@@ -23,7 +23,7 @@ Running a company with AI agents requires a specific infrastructure: folder hier
 
 | Agent | Purpose |
 |-------|---------|
-| `company-auditor` | Audits company structure for completeness against Agentic Bible best practices |
+| `company-auditor` | Audits company structure for completeness against the plugin's best practice patterns |
 
 ## Quick Start
 
@@ -41,7 +41,6 @@ Audit my agentic company structure
 ## Requirements
 
 - Claude Code CLI installed and authenticated
-- Familiarity with the Agentic Bible 2026 patterns (recommended)
 
 ## License
 Apache-2.0
