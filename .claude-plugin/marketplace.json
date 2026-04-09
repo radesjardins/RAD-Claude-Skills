@@ -185,6 +185,14 @@
       "category": "productivity",
       "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-gws-core",
       "license": "Apache-2.0"
+    },
+    {
+      "name": "rad-planner",
+      "source": "./plugins/rad-planner",
+      "description": "Structured project planning — dependency-aware implementation plans with DAG task graphs, stack evaluation via Golden Path matrix, risk assessment (14 anti-patterns), failure state mapping, TDD integration, and context management.",
+      "category": "productivity",
+      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-planner",
+      "license": "Apache-2.0"
     }
   ]
 }
