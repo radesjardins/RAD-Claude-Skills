@@ -1,12 +1,9 @@
 ---
 name: creative-unblock
 description: >
-  This skill should be used when the user says "I'm stuck", "I have no ideas",
-  "I don't know where to start", "writer's block", "can't think of anything",
-  "I'm blocked", or appears unable to make progress on a creative task. Also use
-  when the user seems hesitant, overwhelmed, or is going in circles without
-  committing to a direction. Provides warm-up exercises, creative provocation,
-  and progressive engagement to build momentum.
+  I'm stuck, I have no ideas, I don't know where to start, writer's block, can't think
+  of anything, I'm blocked — user unable to make progress. Warm-up exercises, creative
+  provocation, progressive engagement to build momentum.
 ---
 
 # Creative Unblocking

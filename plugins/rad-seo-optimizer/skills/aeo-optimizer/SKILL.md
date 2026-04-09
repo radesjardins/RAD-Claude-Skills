@@ -1,11 +1,9 @@
 ---
 name: aeo-optimizer
 description: >
-  This skill should be used when the user says "AI visibility", "how does my brand appear
-  in AI", "AI search optimization", "AEO", "generative engine optimization", "check my AI
-  presence", or wants to improve how a brand appears in AI-generated responses from ChatGPT,
-  Perplexity, or Google AI Overviews. Also use when the user mentions LLM seeding, AI
-  citations, or answer engine optimization.
+  AEO, AI visibility, AI search optimization, generative engine optimization, "how does my
+  brand appear in AI", LLM seeding, AI citations, answer engine optimization, brand presence
+  in ChatGPT/Perplexity/Google AI Overviews.
 argument-hint: "[brand name or URL]"
 ---
 

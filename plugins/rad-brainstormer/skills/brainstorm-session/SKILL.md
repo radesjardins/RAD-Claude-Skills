@@ -1,12 +1,9 @@
 ---
 name: brainstorm-session
 description: >
-  This skill should be used when the user says "let's brainstorm", "I need ideas",
-  "help me think through", "brainstorm with me", "what should I build", "how should
-  I approach this", or wants to explore a problem space before committing to an approach.
-  Use this for any creative ideation or problem exploration, even if the user doesn't
-  explicitly say "brainstorm" — any open-ended exploration of possibilities qualifies.
-  Handles any starting state from blank slate to refining an existing concept.
+  Let's brainstorm, I need ideas, help me think through, brainstorm with me, what
+  should I build, how should I approach this — open-ended exploration of possibilities.
+  Handles blank slate to refining an existing concept.
 argument-hint: "[topic or problem]"
 ---
 

@@ -1,10 +1,9 @@
 ---
 name: content-strategist
 description: >
-  This skill should be used when the user says "content strategy", "what should I write about",
-  "content gaps", "editorial calendar", "content audit", "topical authority", "content plan",
-  or needs a data-driven plan for what content to create. Covers topical authority mapping,
-  gap analysis, brief generation, and 12-week editorial calendar.
+  Content strategy, content gaps, editorial calendar, topical authority, content plan,
+  what should I write about. Covers topical authority mapping, gap analysis, brief
+  generation, and 12-week editorial calendar.
 argument-hint: "[site URL or topic area]"
 ---
 

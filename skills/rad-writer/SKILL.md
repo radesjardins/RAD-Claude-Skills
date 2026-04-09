@@ -59,21 +59,7 @@ Baked into generation and improvement — not post-processing. Reference `ai-wri
 
 ### Domain Awareness
 
-Detect domain from content signals. Reference the relevant `domain-*.md` for conventions, anti-patterns, and domain-specific AI tells.
-
-| Signal | Domain |
-|--------|--------|
-| Greetings, signatures, subject lines | Email |
-| Headings, hooks, blog structure | Blog |
-| CTAs, product language, conversion focus | Web copy |
-| Executive summaries, data, formal tone | Business report |
-| Citations, methodology, abstracts | Research |
-| Slides, bullets, speaker notes | Presentation |
-| Narrative voice, essay structure | Prose |
-| Code blocks, API references, steps | Technical |
-| Hashtags, short-form, platform markers | Social |
-
-If uncertain, ask. Never ask more than 3-4 context questions before starting.
+Detect domain from content signals (greetings → email, CTAs → web copy, citations → research, etc.). Reference the relevant `domain-*.md` for conventions, anti-patterns, and domain-specific AI tells. If uncertain, ask. Never ask more than 3-4 context questions before starting.
 
 ### Voice Profile Matching
 
@@ -348,19 +334,9 @@ Generate a structured voice profile from writing samples.
 
 ### Using the Profile
 
-After generating, explain:
+After generating, explain: upload to Project Knowledge for persistent voice matching, or attach to any conversation. Multiple named profiles supported (professional-email, blog-voice, academic).
 
-> "Your voice profile is ready. To use it in future conversations:
->
-> **In a Project:** Upload this artifact as Project Knowledge — every conversation in that project will write in your voice.
->
-> **In any conversation:** Attach this artifact alongside this skill — I'll match your voice for that session.
->
-> **Multiple profiles:** You can create separate profiles for different contexts (professional-email, blog-voice, academic) and use whichever fits."
-
-### Profile Updates
-
-When asked to update: read existing profile + new samples, re-analyze, note what changed and why. When asked to tweak: apply change and cascade effects (e.g., reducing formality → more contractions, shorter sentences, casual vocabulary).
+When asked to update: read existing profile + new samples, re-analyze, note changes. When asked to tweak: apply and cascade effects.
 
 ### Critical Rules
 
@@ -375,13 +351,7 @@ When asked to update: read existing profile + new samples, re-analyze, note what
 
 ## Execution Rules
 
-1. **Detect domain automatically** — don't make the user categorize their writing
-2. **Gather context before writing** — 3-4 questions max, skip what's already answered
-3. **AI avoidance is silent** — never announce it. Just write well.
-4. **Number every change in improve mode** — the accept/reject workflow depends on it
-5. **Review diagnoses, improve fixes** — distinct purposes, don't blur them
-6. **Artifacts for deliverables** — finished drafts, revised text, review reports, audit diagnostics, voice profiles
-7. **Long docs get chunked** — rolling context summaries between sections
-8. **Offer the next mode** after completing each one
-9. **Preserve the writer's voice** — improve toward their patterns, not toward generic "good writing"
-10. **Reference resource files** for detailed domain conventions, blocklists, and craft techniques
+1. **AI avoidance is silent** — never announce it. Just write well.
+2. **Artifacts for deliverables** — finished drafts, revised text, review reports, audit diagnostics, voice profiles
+3. **Offer the next mode** after completing each one
+4. **Reference resource files** for domain conventions, blocklists, and craft techniques

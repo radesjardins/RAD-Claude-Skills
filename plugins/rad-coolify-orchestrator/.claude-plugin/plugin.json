@@ -1,6 +1,6 @@
 {
   "name": "rad-coolify-orchestrator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "End-to-end Coolify self-hosted PaaS management — deployments (Nixpacks/Dockerfile/Compose/pre-built), databases (provisioning/backups/SSL), security (secrets/RBAC/network isolation), CI/CD (API/GitHub Actions/GHCR/webhooks), troubleshooting (502/504/SSL/build failures/container lifecycle), observability (Sentinel/log drains/Uptime Kuma), and multi-server infrastructure (Swarm/build servers). Covers Coolify v4 self-hosted. Not for Coolify Cloud.",
   "author": {
     "name": "RAD",

@@ -17,11 +17,6 @@ Generate domain-appropriate text from scratch with AI pattern avoidance baked in
 
 ## Setup
 
-**Load these references NOW:**
-- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md`
-- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md`
-- `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
-
 **Check for voice profile:**
 - If file system available, check for `~/.rad-writer/profiles/default.md` or a named profile
 - If found, load and apply voice patterns during generation
@@ -72,6 +67,11 @@ Ask domain-specific questions BEFORE writing. Pull questions from the domain ref
 | Social | Platform? Goal? Audience? |
 
 ### Step 3: Generate
+
+**Load now** (needed for generation):
+- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md`
+- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md`
+- `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
 
 Write the text following these constraints:
 

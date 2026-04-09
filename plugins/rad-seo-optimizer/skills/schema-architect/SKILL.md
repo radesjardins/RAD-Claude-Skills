@@ -1,10 +1,9 @@
 ---
 name: schema-architect
 description: >
-  This skill should be used when the user says "add schema", "structured data", "JSON-LD",
-  "rich snippets", "schema markup", "generate schema", or wants to implement or fix schema.org
-  markup on a page. Generates valid JSON-LD with all required and recommended properties,
-  validates existing markup, and identifies missing schema opportunities.
+  Add schema, structured data, JSON-LD, rich snippets, schema markup, generate schema.
+  Generates valid JSON-LD, validates existing markup, and identifies missing schema
+  opportunities.
 argument-hint: "[URL or page for schema]"
 ---
 

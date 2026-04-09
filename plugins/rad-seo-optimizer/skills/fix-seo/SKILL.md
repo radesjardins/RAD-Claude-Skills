@@ -1,11 +1,9 @@
 ---
 name: fix-seo
 description: >
-  This skill should be used when the user says "fix my SEO", "fix this SEO issue",
-  "how do I fix", "fix missing meta", "fix broken links", "fix page speed", "fix
-  schema", or has a specific SEO problem they want remediated. Routes to the appropriate
-  specialized skill and applies fixes using claude-code-fix-recipes. For diagnosis
-  without fixing, use full-seo-audit instead.
+  Fix my SEO, fix this SEO issue, fix missing meta, fix broken links, fix page speed,
+  fix schema — user has a specific SEO problem to remediate. Routes to specialized skills
+  and applies fixes. For diagnosis without fixing, use full-seo-audit instead.
 argument-hint: "[SEO issue to fix]"
 ---
 

@@ -1,11 +1,10 @@
 ---
 name: full-seo-audit
 description: >
-  This skill should be used when the user says "audit my SEO", "check my site's SEO",
-  "run an SEO audit", "SEO score", "SEO health check", "what SEO issues does my site have",
-  or wants a comprehensive multi-category SEO analysis. Performs a full 6-phase audit across
-  technical, on-page, content, schema, links, and AI visibility. For single-area requests,
-  route to the specialized skill instead.
+  Audit my SEO, run an SEO audit, SEO score, SEO health check, full SEO analysis —
+  comprehensive multi-category request. Performs a 6-phase audit: technical, on-page,
+  content, schema, links, AI visibility. For single-area requests, route to the
+  specialized skill instead.
 argument-hint: "[URL or path to audit]"
 ---
 
@@ -244,34 +243,7 @@ For deeper competitive analysis, delegate to the **competitor-intelligence** ski
 
 ## Scoring System
 
-Reference `audit-scoring-rubric.md` for detailed scoring criteria and `google-ranking-systems.md` for current Google ranking systems and signals. Apply these weights:
-
-| Category | Weight | What It Measures |
-|---|---|---|
-| Technical SEO | 20% | Can search engines crawl and index the site properly? |
-| On-Page SEO | 15% | Do pages communicate relevance to search engines? |
-| Content & E-E-A-T | 20% | Is the content high-quality, trustworthy, and authoritative? |
-| Schema & Structured Data | 10% | Does the site use markup to earn rich results? |
-| Internal Linking | 10% | Does the link structure distribute authority effectively? |
-| Page Speed | 10% | Does the site load fast enough to retain users? |
-| Mobile Usability | 5% | Does the site work well on phones and tablets? |
-| AEO Readiness | 10% | Is the site optimized for AI search engines? |
-
-### Scoring Scale
-- **90-100 (A)**: Excellent. Minor optimizations only.
-- **80-89 (B)**: Good. A few meaningful improvements available.
-- **70-79 (C)**: Average. Significant opportunities being missed.
-- **60-69 (D)**: Below average. Serious issues holding back performance.
-- **Below 60 (F)**: Poor. Fundamental problems need immediate attention.
-
-For each category, count critical issues, warnings, and opportunities. Deduct points
-based on severity:
-- Critical issue: -10 to -15 points from that category.
-- Warning: -3 to -7 points from that category.
-- Opportunity (missing but not broken): -1 to -3 points.
-
-Each category starts at 100 and is deducted from. The weighted average produces the
-final score.
+Read `${CLAUDE_SKILL_DIR}/../../references/audit-scoring-rubric.md` for the full category weights, severity deductions, A-F scale, and scoring methodology. Also read `${CLAUDE_SKILL_DIR}/../../references/google-ranking-systems.md` for current Google ranking signals.
 
 ---
 

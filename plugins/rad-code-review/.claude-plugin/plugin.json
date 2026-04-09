@@ -1,6 +1,6 @@
 {
   "name": "rad-code-review",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "3-role adversarial code review with diff-aware scoping and AI slop detection. Catches what AI wrote badly and only flags what you changed. Covers security (OWASP + framework-specific IDOR), architecture, AI slop detection (14 patterns), performance profiling heuristics, UX/accessibility (WCAG 2.2 + dynamic ARIA state), and release readiness with severity-ranked findings. Includes a code-reviewer agent for proactive review after significant implementation work.",
   "author": {
     "name": "RAD",

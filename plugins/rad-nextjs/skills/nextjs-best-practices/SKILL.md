@@ -1,15 +1,10 @@
 ---
 name: nextjs-best-practices
 description: >
-  This skill should be used when working on any Next.js project or when the user asks about
-  Next.js best practices, conventions, or patterns. Trigger when: creating Next.js components,
-  pages, or layouts; configuring next.config.ts; choosing between Server and Client Components;
-  implementing data fetching or caching; using the App Router; working with React Server
-  Components (RSC); optimizing performance or Core Web Vitals (LCP, CLS, INP); using
-  next/image, next/font, or next/script; implementing Partial Prerendering (PPR); setting up
-  Suspense boundaries; deploying to production; working with route groups or nested layouts;
-  using the "use cache" directive; implementing ISR or revalidation; building with Turbopack;
-  or any task involving Next.js 14, 15, or 16 App Router applications.
+  Next.js best practices, App Router, Server/Client Components, RSC, data fetching, caching,
+  "use cache", ISR, revalidation, next/image, next/font, next/script, PPR, Suspense, route
+  groups, nested layouts, Turbopack, Core Web Vitals, next.config.ts — any Next.js 14/15/16
+  App Router work.
 ---
 
 # Next.js App Router: Coding Standards & Best Practices
@@ -117,30 +112,14 @@ See `references/server-client-patterns.md` for complete Server Action patterns w
 
 ## 5. Performance Optimization
 
-### Core Web Vitals
+See `references/performance-checklist.md` for the complete CWV optimization reference.
 
-**LCP (Largest Contentful Paint):**
-- Always use the `priority` prop on above-the-fold `next/image` components.
-- Never apply `loading="lazy"` to the LCP image.
-
-**CLS (Cumulative Layout Shift):**
-- Always set `width` and `height` on images (or use CSS `aspect-ratio`).
-- Use `transform` for animations, never layout-triggering properties (`top`, `margin`, `box-shadow`).
-
-**INP (Interaction to Next Paint):**
-- Break long tasks with `scheduler.yield()`.
-- Minimize client-side JavaScript — move logic to Server Components.
-
-### Asset Optimization
-
-- **Images:** Use `next/image` exclusively. Drop `quality` to 75 for large images. Use `priority` for above-the-fold.
-- **Fonts:** Use `next/font` to self-host. Eliminates external requests and prevents FOUT/layout shifts.
-- **Third-party scripts:** Use `next/script` with `strategy="lazyOnload"` or `"afterInteractive"`.
-- **Code splitting:** Use `next/dynamic` for heavy below-the-fold components, modals, and libraries.
-
-### Partial Prerendering (PPR)
-
-Wrap dynamic components in `<Suspense>` to serve a static shell instantly from the edge while streaming dynamic content. Combines the speed of static with the freshness of dynamic.
+**Key rules:**
+- **LCP:** `priority` prop on above-the-fold `next/image`. Never lazy-load the LCP image.
+- **CLS:** Always set `width`/`height` on images. Use `transform` for animations, not `top`/`margin`.
+- **INP:** Break long tasks with `scheduler.yield()`. Move logic to Server Components.
+- **Assets:** `next/image` for all images, `next/font` for self-hosted fonts, `next/script` with `lazyOnload`, `next/dynamic` for heavy below-fold components.
+- **PPR:** Wrap dynamic components in `<Suspense>` to serve static shell instantly while streaming dynamic content.
 
 ---
 

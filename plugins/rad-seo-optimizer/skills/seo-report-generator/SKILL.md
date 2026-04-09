@@ -1,10 +1,9 @@
 ---
 name: seo-report-generator
 description: >
-  This skill should be used when the user says "SEO report", "generate audit report",
-  "summarize SEO findings", "SEO dashboard", "create SEO roadmap", or wants to aggregate
-  findings from completed audits into a single prioritized report. Runs AFTER audit skills,
-  not instead of them. Produces scores, executive summary, and 30/60/90 day roadmap.
+  SEO report, generate audit report, summarize SEO findings, SEO dashboard, SEO roadmap.
+  Aggregates findings from completed audits into a prioritized report. Runs AFTER audit
+  skills. Produces scores, executive summary, and 30/60/90 day roadmap.
 ---
 
 # SEO Report Generator

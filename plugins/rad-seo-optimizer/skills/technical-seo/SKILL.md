@@ -1,11 +1,9 @@
 ---
 name: technical-seo
 description: >
-  This skill should be used when the user says "site speed", "core web vitals", "crawlability",
-  "robots.txt", "sitemap issues", "page speed", "mobile-friendly check", "HTTPS issues",
-  "indexation problems", or wants to fix technical factors affecting search rankings. Covers
-  crawlability, indexation, Core Web Vitals, redirects, canonicals, JS rendering, and security
-  headers.
+  Site speed, Core Web Vitals, crawlability, robots.txt, sitemap issues, page speed,
+  HTTPS issues, indexation, mobile-friendly check. Covers crawlability, indexation, CWV,
+  redirects, canonicals, JS rendering, and security headers.
 argument-hint: "[URL or path to audit]"
 ---
 

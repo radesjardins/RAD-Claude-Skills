@@ -16,11 +16,6 @@ Take existing text and make it better. Produce an improved version with numbered
 
 ## Setup
 
-**Load these references NOW:**
-- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md`
-- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md`
-- `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
-
 **Check for voice profile:**
 - If file system available, check for `~/.rad-writer/profiles/default.md` or named profile
 - If found, use as a target for voice consistency
@@ -52,6 +47,11 @@ Infer the domain from content:
 If uncertain, ask. Load: `${CLAUDE_SKILL_DIR}/../../references/domain-[type].md`
 
 ### Step 3: Analyze and Improve
+
+**Load now** (needed for analysis):
+- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md`
+- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md`
+- `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
 
 Read the full text. Identify improvements in these categories:
 

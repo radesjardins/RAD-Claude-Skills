@@ -1,11 +1,9 @@
 ---
 name: idea-generation
 description: >
-  This skill should be used when the user says "generate ideas", "I need more options",
-  "what else could work", "give me alternatives", "more ideas please", or needs pure
-  divergent ideation without evaluation. Uses proven techniques like SCAMPER, Reverse
-  Brainstorming, Starbursting, and Analogical Thinking. For evaluation of generated
-  ideas, use idea-evaluation instead.
+  Generate ideas, I need more options, what else could work, give me alternatives,
+  more ideas please. Pure divergent ideation using SCAMPER, Reverse Brainstorming,
+  Starbursting, Analogical Thinking. For evaluation, use idea-evaluation.
 ---
 
 # Idea Generation — Pure Divergent Thinking

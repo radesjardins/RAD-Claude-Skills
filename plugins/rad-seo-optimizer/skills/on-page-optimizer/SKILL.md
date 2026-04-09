@@ -1,10 +1,9 @@
 ---
 name: on-page-optimizer
 description: >
-  This skill should be used when the user says "optimize this page", "improve my title tags",
-  "fix meta descriptions", "heading structure", "E-E-A-T", "content quality score", "on-page
-  SEO", or wants to optimize a specific page for search visibility. Covers title tags, meta
-  descriptions, headings, keyword usage, content quality, E-E-A-T signals, and image alt text.
+  Optimize this page, title tags, meta descriptions, heading structure, E-E-A-T, on-page
+  SEO, content quality score — single page optimization. Covers title tags, meta, headings,
+  keyword usage, E-E-A-T signals, and image alt text.
 argument-hint: "[URL or page to optimize]"
 ---
 

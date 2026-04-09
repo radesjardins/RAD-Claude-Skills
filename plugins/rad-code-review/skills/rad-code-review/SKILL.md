@@ -1,18 +1,11 @@
 ---
 name: rad-code-review
 description: >
-  3-role adversarial review with diff-aware scoping and AI slop detection — the only code
-  reviewer that catches what AI wrote badly and only flags what you changed. Use when the user
-  says "review my code", "code review", "is this ready to ship", "check for bugs", "security
-  audit", "review this PR", "review my diff", "check code quality", "what did I break",
-  "pre-merge check", "is this safe to deploy", or wants professional-grade code review.
-  Covers security (OWASP + framework-specific IDOR), architecture, AI slop detection (14
-  patterns), performance profiling heuristics, UX/accessibility (WCAG 2.2 + dynamic ARIA state),
-  and release readiness with severity-ranked findings and optional fix application.
-  Diff and commit scopes are blame-aware by default — only flags issues you introduced.
-  Supports --since <commit> for incremental review across multiple commits.
-  Use even for small changes — bugs hide in simple code too.
-argument-hint: "[repo|diff|commit|tree] [--since <commit>] [--full-scan] [--strictness mvp|production|public] [--engine claude|codex|both] [--local-only] [--fix blockers|critical-major|IDs]"
+  Review my code, code review, is this ready to ship, check for bugs, security audit,
+  review this PR, pre-merge check, is this safe to deploy, check code quality. Blame-aware
+  diff scoping, 3-role adversarial review, AI slop detection (14 patterns), framework IDOR,
+  WCAG 2.2, performance heuristics, severity-ranked findings, optional fix application.
+argument-hint: "[repo|diff|commit] [--since commit] [--strictness mvp|production|public] [--fix blockers|critical-major|IDs]"
 allowed-tools: Read Write Edit Bash Glob Grep Agent AskUserQuestion WebSearch WebFetch mcp__context7__resolve-library-id mcp__context7__query-docs
 ---
 

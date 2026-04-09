@@ -1,6 +1,6 @@
 {
   "name": "rad-nextjs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "RAD Next.js — comprehensive Next.js coding standards, security hardening, testing patterns, and troubleshooting guidance. Covers App Router architecture, Server/Client component boundaries, data fetching, caching, performance optimization (Core Web Vitals), authentication, OWASP protection, Vitest/Cypress/Playwright testing, and common bug diagnosis.",
   "author": {
     "name": "RAD",

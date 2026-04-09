@@ -1,11 +1,9 @@
 ---
 name: keyword-discovery
 description: >
-  This skill should be used when the user says "keyword research", "find keywords for",
-  "what keywords should I target", "keyword analysis", "search volume", "keyword difficulty",
-  or needs a complete keyword research pipeline. Covers seed discovery, expansion, intent
-  classification, difficulty assessment, and topic clustering. Produces 150-300 prioritized
-  keywords.
+  Keyword research, find keywords, what keywords should I target, keyword analysis, search
+  volume, keyword difficulty. Covers seed discovery, expansion, intent classification,
+  difficulty, and topic clustering. Produces 150-300 prioritized keywords.
 argument-hint: "[topic or seed keyword]"
 ---
 

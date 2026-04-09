@@ -1,11 +1,9 @@
 ---
 name: idea-evaluation
 description: >
-  This skill should be used when the user says "evaluate these ideas", "which idea
-  is best", "help me prioritize", "compare these options", "rank these", "how do I
-  choose", or has a set of ideas and needs structured evaluation. Provides frameworks
-  like Impact/Effort Matrix, Assumption Mapping, Pre-Mortem, JTBD, and Dot Voting
-  to filter, rank, and select from existing ideas.
+  Evaluate these ideas, which idea is best, help me prioritize, compare these options,
+  rank these, how do I choose. Structured evaluation via Impact/Effort Matrix, Assumption
+  Mapping, Pre-Mortem, JTBD, Dot Voting.
 argument-hint: "[topic or problem]"
 ---
 

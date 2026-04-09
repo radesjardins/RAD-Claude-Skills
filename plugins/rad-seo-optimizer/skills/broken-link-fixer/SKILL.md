@@ -1,10 +1,9 @@
 ---
 name: broken-link-fixer
 description: >
-  This skill should be used when the user says "broken links", "404 errors", "dead links",
-  "fix links", "link checker", "redirect chains", or wants to find and fix links that lead
-  to non-existent pages. Scans for broken internal and external links, redirect chains,
-  mixed-content issues, and unlinked brand mention opportunities.
+  Broken links, 404 errors, dead links, redirect chains, link checker, fix links. Scans
+  for broken internal/external links, redirect chains, mixed-content issues, and unlinked
+  brand mention opportunities.
 argument-hint: "[URL or path to check]"
 ---
 

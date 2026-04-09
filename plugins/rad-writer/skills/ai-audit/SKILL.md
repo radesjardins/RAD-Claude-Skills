@@ -19,13 +19,6 @@ Deep, dedicated analysis of AI writing patterns. Not a detector — a diagnostic
 
 **What this skill is NOT:** An AI detector. It does not render verdicts ("this is 73% AI"). It does not claim to determine authorship. It identifies craft problems that happen to correlate with AI output.
 
-## Setup
-
-**Load these references NOW:**
-- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md` (primary reference for this skill)
-- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md` (word/phrase scanning)
-- `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md` (fix recommendations)
-
 ## Process
 
 ### Step 1: Receive Text
@@ -46,6 +39,8 @@ Domain matters because AI patterns differ by genre:
 - AI social: engagement bait patterns, "agree?", forced vulnerability
 
 ### Step 3: Lexical Scan
+
+**Load now:** `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md`
 
 Scan the text against the word blocklist. For each flagged word/phrase:
 - Count occurrences
@@ -70,6 +65,8 @@ LEXICAL TELLS
 ```
 
 ### Step 4: Structural Analysis
+
+**Load now:** `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md` (for fix recommendations)
 
 Measure structural patterns:
 
@@ -113,6 +110,8 @@ STRUCTURAL ANALYSIS
 ```
 
 ### Step 5: Rhetorical Pattern Scan
+
+**Load now:** `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md` (rhetorical pattern catalog)
 
 Check for AI-specific rhetorical patterns:
 

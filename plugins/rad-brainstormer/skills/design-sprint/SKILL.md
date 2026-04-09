@@ -1,12 +1,9 @@
 ---
 name: design-sprint
 description: >
-  This skill should be used when the user says "design this", "create a spec",
-  "design sprint", "architecture for this", "write a design doc", or has already
-  chosen a software direction and needs a complete design specification. Use when
-  the user has moved past ideation and needs architecture, components, data flow,
-  error handling, and testing planned out. Not for ideation — use brainstorm-session
-  for that.
+  Design this, create a spec, design sprint, architecture for this, write a design doc.
+  Post-ideation: architecture, components, data flow, error handling, testing. Not for
+  ideation — use brainstorm-session for that.
 ---
 
 # Software Design Sprint

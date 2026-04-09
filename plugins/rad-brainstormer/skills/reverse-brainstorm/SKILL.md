@@ -1,11 +1,9 @@
 ---
 name: reverse-brainstorm
 description: >
-  This skill should be used when the user says "reverse brainstorm", "make it worse",
-  "flip the problem", "opposite approach", or when conventional brainstorming has stalled
-  and a new angle is needed. Works by asking "How could this problem get worse?" then
-  inverting those answers into potential solutions. Especially effective for persistent
-  or seemingly intractable problems.
+  Reverse brainstorm, make it worse, flip the problem, opposite approach. Ask "How
+  could this get worse?" then invert answers into solutions. Effective when conventional
+  brainstorming stalls.
 argument-hint: "[problem to reverse-brainstorm]"
 ---
 

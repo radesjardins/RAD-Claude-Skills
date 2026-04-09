@@ -1,10 +1,9 @@
 ---
 name: link-building-strategy
 description: >
-  This skill should be used when the user says "link building", "get backlinks", "domain
-  authority", "backlink strategy", "link acquisition", "outreach plan", or wants to improve
-  their site's backlink profile. Covers link profile assessment, competitor gap analysis,
-  linkable asset identification, tactic selection, and 12-week outreach plan with templates.
+  Link building, get backlinks, domain authority, backlink strategy, link acquisition,
+  outreach plan. Covers link profile assessment, competitor gap analysis, linkable asset
+  identification, tactic selection, and 12-week outreach plan with templates.
 ---
 
 # Link Building Strategy Skill

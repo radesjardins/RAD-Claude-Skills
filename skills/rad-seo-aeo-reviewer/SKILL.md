@@ -135,14 +135,7 @@ Execute all six phases. Do not skip phases.
 
 **Heading Structure** — One H1 with keyword, logical H2/H3 hierarchy, 50%+ H2s as questions.
 
-**E-E-A-T Signals** — Reference `eeat-checklist.md` for the full evaluation criteria.
-
-| Pillar | Key Signals |
-|--------|-----------|
-| Experience | First-hand photos, case studies, "I tested" language |
-| Expertise | Author bios, qualifications, certifications |
-| Authoritativeness | Awards, media mentions, quality backlinks |
-| Trustworthiness | HTTPS, accurate info, contact details, privacy policy |
+**E-E-A-T Signals** — Reference `eeat-checklist.md` for the full evaluation criteria (Experience, Expertise, Authoritativeness, Trustworthiness). Check author bios, credentials, trust signals, contact info, privacy policy.
 
 **Image Optimization** — Alt text, width/height, WebP, lazy loading, descriptive filenames.
 
@@ -174,20 +167,7 @@ Search for the site's primary keywords, note who ranks top 5. Compare schema cov
 
 ### Step 5: Scoring
 
-Reference `scoring-rubric.md` for the detailed formula and severity classifications. Apply these weights:
-
-| Category | Weight |
-|----------|--------|
-| Technical SEO | 20% |
-| On-Page SEO & E-E-A-T | 15% |
-| Content Quality & AEO | 20% |
-| Schema & Structured Data | 10% |
-| Internal Linking | 10% |
-| Page Speed & Core Web Vitals | 10% |
-| Mobile Usability | 5% |
-| AEO Readiness | 10% |
-
-Per-category: `score = 100 - (critical × 15) - (warning × 5) - (opportunity × 2)`. Weighted average = overall score. Grade: A (90-100), B (80-89), C (70-79), D (60-69), F (0-59).
+Reference `scoring-rubric.md` for weights, severity deductions, and grade scale. Per-category: `score = 100 - (critical × 15) - (warning × 5) - (opportunity × 2)`. Weighted average = overall. Grade: A (90+), B (80-89), C (70-79), D (60-69), F (<60).
 
 ### Step 6: Produce the Report
 
@@ -413,15 +393,7 @@ Get brand mentioned alongside industry leaders: comparison content, roundup ment
 
 #### Phase 6: Platform-Specific Optimization
 
-Reference `aeo-phases.md` for detailed platform-by-platform signal tables.
-
-| Platform | Key Signals |
-|----------|-----------|
-| Google AI Overviews | Top-10 ranking + structured data + freshness + E-E-A-T |
-| ChatGPT | Wikipedia + Reddit + consistent facts + structured content |
-| Perplexity | Real-time web quality + author attribution + structured pages |
-| Claude | Nuanced analysis + original research + balanced perspective |
-| Copilot | Bing index + social signals + schema markup |
+Reference `aeo-phases.md` for detailed platform-by-platform signal tables (Google AI Overviews, ChatGPT, Perplexity, Claude, Copilot).
 
 #### Phase 7: Visual Optimization
 
@@ -489,17 +461,6 @@ Quarterly: Full visibility audit. Compare composite scores.
 7. **Offer the next workflow** after completing each one.
 8. **Reference resource files** for detailed tables and checklists rather than repeating them inline.
 
-## Google Ranking Systems Reference
+## Google Ranking Systems
 
-| System | Optimize By |
-|--------|-------------|
-| BERT / Neural Matching | Writing naturally, covering semantic relationships |
-| RankBrain | Satisfying intent, preventing pogo-sticking |
-| Passage Ranking | Semantic chunking with descriptive headings |
-| Page Experience (CWV) | LCP < 2.5s, INP < 200ms, CLS < 0.1 |
-| Link Analysis / PageRank | Earning natural backlinks |
-| Freshness | Regular updates, visible dates |
-| Helpful Content (core) | Serve users, not rankings |
-| Deduplication | `rel="canonical"`, consolidating thin pages |
-
-Reference `google-ranking-systems.md` for the complete system descriptions.
+Reference `google-ranking-systems.md` for the complete system descriptions and optimization strategies.

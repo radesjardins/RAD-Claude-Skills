@@ -1,10 +1,9 @@
 ---
 name: five-whys
 description: >
-  This skill should be used when the user says "5 whys", "root cause analysis",
-  "why does this keep happening", "find the root cause", "trace this problem",
-  or needs to dig beneath surface symptoms to find the real problem before
-  brainstorming solutions. Based on Toyota's production system methodology.
+  5 whys, root cause analysis, why does this keep happening, find the root cause,
+  trace this problem. Dig beneath surface symptoms to find the real problem.
+  Toyota production system methodology.
 argument-hint: "[problem or symptom to trace]"
 ---
 

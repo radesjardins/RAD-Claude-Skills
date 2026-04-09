@@ -1,14 +1,9 @@
 ---
 name: coolify-deploy
 description: >
-  This skill should be used when deploying applications to Coolify, choosing a build pack
-  (Nixpacks, Dockerfile, Docker Compose, pre-built image, static), configuring deployment
-  settings, handling zero-downtime deployments, performing rollbacks, deploying from registries
-  (GHCR, Docker Hub), working with monorepos in Coolify, setting build-time vs runtime
-  environment variables, or troubleshooting deployment failures. Trigger when: "deploy to Coolify",
-  "which build pack", "Nixpacks vs Dockerfile", "Coolify rollback", "zero-downtime deploy",
-  "deploy from registry", "Coolify monorepo", "Coolify environment variables",
-  "pre/post deployment script", "Railpack", "Coolify static site".
+  Deploy to Coolify, which build pack, Nixpacks vs Dockerfile, Coolify rollback,
+  zero-downtime deploy, deploy from registry, Coolify monorepo, Coolify environment
+  variables, pre/post deployment script, Railpack, Coolify static site.
 ---
 
 # Coolify Deployments
@@ -105,17 +100,7 @@ Coolify separates environment variables into two scopes:
 
 ### NIXPACKS_* Override System
 
-Force specific runtimes or versions by setting environment variables:
-
-| Variable | Example | Effect |
-|----------|---------|--------|
-| `NIXPACKS_NODE_VERSION` | `20` | Force Node.js 20 |
-| `NIXPACKS_PYTHON_VERSION` | `3.12` | Force Python 3.12 |
-| `NIXPACKS_INSTALL_CMD` | `pnpm install --frozen-lockfile` | Override install command |
-| `NIXPACKS_BUILD_CMD` | `npm run build:prod` | Override build command |
-| `NIXPACKS_START_CMD` | `node dist/server.js` | Override start command |
-| `NIXPACKS_PKGS` | `ffmpeg imagemagick` | Add system packages |
-| `NIXPACKS_APT_PKGS` | `libvips-dev` | Add apt packages |
+Force specific runtimes, versions, or commands via `NIXPACKS_*` environment variables (e.g., `NIXPACKS_NODE_VERSION=20`, `NIXPACKS_BUILD_CMD`, `NIXPACKS_PKGS`). See `references/build-packs.md` for the full variable table and `nixpacks.toml` configuration.
 
 ### Monorepo Pattern
 

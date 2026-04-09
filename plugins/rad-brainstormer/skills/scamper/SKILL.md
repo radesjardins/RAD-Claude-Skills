@@ -1,11 +1,9 @@
 ---
 name: scamper
 description: >
-  This skill should be used when the user says "SCAMPER", "modify this concept",
-  "improve this idea", "systematic improvement", or wants to systematically explore
-  modifications to an existing concept, product, or process. Applies all 7 SCAMPER
-  lenses: Substitute, Combine, Adapt, Modify/Magnify, Put to other use, Eliminate,
-  Reverse/Rearrange.
+  SCAMPER, modify this concept, improve this idea, systematic improvement. Systematically
+  explore modifications via 7 lenses: Substitute, Combine, Adapt, Modify, Put to other
+  use, Eliminate, Reverse.
 argument-hint: "[concept, product, or process to SCAMPER]"
 ---
 

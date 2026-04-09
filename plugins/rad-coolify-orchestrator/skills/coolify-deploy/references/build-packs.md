@@ -22,6 +22,18 @@ Every Nixpacks build follows four phases:
 
 Override any phase with `NIXPACKS_*` environment variables or a `nixpacks.toml` file.
 
+### NIXPACKS_* Environment Variable Overrides
+
+| Variable | Example | Effect |
+|----------|---------|--------|
+| `NIXPACKS_NODE_VERSION` | `20` | Force Node.js 20 |
+| `NIXPACKS_PYTHON_VERSION` | `3.12` | Force Python 3.12 |
+| `NIXPACKS_INSTALL_CMD` | `pnpm install --frozen-lockfile` | Override install command |
+| `NIXPACKS_BUILD_CMD` | `npm run build:prod` | Override build command |
+| `NIXPACKS_START_CMD` | `node dist/server.js` | Override start command |
+| `NIXPACKS_PKGS` | `ffmpeg imagemagick` | Add system packages |
+| `NIXPACKS_APT_PKGS` | `libvips-dev` | Add apt packages |
+
 ### nixpacks.toml Configuration
 
 Place at repo root (or base directory) for fine-grained control:

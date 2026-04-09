@@ -1,10 +1,9 @@
 ---
 name: how-might-we
 description: >
-  This skill should be used when the user says "how might we", "reframe this problem",
-  "turn this into an opportunity", "HMW questions", or needs to reframe a problem as
-  actionable opportunity questions. Uses the HMW technique from Min Basadur/P&G to
-  generate multiple solution paths from a single problem statement.
+  How might we, reframe this problem, turn this into an opportunity, HMW questions.
+  Reframe problems as actionable opportunity questions using the Basadur/P&G HMW
+  technique.
 argument-hint: "[problem or challenge to reframe]"
 ---
 

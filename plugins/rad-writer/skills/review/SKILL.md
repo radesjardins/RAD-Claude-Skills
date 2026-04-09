@@ -16,11 +16,6 @@ Diagnostic feedback on writing quality. Tells you what's working, what's not, an
 
 ## Setup
 
-**Load these references NOW:**
-- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md`
-- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md`
-- `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
-
 **Check for voice profile:**
 - If available, include "voice consistency" as a scored category
 
@@ -56,6 +51,11 @@ sentence-level craft, and AI patterns separately, then consolidates findings.
 Pass the text, detected domain, and domain reference to the agent.
 
 ### Step 4: Analyze (Standard Review)
+
+**Load now** (needed for analysis):
+- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md` (AI patterns category)
+- `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md` (lexical tells)
+- If sentence/structure issues are found: `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
 
 Read the full text. Evaluate across these categories:
 

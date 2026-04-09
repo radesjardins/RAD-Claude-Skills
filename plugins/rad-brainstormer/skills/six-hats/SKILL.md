@@ -1,11 +1,9 @@
 ---
 name: six-hats
 description: >
-  This skill should be used when the user says "six hats", "thinking hats", "explore
-  all perspectives", "de Bono", or needs to analyze a topic from multiple perspectives
-  systematically. Applies Edward de Bono's Six Thinking Hats for parallel thinking:
-  Blue (process), White (data), Green (creativity), Yellow (optimism), Black (caution),
-  Red (intuition).
+  Six hats, thinking hats, explore all perspectives, de Bono. Analyze from multiple
+  perspectives via Six Thinking Hats: Blue (process), White (data), Green (creativity),
+  Yellow (optimism), Black (caution), Red (intuition).
 argument-hint: "[topic, decision, or idea to analyze]"
 ---
 

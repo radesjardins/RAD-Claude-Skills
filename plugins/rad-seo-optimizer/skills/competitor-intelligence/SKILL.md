@@ -1,10 +1,9 @@
 ---
 name: competitor-intelligence
 description: >
-  This skill should be used when the user says "competitor analysis", "who ranks for",
-  "what are competitors doing", "competitive audit", "compare my SEO", "competitor gap",
-  or wants to understand how they stack up against competitors in search. Covers content gaps,
-  technical comparison, backlink profiles, SERP features, and AI search visibility.
+  Competitor analysis, competitor SEO, who ranks for, competitive audit, compare my SEO,
+  competitor gap. Covers content gaps, technical comparison, backlink profiles, SERP
+  features, and AI search visibility.
 argument-hint: "[competitor URL or domain]"
 ---
 
