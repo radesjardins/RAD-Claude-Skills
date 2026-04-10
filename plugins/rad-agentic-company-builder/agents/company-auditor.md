@@ -1,7 +1,7 @@
 ---
 name: company-auditor
-description: Use this agent when auditing an agentic company structure for completeness, reviewing folder hierarchy against Agentic Bible best practices, or checking for missing configuration. Examples:
-
+description: >
+  Use this agent when auditing an agentic company structure for completeness, reviewing folder hierarchy against Agentic Bible best practices, or checking for missing configuration.
   <example>
   Context: User has scaffolded a company structure and wants to verify it
   user: "Audit my agentic company structure"
@@ -10,7 +10,6 @@ description: Use this agent when auditing an agentic company structure for compl
   User explicitly requests an audit of their agentic company setup.
   </commentary>
   </example>
-
   <example>
   Context: User has been working on their company setup for a while
   user: "Is my company structure complete? Am I missing anything?"
@@ -19,7 +18,6 @@ description: Use this agent when auditing an agentic company structure for compl
   User wants to verify completeness of their agentic company configuration.
   </commentary>
   </example>
-
   <example>
   Context: User just finished scaffolding and wants validation
   user: "Check if my agentic setup follows the Bible patterns"
@@ -28,7 +26,6 @@ description: Use this agent when auditing an agentic company structure for compl
   User wants validation against the canonical reference architecture.
   </commentary>
   </example>
-
 model: sonnet
 color: yellow
 tools: ["Read", "Grep", "Glob", "Bash"]

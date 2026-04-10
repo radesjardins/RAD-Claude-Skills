@@ -1,43 +1,39 @@
 ---
 name: zod-reviewer
-description: Use this agent when a code review is needed specifically for Zod validation usage — covering anti-patterns, security vulnerabilities, missing boundary validation, and Zod v4 correctness. Trigger proactively after significant Zod schema work is completed, or when the user asks to review Zod schemas. Examples:
-
-<example>
-Context: The user has just implemented API route handlers with Zod validation for a Fastify app.
-user: "I've finished adding Zod validation to all my Fastify routes"
-assistant: "Great work! Let me use the zod-reviewer agent to check the schemas for security issues and anti-patterns."
-<commentary>
-A significant Zod implementation has been completed. The zod-reviewer should proactively audit for z.object() vs z.strictObject(), PATCH endpoint defaults, missing boundaries, and other common mistakes.
-</commentary>
-</example>
-
-<example>
-Context: The user wants their Zod schemas reviewed before shipping.
-user: "Can you review my Zod schemas before I deploy? I want to make sure they're secure and correct."
-assistant: "I'll use the zod-reviewer agent to perform a comprehensive audit of your Zod validation."
-<commentary>
-Explicit review request for Zod schemas. The agent should do a thorough review covering security, correctness, performance, and Zod v4 compatibility.
-</commentary>
-</example>
-
-<example>
-Context: The user just upgraded their project from Zod 3 to Zod 4.
-user: "I've migrated the schemas to Zod 4, can you check if I missed anything?"
-assistant: "I'll run the zod-reviewer agent to audit your Zod 4 migration for breaking changes and unsafe patterns."
-<commentary>
-Zod 4 migration is a high-risk operation with silent behavioral changes (.default() behavior, .merge() deprecation). A targeted review is warranted.
-</commentary>
-</example>
-
-<example>
-Context: The user asks about the safety of their PATCH endpoint schema.
-user: "Is my PATCH endpoint schema safe to use with the database?"
-assistant: "Let me use the zod-reviewer agent to analyze the schema for the data-loss risk specific to PATCH endpoints in Zod 4."
-<commentary>
-PATCH endpoint schema safety is a specific Zod 4 concern — the agent should check for .default() values in schemas used for partial updates.
-</commentary>
-</example>
-
+description: >
+  Use this agent when a code review is needed specifically for Zod validation usage — covering anti-patterns, security vulnerabilities, missing boundary validation, and Zod v4 correctness. Trigger proactively after significant Zod schema work is completed, or when the user asks to review Zod schemas.
+  <example>
+  Context: The user has just implemented API route handlers with Zod validation for a Fastify app.
+  user: "I've finished adding Zod validation to all my Fastify routes"
+  assistant: "Great work! Let me use the zod-reviewer agent to check the schemas for security issues and anti-patterns."
+  <commentary>
+  A significant Zod implementation has been completed. The zod-reviewer should proactively audit for z.object() vs z.strictObject(), PATCH endpoint defaults, missing boundaries, and other common mistakes.
+  </commentary>
+  </example>
+  <example>
+  Context: The user wants their Zod schemas reviewed before shipping.
+  user: "Can you review my Zod schemas before I deploy? I want to make sure they're secure and correct."
+  assistant: "I'll use the zod-reviewer agent to perform a comprehensive audit of your Zod validation."
+  <commentary>
+  Explicit review request for Zod schemas. The agent should do a thorough review covering security, correctness, performance, and Zod v4 compatibility.
+  </commentary>
+  </example>
+  <example>
+  Context: The user just upgraded their project from Zod 3 to Zod 4.
+  user: "I've migrated the schemas to Zod 4, can you check if I missed anything?"
+  assistant: "I'll run the zod-reviewer agent to audit your Zod 4 migration for breaking changes and unsafe patterns."
+  <commentary>
+  Zod 4 migration is a high-risk operation with silent behavioral changes (.default() behavior, .merge() deprecation). A targeted review is warranted.
+  </commentary>
+  </example>
+  <example>
+  Context: The user asks about the safety of their PATCH endpoint schema.
+  user: "Is my PATCH endpoint schema safe to use with the database?"
+  assistant: "Let me use the zod-reviewer agent to analyze the schema for the data-loss risk specific to PATCH endpoints in Zod 4."
+  <commentary>
+  PATCH endpoint schema safety is a specific Zod 4 concern — the agent should check for .default() values in schemas used for partial updates.
+  </commentary>
+  </example>
 model: inherit
 color: yellow
 tools: ["Read", "Grep", "Glob"]

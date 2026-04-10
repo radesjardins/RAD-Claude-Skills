@@ -9,10 +9,5 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-google-workspace",
   "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
-  "upstream": {
-    "name": "Google Workspace CLI",
-    "url": "https://github.com/googleworkspace/cli",
-    "license": "Apache-2.0"
-  },
   "keywords": ["google-workspace", "gmail", "calendar", "drive", "docs", "sheets", "gws", "recipes", "productivity"]
 }
