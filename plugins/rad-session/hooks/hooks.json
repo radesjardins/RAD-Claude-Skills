@@ -1,0 +1,17 @@
+{
+  "description": "Fire a reminder to run /wrapup when context compaction occurs, so session state is captured to HANDOFF.md before silent context loss.",
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/precompact.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

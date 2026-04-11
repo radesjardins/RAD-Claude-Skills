@@ -1,6 +1,6 @@
 # RAD Claude Skills
 
-A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 23 plugins, 233+ skills, and 27 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
+A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's agentic coding tool. 23 plugins, 234+ skills, and 27 autonomous agents covering developer frameworks, productivity, accessibility, SEO, writing, and more.
 
 Install everything at once or cherry-pick individual plugins.
 
@@ -29,7 +29,7 @@ RAD-Claude-Skills/
 │   ├── rad-planner/                   # Structured project planning & risk assessment
 │   ├── rad-react/                     # Modern React best practices
 │   ├── rad-seo-optimizer/             # Complete SEO & AEO toolkit
-│   ├── rad-session/                   # Session continuity — wrapup & startup
+│   ├── rad-session/                   # Resource-aware session briefings + disciplined wrapup
 │   ├── rad-stack-guide/               # Stack detection, guidance & review orchestration
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
 │   ├── rad-supabase/                  # Full-stack Supabase development
@@ -115,7 +115,7 @@ Not sure which plugins to install first? These five deliver the most value acros
 | Plugin | Why install it | Works with |
 |--------|---------------|-----------|
 | [rad-code-review](plugins/rad-code-review/) | Catches bugs, AI anti-patterns, and security issues in your current diff — regardless of language or framework | CLI, Desktop |
-| [rad-session](plugins/rad-session/) | `/wrapup` and `/startup` — structured handoffs that preserve context between sessions | CLI, Desktop |
+| [rad-session](plugins/rad-session/) | Resource-aware `/startup` briefings (auto-detects MCPs, CLIs, stack), disciplined `/wrapup` with prune protection, PreCompact safety net | CLI, Desktop |
 | [rad-typescript](plugins/rad-typescript/) | Enforces strict mode and catches the 14 most common AI-generated TypeScript mistakes | CLI, Desktop |
 | [rad-writer](plugins/rad-writer/) | Domain-aware writing across 9 content types, with structured review and AI pattern removal | CLI, Desktop, Claude.ai |
 | [rad-stack-guide](plugins/rad-stack-guide/) | Detects your full stack, recommends which rad-* plugins to install, and orchestrates pre-ship reviews | CLI, Desktop |
@@ -145,7 +145,7 @@ Install all five in one pass, or pick the ones that match your current work.
 | [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core | CLI, Desktop |
 | [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, 3 review roles | CLI, Desktop |
 | [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection & review orchestration — detects your stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate | CLI, Desktop |
-| [rad-session](plugins/rad-session/) | 2 | 0 | Session continuity — `/wrapup` captures where you left off, `/startup` orients the next session. Maintains HANDOFF.md, session log, and CLAUDE.md | CLI, Desktop |
+| [rad-session](plugins/rad-session/) | 3 | 0 | Resource-aware session briefings + disciplined wrapup. `/startup` auto-detects MCPs/CLIs/stack (Phase 2.5 Resource Discovery), `/wrapup` captures "what NOT to do" and prunes CLAUDE.md with diff confirmation (Resources section protected), `/add-resource` registers new tools. PreCompact hook prevents silent context loss on compaction. | CLI, Desktop |
 | [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation, risk assessment (14 anti-patterns), failure state mapping, context management | CLI, Desktop |
 
 ### Productivity & Content

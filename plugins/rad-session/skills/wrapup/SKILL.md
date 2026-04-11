@@ -2,11 +2,12 @@
 name: wrapup
 description: >
   End-of-session skill that captures session state to HANDOFF.md, appends to the
-  session log, prunes CLAUDE.md of stale/ephemeral content, and optionally updates
-  global memory. Use at the end of any work session for seamless handoffs.
-  Trigger when the user says "/wrapup", "wrap up", "end of session",
-  "session handoff", "save session state", "wrap this up",
-  "let's wrap up", "close out this session".
+  session log, and prunes CLAUDE.md of stale/ephemeral content (the ## Resources
+  section is protected from removal). Surfaces insights for Claude Code's native
+  Auto Memory but does not write to the memory path itself. Use at the end of any
+  work session for seamless handoffs. Trigger when the user says "/wrapup",
+  "wrap up", "end of session", "session handoff", "save session state",
+  "wrap this up", "let's wrap up", "close out this session".
 allowed-tools:
   - Read
   - Write
@@ -18,9 +19,9 @@ allowed-tools:
 
 # Session Wrapup
 
-Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean for the next session.
+Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean for the next session. The `## Resources` section is protected from deletion. Insights worth remembering are surfaced in the final summary for Claude Code's native Auto Memory to pick up on its own schedule.
 
-**Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, and pruning CLAUDE.md..."
+**Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), and surfacing any insights..."
 
 ---
 
@@ -239,11 +240,13 @@ Wait for the user to respond. Acceptable responses:
 
 ---
 
-## Phase 5: Memory Prompt
+## Phase 5: Surface Insights for Native Auto Memory
 
-Review the session for insights worth preserving in global memory (the `~/.claude/projects/` memory system).
+**What changed in 2.1:** rad-session no longer writes to `~/.claude/projects/<project>/memory/` — that path is owned by Claude Code's **native Auto Memory** (shipped in v2.1.59). Writing there would collide with the native system and confuse `/memory` and `MEMORY.md` consolidation.
 
-### What Qualifies as a Memory Candidate
+Instead, Phase 5 now **surfaces insights** by mentioning them in the final session summary. Claude Code's native Auto Memory will see them in the conversation context and save them on its own schedule — no duplicate write path, no collision.
+
+### What Qualifies as an Insight to Surface
 
 | Type | Example |
 |------|---------|
@@ -254,38 +257,29 @@ Review the session for insights worth preserving in global memory (the `~/.claud
 
 ### What Does NOT Qualify
 
-- Anything already captured in HANDOFF.md or session-log.md
+- Anything already captured in HANDOFF.md or session-log.md — duplication wastes tokens
 - Code patterns, file paths, or architecture (derivable from the codebase)
 - Session-specific debugging details
-- Anything already in existing memory files
+- Resource entries — those belong in CLAUDE.md's `## Resources` section via `/add-resource`, not memory
 
 ### Presentation
 
-If candidates exist, present them:
+If insights exist, include them in the final summary block under a "Worth remembering" sub-section:
 
 ```
-Global memory candidates:
-  1. [Description] ([type])
-  2. [Description] ([type])
-
-Save any of these to global memory? (1, 2, both, none)
+Worth remembering (for native Auto Memory):
+  - [insight 1] ([type])
+  - [insight 2] ([type])
 ```
 
-If the user confirms:
-1. Discover the active memory directory for the current project working directory
-2. Write or update the relevant memory file using the standard frontmatter format:
-   ```markdown
-   ---
-   name: [Human-readable name]
-   description: [One-line — used for relevance matching in future sessions]
-   type: [user | feedback | project | reference]
-   ---
+Do **not** prompt the user to pick which ones to save — Claude Code's native Auto Memory decides on its own schedule. Your job is to surface the candidate; the harness persists it.
 
-   [Content — for feedback/project types: rule/fact, then **Why:** and **How to apply:** lines]
-   ```
-3. Update the `MEMORY.md` index with a one-line pointer
+**Do not** write to `~/.claude/projects/<project>/memory/` directly. **Do not** create or edit `MEMORY.md`. If you detect that a prior rad-session version wrote memory files there, leave them alone — do not migrate or delete, and note it once in the final summary:
 
-If no candidates or user declines, skip silently.
+```
+Note: detected legacy rad-session memory files at ~/.claude/projects/<project>/memory/.
+These are no longer written to by /wrapup. Native Auto Memory manages that path.
+```
 
 ### Session Complete
 
@@ -296,5 +290,5 @@ Session wrapped up:
   - HANDOFF.md written ([N] lines)
   - Session log updated ([N] total entries)
   - CLAUDE.md [pruned: N changes | unchanged | created]
-  [- Global memory updated (if applicable)]
+  [- Worth remembering: N insights surfaced for native Auto Memory]
 ```

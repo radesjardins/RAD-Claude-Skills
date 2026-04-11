@@ -1,7 +1,7 @@
 {
   "name": "rad-session",
-  "version": "2.0.0",
-  "description": "Session handoff management — /wrapup captures state and prunes CLAUDE.md (Resources section protected), /startup orients new sessions and detects project resources (MCPs, CLIs, scripts, env), /add-resource registers new MCPs/CLIs/tools into CLAUDE.md.",
+  "version": "2.1.0",
+  "description": "Resource-aware session briefings and disciplined wrapup for Claude Code. /startup auto-detects project resources (MCPs, CLIs, scripts, env), /wrapup captures 'what NOT to do' and prunes CLAUDE.md with diff confirmation (Resources section protected), /add-resource registers new tools, and a PreCompact hook prevents silent context loss when compaction fires.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"
