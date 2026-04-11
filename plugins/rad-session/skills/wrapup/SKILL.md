@@ -196,8 +196,9 @@ For each identifiable section or statement in CLAUDE.md, evaluate:
 | Does this reference files, functions, or patterns that no longer exist? | Remove |
 | Would removing this cause Claude to make mistakes? | Keep |
 | Is this a permanent convention, rule, or architectural decision? | Keep |
+| Is this inside a protected Resources section (`## Resources`, `## MCP`, `## Tools`, `## CLI Tools`)? | Keep — see "Protected Sections" below |
 
-**Primary heuristic:** Ephemeral state migrates out of CLAUDE.md into HANDOFF.md. CLAUDE.md is for permanent rules.
+**Primary heuristic:** Ephemeral state migrates out of CLAUDE.md into HANDOFF.md. CLAUDE.md is for permanent rules and registered resources.
 
 ### Respecting Structure
 
@@ -206,6 +207,18 @@ For each identifiable section or statement in CLAUDE.md, evaluate:
 - Do NOT add sections, comments, or formatting the user didn't ask for
 - Only prune within the existing structure
 - Exception: if CLAUDE.md was just created by this skill in this run, the scaffold format is used
+
+### Protected Sections
+
+The following sections are **protected** from removal. Never delete the section itself. Individual entries inside them may only be removed if they reference a file path, binary, or URL that clearly no longer exists — and even then, show the specific item in the diff and wait for explicit approval before removing.
+
+- `## Resources` (canonical)
+- `## MCP` / `## MCPs`
+- `## Tools` / `## CLI Tools`
+
+**Why:** these sections are the user's registered resources for the project — MCPs, CLIs, scripts, environment tools — and the `/startup` skill (Phase 2.5) reads them as the authoritative source when orienting a new session. Pruning them would force the user to re-explain available resources every session, defeating the purpose of the handoff system. Entries are typically added via the `/add-resource` skill or manually by the user.
+
+If a Resources-section entry appears stale, **flag it in the diff but keep it** unless the user explicitly says "remove it." When in doubt, keep.
 
 ### Show the Diff
 
