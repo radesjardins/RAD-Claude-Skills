@@ -1,5 +1,37 @@
 # RAD Code Review — Roadmap
 
+## v3.0 (current)
+
+**Optimized for Claude Opus 4.7** — major platform-level upgrade, no new review dimensions. Retains full compatibility with Sonnet 4.6 and (for narrow scopes) Haiku 4.5.
+
+- **Opus 4.7 as default primary-review model** — agent and skill both default to Opus; `--model sonnet|haiku` overrides per-run; `.ucrconfig.yml` `review_model` sets a project default.
+- **Parallel tool-call pipeline** — agent Phase 1 issues Glob/Grep/Read as a single parallel batch. Orchestrator Steps 3a–3e run in parallel. Step 5 automated checks (npm audit, pip-audit, gitleaks, tsc, eslint, etc.) run concurrently via `run_in_background`. Deep reviews ~3–5× faster on Opus/Sonnet.
+- **JSON-first subagent output** — primary and adversarial subagents emit structured JSON per the schema in `references/subagent-prompts/*.md`. Orchestrator parses JSON as authoritative. Markdown fallback retained for legacy resilience.
+- **Compaction-safe checkpointing** — state written to `.ucr/state/<run-id>.json` after Steps 5, 7, 9. `--resume <run-id>` rehydrates mid-review and continues from the last checkpoint. Long reviews of 500+ file repos no longer lose progress when context compacts.
+- **`--non-interactive` mode** — Step 10 menu is skipped; findings, verdict, and report path return as structured data. Used by the `code-reviewer` agent, `/loop` sessions, and CI integrations.
+- **Externalized subagent prompts** — moved from inline in `orchestrate-review.md` Step 6/8 to `references/subagent-prompts/{primary,adversarial,self-adversarial}-review.md`. Cleaner orchestrator, easier to audit and version.
+- **`.ucrconfig.yml` accepted-risk expiry enforcement** — entries with `expires < today` are surfaced as stale and re-evaluated rather than silently suppressed. Prevents permanent suppression via never-reviewed acceptances.
+- **Structured JSON blame context** — Step 3f now emits a single JSON document with per-file changed ranges, blame metadata (scoped to changed lines only via `git blame -L`), and dependency edges. Replaces the prose "annotated diff context document" — smaller, more reliable, faster to produce on large diffs.
+- **History filename unified** — `{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` across both orchestrator and report-generation. Multiple same-day reviews no longer overwrite.
+- **Cleanup** — removed vestigial `install.sh`/`install.ps1` (handled by plugin manifest) and unused `scripts/*.sh` that no workflow referenced.
+
+## v2.1
+
+Interactive findings menu — accept specific findings or all minor findings as intentional, persisted to `.ucrconfig.yml` with 1-year expiry and optional justification. Show-new-only mode filters the current report against `.ucr/history/` to surface only findings introduced since the last review. First-run `.ucrconfig.yml` creation with optional `.gitignore` integration.
+
+## v2.0
+
+Diff-aware scoping, actionable detection heuristics, and practical PR workflow support.
+
+- Blame-aware diff scoping — `diff` and `commit` scopes only flag issues on changed lines by default, with dependency chain detection for pre-existing issues that new code depends on
+- Incremental review (`--since <commit>`) — review all changes since a specific commit, with blame-aware filtering
+- `--full-scan` override — opt out of blame-aware filtering to get v1.0-style full review on any scope
+- Framework-specific IDOR detection — concrete grep-able mutation ownership patterns for Next.js Server Actions, Next.js API Routes, Express/Fastify, Django/DRF, Rails, and Go (Gin/Echo/Chi/net/http), plus multi-tenant isolation checks
+- Performance profiling heuristics — 8 detection patterns: N+1 queries in loops, unnecessary React re-renders, unbounded list rendering, synchronous blocking in handlers, missing pagination, bundle bloat indicators, missing caching, missing database indexes
+- Dynamic ARIA state detection — catches hardcoded `aria-expanded`, `aria-selected`, `aria-checked`, `aria-pressed`, and frozen `aria-hidden` as string literals instead of dynamic values
+- Finding attribution — every finding tagged as `introduced`, `pre-existing-dependency`, or `pre-existing-secret` for clear signal in PR review workflows
+- Adversarial blame validation — adversarial pass verifies blame-scoping decisions to catch issues that were incorrectly filtered or incorrectly included
+
 ## v1.0
 
 The foundation. A complete, production-ready code review skill.
@@ -19,31 +51,17 @@ The foundation. A complete, production-ready code review skill.
 - Secrets scanning (gitleaks + pattern fallback, never exposes values)
 - Cross-platform install (bash + PowerShell)
 
-## v2.0 (current)
-
-Diff-aware scoping, actionable detection heuristics, and practical PR workflow support.
-
-- **Blame-aware diff scoping** — `diff` and `commit` scopes only flag issues on changed lines by default, with dependency chain detection for pre-existing issues that new code depends on
-- **Incremental review (`--since <commit>`)** — review all changes since a specific commit, with blame-aware filtering
-- **`--full-scan` override** — opt out of blame-aware filtering to get v1.0-style full review on any scope
-- **Framework-specific IDOR detection** — concrete grep-able mutation ownership patterns for Next.js Server Actions, Next.js API Routes, Express/Fastify, Django/DRF, Rails, and Go (Gin/Echo/Chi/net/http), plus multi-tenant isolation checks
-- **Performance profiling heuristics** — new reference file with 8 detection patterns: N+1 queries in loops, unnecessary React re-renders, unbounded list rendering, synchronous blocking in handlers, missing pagination, bundle bloat indicators, missing caching, missing database indexes
-- **Dynamic ARIA state detection** — catches hardcoded `aria-expanded`, `aria-selected`, `aria-checked`, `aria-pressed`, and frozen `aria-hidden` as string literals instead of dynamic values
-- **Finding attribution** — every finding tagged as `introduced`, `pre-existing-dependency`, or `pre-existing-secret` for clear signal in PR review workflows
-- **Adversarial blame validation** — adversarial pass now verifies blame-scoping decisions to catch issues that were incorrectly filtered or incorrectly included
-- **Updated elevator pitch and discoverability** — sharper skill description, better trigger phrases, compelling README positioning
-
-## v2.1 (planned)
+## v3.1 (planned — deferred from v2.1 roadmap)
 
 Deeper domain-specific review capabilities.
 
-- **Interactive findings management** — Numbered end-of-review menu with accept, fix, and filter options. Accept specific findings or all minor findings as intentional; they are persisted to `.ucrconfig.yml` with expiry dates and optional justification notes. Show-new-only mode filters the current report against `.ucr/history/` to surface only findings introduced since the last review. First-run `.ucrconfig.yml` creation with optional `.gitignore` integration.
 - **Threat model mode** — Given an architecture description or diagram, enumerate attack surfaces, trust boundaries, and data flow risks. Produce a lightweight threat model alongside the code review.
 - **API contract review** — Validate that implementation matches OpenAPI/Swagger schema. Detect undocumented endpoints, missing error responses, request/response type mismatches, and breaking changes between schema versions.
 - **Schema/migration review** — Analyze database migrations for: data loss risk, missing rollback, index performance, constraint correctness, and compatibility with ORM models. Support for SQL migrations, Prisma, Alembic, ActiveRecord, and Flyway.
 - **Infra/deploy config deep review** — Extended analysis of Dockerfiles, Kubernetes manifests, Terraform/Pulumi configs, CI/CD pipelines, and cloud IAM policies.
+- **`security-only` strictness level** — skip architecture/UX/a11y/perf; run security + AI-slop + secrets only. Common PR-check use case.
 
-## v3.0 (planned)
+## v4.0 (planned)
 
 Interactive and visual review capabilities, plus extensibility.
 
@@ -53,7 +71,7 @@ Interactive and visual review capabilities, plus extensibility.
 - **Custom project-type module support** — User-defined project-type modules in `.ucr/project-types/` that extend or override built-in modules.
 - **Plugin system for custom checks** — Define custom review rules as small scripts or prompt fragments.
 
-## v4.0 (future)
+## v5.0 (future)
 
 Cross-service intelligence and continuous operation.
 

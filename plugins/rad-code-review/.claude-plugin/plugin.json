@@ -1,7 +1,7 @@
 {
   "name": "rad-code-review",
-  "version": "2.2.0",
-  "description": "3-role adversarial code review with diff-aware scoping and AI slop detection. Catches what AI wrote badly and only flags what you changed. Covers security (OWASP + framework-specific IDOR), architecture, AI slop detection (14 patterns), performance profiling heuristics, UX/accessibility (WCAG 2.2 + dynamic ARIA state), and release readiness with severity-ranked findings. Includes a code-reviewer agent for proactive review after significant implementation work.",
+  "version": "3.0.0",
+  "description": "3-role adversarial code review optimized for Claude Opus 4.7 (Sonnet 4.6 / Haiku 4.5 compatible). Parallel tool-call pipeline, JSON-first subagent output, compaction-safe checkpointing with --resume, and --non-interactive mode for agents/CI. Blame-aware diff scoping, 14-pattern AI slop detection, framework-specific IDOR (Next.js/Express/Fastify/Django/Rails/Go), WCAG 2.2 + dynamic ARIA state detection, performance profiling heuristics, severity-ranked findings with release verdict, accepted-risk expiry enforcement. Includes a code-reviewer agent for proactive autonomous review.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"

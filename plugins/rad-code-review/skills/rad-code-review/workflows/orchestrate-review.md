@@ -1,13 +1,23 @@
-# RAD Code Review v2.0 — Main Workflow
+# RAD Code Review v3.0 — Main Workflow
 
 This workflow is loaded by the orchestrator SKILL.md and executed end-to-end.
 
-**v2.0 changes from v1.0:**
-- Step 0: Added `--since <commit>` and `--full-scan` flag parsing
-- Step 3e: Added blame-aware diff computation for diff/commit/--since scopes
-- Step 6: Subagent prompt includes annotated diff context and blame-aware review rules
-- Step 6: Added framework-specific IDOR heuristics and performance profiling patterns
-- Step 8: Adversarial pass receives blame context to validate scoping decisions
+**Cross-model note.** Optimized for Opus 4.7 — parallel tool calls across Steps 1–5, JSON-first subagent output, compaction-safe checkpointing. Sonnet 4.6 is a first-class fallback. Haiku 4.5 should be used only for small-scope blame-aware reviews with `--local-only`; the full protocol exceeds Haiku's reliable capacity.
+
+**v3.0 changes from v2.x:**
+- **Step 3a/3b/3c/3d/3e run in a single parallel batch** (was sequential)
+- **Step 3f emits structured JSON blame context** (was prose-annotated diff)
+- **Step 5 automated checks run in parallel** via `run_in_background` (was sequential, blocking)
+- **Step 6 selects the subagent model explicitly** (primary: Opus 4.7 default; configurable)
+- **Step 6 subagent prompt externalized** to `references/subagent-prompts/primary-review.md`
+- **Step 6 subagent emits JSON-first findings** (was markdown, fragile across models)
+- **Step 8 adversarial prompt externalized** to `references/subagent-prompts/adversarial-review.md` and `self-adversarial-review.md`
+- **Step 10 supports `--non-interactive`** — skips the menu, returns findings directly (for agent/loop invocation)
+- **Step 2 enforces `.ucrconfig.yml` accepted-risk expiry** — stale entries warn and are re-evaluated
+- **New Step 0.5: Checkpoint/Resume** — periodic state writes to `.ucr/state/{run-id}.json`; `--resume <run-id>` rehydrates mid-review after compaction
+- **History filename unified** across orchestrator and report-generation to `{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` (multiple same-day reviews no longer overwrite)
+
+**v2.x changes** (retained): blame-aware scoping, `--since`, `--full-scan`, framework IDOR, performance heuristics, dynamic ARIA state, finding attribution, adversarial blame validation, interactive findings menu.
 
 ---
 
@@ -21,6 +31,11 @@ Parse $ARGUMENTS for:
 - **Engine**: claude | codex | both (default: claude)
 - **Local-only**: --local-only flag (default: internet-enabled)
 - **Fix mode**: --fix blockers | --fix critical-major | --fix <ids> (default: no fixes)
+- **Non-interactive**: --non-interactive (skip the findings menu, return findings + save report directly — for agent/loop invocation)
+- **Resume**: --resume <run-id> (rehydrate state from `.ucr/state/<run-id>.json` and continue from last checkpoint)
+- **Model overrides**:
+  - `--model <name>` — override the default primary-review model (default: opus, resolved from `.ucrconfig.yml` `review_model` if present)
+  - `--adversarial-model <name>` — override the adversarial-pass model (default: same as primary if engine=claude|codex, or Opus for engine=both cross-check)
 
 ### Resolve scan mode:
 
@@ -49,6 +64,34 @@ What would you like me to review?
 ```
 
 If user chooses option 5, prompt for the commit hash.
+
+## Step 0.5: Checkpoint / Resume
+
+### If `--resume <run-id>` was provided
+
+1. Read `.ucr/state/<run-id>.json`. If missing, error: `No resumable state found for run-id <run-id>. Starting fresh.` and fall through to Step 1.
+2. Rehydrate state variables from the JSON: `scope`, `strictness`, `engine`, `blame_aware`, `commit_hash`, `file_count`, `annotated_diff_context`, `accepted_risks`, `exclusions`, `automated_check_output`, `primary_findings`, `adversarial_findings`, `phase_completed`.
+3. Jump directly to the step AFTER `phase_completed`:
+   - `phase_completed: "step_5"` → jump to Step 6
+   - `phase_completed: "step_7"` → jump to Step 8
+   - `phase_completed: "step_9"` → jump to Step 10
+4. Inform the user: `Resumed run <run-id> at Step <N+1>. Phases already completed: <list>.`
+
+### Checkpoint writes (applies to all non-resume runs)
+
+After each of the following steps completes, write/overwrite `.ucr/state/<run-id>.json`:
+
+- After Step 5 (automated checks): `phase_completed: "step_5"`
+- After Step 7 (primary review return): `phase_completed: "step_7"` + `primary_findings`
+- After Step 9 (review-of-review): `phase_completed: "step_9"` + merged findings
+
+**Run ID format:** `{YYYY-MM-DD}-{HHmmss}` (local time). Create the directory first: `mkdir -p .ucr/state`.
+
+**Cleanup:** After a successful report write in Step 12, move the state file to `.ucr/state/completed/<run-id>.json` so future resumes don't accidentally target a finished run. Prune `completed/` entries older than 30 days.
+
+**Why this matters on Opus 4.7:** deep reviews of 500+ file repos can trip compaction mid-flight. Without checkpoints, the orchestrator loses track of findings and must restart. With checkpoints, resume is one flag.
+
+---
 
 ## Step 1: Connectivity Disclosure
 
@@ -86,10 +129,27 @@ If present, read it and extract:
 - `custom_rules`: list of project-specific review rules
 - `strictness_override`: per-category strictness overrides
 - `review_focus`: optional emphasis areas
+- `review_model`: optional default model for primary review (used in Step 6 unless `--model` is passed)
+
+### Accepted-risk expiry enforcement
+
+For each entry in `accepted_risks`, check `expires`:
+
+- If `expires` is missing → warn: `Accepted risk <id> has no expiry date. Recommend setting one to avoid stale suppression.` Keep the suppression.
+- If `expires` parses as a date and `expires < today` → mark the entry as **stale** and surface it in the report:
+  ```
+  Stale accepted risk (expired {date}): <id> — <description>
+  This finding will be RE-EVALUATED in the current review rather than suppressed.
+  Update .ucrconfig.yml to renew the acceptance if it's still valid.
+  ```
+  Do NOT apply suppression for stale entries — let the finding surface. Collect all stale entries and include them in the final report under a "Stale accepted risks" section.
+- If `expires >= today` → apply suppression as normal; record the entry for the disclosure section of the report.
 
 If NOT present, proceed with defaults. Note in report: "No .ucrconfig.yml found — using default configuration."
 
 ## Step 3: Detect Project Context
+
+**Execution: parallel-first.** Steps 3a (metadata), 3b (stack detection reads), 3d (trust boundary greps), and 3e (file list commands) have no inter-step dependencies and MUST be issued as a single parallel batch. On Opus 4.7 and Sonnet 4.6 this cuts Step 3 wall-time ~4–6×. Step 3c (classification) and Step 3f (blame context) depend on 3a/3b/3e output and run after the parallel batch resolves. Haiku may serialize if batching misbehaves.
 
 Run the following detection steps:
 
@@ -192,72 +252,76 @@ Record total file count and estimated review scope.
 
 ### 3f: Compute Blame-Aware Diff Context (if blame_aware = true)
 
-When `blame_aware` is true (default for diff/commit/--since scopes), compute annotated
-diff context that the subagent will use to scope its findings.
+When `blame_aware` is true (default for diff/commit/--since scopes), compute a structured
+JSON diff context that the subagent will consume in Step 6. v3.0 emits JSON instead of
+prose — more reliable across models, lower token cost, easier to index.
 
-**Step 3f.1: Generate annotated diff**
+**Step 3f.1: Generate per-file diffs**
 
+Run in parallel per changed file:
 ```bash
-# For diff scope:
-git diff -U5 HEAD
-git diff -U5 --cached
-
-# For commit scope:
-git diff -U5 HEAD~1 HEAD
-
-# For --since scope:
-git diff -U5 <commit>..HEAD
+git diff -U5 HEAD <file>                  # diff scope
+git diff -U5 --cached <file>              # diff scope (staged)
+git diff -U5 HEAD~1 HEAD <file>           # commit scope
+git diff -U5 <commit>..HEAD <file>        # --since scope
 ```
-
-The `-U5` flag provides 5 lines of surrounding context for each change, giving the
-reviewer enough context to understand the change without reviewing the entire file.
 
 **Step 3f.2: Generate blame metadata for changed files**
 
-For each changed file, run:
+For each changed file (in parallel):
 ```bash
-git blame --line-porcelain <file> 2>/dev/null | grep -E "^(author |author-time |filename |[0-9a-f]{40})" || true
+git blame --line-porcelain -L <start>,<end> <file> 2>/dev/null
 ```
 
-This identifies which lines were written by which author and when, allowing the reviewer
-to distinguish between "lines you changed" and "lines that were already there."
+Restricting `-L` to changed line ranges (available from the diff hunks) avoids blaming
+unchanged code — much faster on large files.
 
-**Step 3f.3: Build the annotated diff context**
+**Step 3f.3: Build the structured JSON diff context**
 
-Construct a structured diff context document for the subagent:
+Produce `annotated_diff_context` as a single JSON document:
 
-```
-## Diff Context (blame-aware mode)
-
-Review mode: blame-aware — only flag issues on lines marked with [CHANGED].
-Exception: flag pre-existing issues if a [CHANGED] line depends on them
-(e.g., a new function call to an existing function with a vulnerability).
-
-### File: {filename}
-Changed lines: {line_numbers}
-Change type: {added | modified | deleted}
-
-```diff
-{unified diff with +/- annotations}
-```
-
-[CHANGED] lines {N-M}: {description of what changed}
-[CONTEXT] lines {N-M}: {surrounding unchanged code for comprehension}
+```json
+{
+  "scan_mode": "blame-aware",
+  "exception_rule": "Flag pre-existing code only when a CHANGED line depends on it (dependency chain rule).",
+  "files": [
+    {
+      "path": "src/api/users.ts",
+      "change_type": "modified",
+      "changed_line_ranges": [{"start": 42, "end": 68}],
+      "context_line_ranges": [{"start": 37, "end": 73}],
+      "diff_hunks": [
+        "unified diff text with +/- markers — exactly as git diff -U5 emits"
+      ],
+      "blame": [
+        {"lines": "42-55", "author": "current", "authored_at": "2026-04-16"},
+        {"lines": "56-68", "author": "prior", "authored_at": "2025-10-03"}
+      ],
+      "dependency_edges": [
+        {
+          "changed_line": 47,
+          "depends_on": {"path": "src/lib/auth.ts", "symbol": "validateSession", "lines": "12-30"},
+          "kind": "function_call"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 **Step 3f.4: Identify dependency chains**
 
-For each changed line, check if it:
-- Calls a function defined elsewhere in the codebase
-- Imports a module that was not changed
-- Uses a variable/constant defined in unchanged code
-- Extends/implements a class or interface defined elsewhere
+For each changed line, detect:
+- Function/method calls to symbols defined elsewhere
+- Imports from unchanged modules
+- Uses of variables/constants defined in unchanged code
+- Extends/implements of classes/interfaces defined elsewhere
 
-Record these as **dependency edges**. The subagent should review the depended-upon
-code for issues that the new change would inherit or expose, even though those lines
-are not themselves changed.
+Record as entries in `dependency_edges`. The subagent will inspect the depended-upon
+symbols for issues that the change newly exposes.
 
-Record: `annotated_diff_context` for use in Step 6.
+Record the full JSON as `annotated_diff_context` for use in Step 6 (token-substituted
+into the primary-review.md template).
 
 ## Step 4: Load Project-Type References
 
@@ -282,22 +346,26 @@ Also load universal references:
 
 If NOT --local-only, and tools are available:
 
+**Execution: parallel-first.** All checks below (5a–5e) are independent and should run concurrently. Use `run_in_background: true` on the Bash tool to start each check, then read their outputs once all have completed. Each check gets a per-command timeout (default 120s; configurable via `.ucrconfig.yml` `check_timeout_seconds`). A slow `npm audit` must not block `tsc` or `ruff`.
+
+Run only the checks that match the detected stack (from Step 3b) — do not spawn `cargo audit` on a Node project. Detect tool availability via presence of config files / lockfiles rather than `which`; failed commands exit 0 via `|| true`.
+
 ### 5a: Dependency Vulnerability Audit
 ```bash
-# Node.js
+# Node.js       (if package.json present)
 npm audit --json 2>/dev/null || true
-# Python
+# Python        (if requirements.txt or pyproject.toml present)
 pip-audit --format json 2>/dev/null || true
-# Rust
+# Rust          (if Cargo.toml present)
 cargo audit --json 2>/dev/null || true
-# Go
+# Go            (if go.mod present)
 govulncheck ./... 2>/dev/null || true
 ```
 
 ### 5b: License Check
 ```bash
 # Node.js
-npx license-checker --json 2>/dev/null || true
+npx --yes license-checker --json 2>/dev/null || true
 # Python
 pip-licenses --format=json 2>/dev/null || true
 ```
@@ -310,7 +378,7 @@ gitleaks detect --source . --report-format json --report-path /tmp/ucr-secrets.j
 ```
 
 ### 5d: Existing Project Tools
-If the project has configured linters, type checkers, or test suites, run them:
+Run only the project-configured linters/type-checkers/tests:
 
 ```bash
 # Type checking
@@ -325,8 +393,7 @@ npm test 2>/dev/null || true
 pytest --tb=short 2>/dev/null || true
 ```
 
-Capture output for inclusion as evidence in findings. Do not treat tool failures
-as review failures — note what ran and what didn't.
+Capture output for inclusion as evidence in findings. Do not treat tool failures as review failures — record what ran, what didn't, and why (missing tool, timeout, non-zero exit).
 
 ### 5e: Build Verification
 ```bash
@@ -338,335 +405,129 @@ python -m build 2>/dev/null || true
 go build ./... 2>/dev/null || true
 ```
 
+### 5f: Aggregate & checkpoint
+
+Collect results from all background commands. Build `automated_check_output` — a structured dict keyed by check name (`npm_audit`, `pip_audit`, `gitleaks`, `tsc`, `eslint`, `npm_test`, `npm_build`, etc.) with per-check: exit code, duration (ms), stdout (truncated to 50KB per check), stderr (truncated).
+
+Write checkpoint to `.ucr/state/<run-id>.json` with `phase_completed: "step_5"` and the aggregated output.
+
 ## Step 6: Spawn Primary Review Subagent (Phase 3 — Deep Review)
 
-Construct the review prompt with all gathered context and spawn a subagent.
+### 6.1 Model selection
 
-**If blame_aware = true**, include the annotated diff context from Step 3f and the
-blame-aware review rules. **If blame_aware = false**, use the standard full-scan prompt.
+Resolve the primary-review model in this order (first match wins):
+
+1. `--model <name>` CLI argument
+2. `.ucrconfig.yml` `review_model` field
+3. Default: **`opus`** (Opus 4.7 — best for deep reasoning, adversarial protocol, severity calibration)
+
+Fallback guidance:
+- **Opus 4.7** — default. Best reasoning quality; recommended for production/public strictness.
+- **Sonnet 4.6** — drop-in for cost-sensitive reviews or quick PR scans. Retains adversarial rigor.
+- **Haiku 4.5** — only for narrow blame-aware diffs (≤20 changed files) with `--local-only`. Too fast to over-think but also too fast to execute the full 10-category checklist reliably on wide scopes.
+
+Record the chosen model in the run state and in the final report.
+
+### 6.2 Load the externalized prompt template
+
+Read `${UCR_DIR}/references/subagent-prompts/primary-review.md`. Substitute placeholders with values from prior steps:
+
+| Placeholder | Source |
+|-------------|--------|
+| `{detected_types}`, `{detected_stack}`, `{detected_framework}` | Step 3b/3c |
+| `{scope}`, `{file_count}`, `{commit_hash}`, `{since_commit_or_na}` | Step 3a/3e |
+| `{scan_mode}` | `blame_aware ? "blame-aware" : "full-scan"` |
+| `{strictness}` | Step 0 |
+| `{trust_boundaries}` | Step 3d |
+| `{exclusions}`, `{accepted_risks}` | Step 2 (active, non-stale only) |
+| `{automated_check_output}` | Step 5f |
+| `{annotated_diff_context_json}` | Step 3f (only if blame_aware) |
+| `{scoped_file_list}` | Step 3e |
+
+### 6.3 Spawn
 
 ```
 Agent(
   subagent_type="general-purpose",
-  description="UCR Deep Review",
-  prompt="""
-  You are a senior principal engineer, application security reviewer, and release manager
-  performing a professional-grade code review.
-
-  YOUR STANDARD IS NOT 'GOOD ENOUGH FOR A DEMO.'
-  YOUR STANDARD IS PROFESSIONAL, PRODUCTION-READY, SECURE, MAINTAINABLE, AND PUBLICLY DEFENSIBLE CODE.
-
-  ## Project Context
-  - Type: {detected_types}
-  - Stack: {detected_stack}
-  - Framework: {detected_framework}
-  - Scope: {scope} ({file_count} files)
-  - Scan mode: {blame_aware ? "blame-aware (only flag issues on changed lines)" : "full-scan"}
-  - Strictness: {strictness}
-  - Commit: {commit_hash}
-  - Since: {since_commit or "N/A"}
-  - Trust boundaries: {trust_boundaries}
-  - Config exclusions: {exclusions}
-  - Accepted risks: {accepted_risks}
-
-  ## Automated Check Results
-  {automated_check_output}
-
-  {IF blame_aware}
-  ## Blame-Aware Review Rules
-
-  This review is running in **blame-aware mode**. You have been given annotated diffs
-  showing exactly which lines were changed.
-
-  **Primary rule:** Only flag issues on lines marked [CHANGED] in the diff context.
-
-  **Exception — dependency chain rule:** If a [CHANGED] line calls, imports, extends,
-  or otherwise depends on pre-existing code that has a vulnerability or defect, flag
-  the pre-existing issue BUT:
-  - Tag it as `[PRE-EXISTING]` in the finding title
-  - Explain the dependency: "New code at X:Y calls existing function Z which has [issue]"
-  - Severity is based on the combined impact, not just the pre-existing code
-
-  **What NOT to flag in blame-aware mode:**
-  - Pre-existing code quality issues that are not connected to changes
-  - Style/formatting issues in unchanged lines
-  - Missing tests for unchanged code
-  - Documentation gaps in unchanged code
-
-  **What to still flag regardless of blame:**
-  - Secrets committed in any changed file (even if the secret line is unchanged but newly staged)
-  - Security vulnerabilities that the changed code introduces a new path to
-
-  ## Diff Context
-  {annotated_diff_context from Step 3f}
-  {ENDIF}
-
-  ## Your Review Must Cover
-
-  ### 1. Functional Correctness
-  - Broken logic, missing edge cases, inconsistent behavior
-  - State corruption risks, race conditions
-  - Invalid assumptions about external APIs or user behavior
-  - Failure-mode behavior — what happens when things go wrong
-  - User flows that appear complete but fail under real use
-
-  ### 2. Security (use @security-checklist.md as reference)
-  - Auth/authz issues, privilege escalation
-  - Injection (SQL, XSS, CSRF, SSRF, command, path traversal, template)
-  - Deserialization, open redirect, IDOR — **use Section 2.4 framework-specific
-    IDOR heuristics for the detected stack**
-  - Weak validation, unsafe file handling
-  - Secrets in code, insecure defaults, session/token handling
-  - Dependency vulnerabilities, supply chain concerns
-  - Unsafe API trust assumptions
-  - Privacy and data leakage
-  - For AI-enabled apps: prompt injection vectors
-
-  ### 3. AI Slop Detection (use @ai-slop-patterns.md as reference)
-  - Hallucinated imports (packages/modules that don't exist)
-  - Fake error handling (try/catch that swallows or log-and-continue)
-  - Placeholder stubs that survived into production code
-  - Silent failures (fake output matching desired format instead of crashing)
-  - Cargo-cult patterns copied without understanding
-  - Repetitive low-signal abstractions
-  - Dead code, misleading comments, inconsistent naming
-  - Over-engineering where simple code is safer
-  - Under-engineering where structure is clearly needed
-  - Code that removes safety checks to avoid errors
-
-  ### 4. Architecture and Maintainability
-  - Tight coupling, weak module boundaries
-  - Unclear ownership of business logic
-  - Config sprawl, poor dependency direction
-  - Hidden side effects, fragile patterns
-  - Cross-component interaction risks
-  - Components that work in isolation but may fail in combination
-
-  ### 5. Tests and Verification
-  - Missing tests, shallow tests, brittle tests
-  - False confidence from happy-path-only coverage
-  - Missing integration/regression/security tests
-  - Mismatch between implementation risk and test depth
-  - Test setup that masks real behavior
-
-  ### 6. Performance and Reliability (use @performance-heuristics.md as reference)
-  - **N+1 queries**: database calls inside loops (.map, .forEach, for...of)
-  - **Unnecessary re-renders**: missing deps in useEffect, object literals in JSX props
-  - **Unbounded lists**: .map() on collections with no pagination or virtualization
-  - **Synchronous blocking**: readFileSync, execSync in request handlers
-  - **Bundle bloat**: importing entire libraries vs tree-shakeable submodules
-  - **Missing pagination**: DB queries without LIMIT/OFFSET or cursor
-  - Memory leaks, retry storms, bad timeout handling
-  - Concurrency issues, scaling risks
-  - Failure handling under degraded conditions
-
-  ### 7. UI/UX (if applicable — use @ux-accessibility-checklist.md)
-  - Mobile-first design, responsive layouts
-  - Touch-target usability, thumb-first navigation
-  - Error states, empty states, loading states
-  - Keyboard usability, interaction cost
-  - Visual hierarchy, typography, spacing
-  - Real user flow friction analysis
-
-  ### 8. Accessibility (if applicable — use @ux-accessibility-checklist.md)
-  - Keyboard access, focus management
-  - Semantic HTML structure, ARIA usage
-  - **Dynamic ARIA states**: check for hardcoded aria-expanded, aria-selected,
-    aria-checked, aria-pressed as string literals instead of dynamic values
-    (see Section 4.3 of the accessibility checklist)
-  - Color contrast, reduced-motion
-  - Form labeling, status messaging
-  - Screen reader considerations
-
-  ### 9. Release Readiness (use @release-readiness.md)
-  - Environment config, setup clarity
-  - Build reliability, CI/CD assumptions
-  - Secrets/config separation
-  - Rollback readiness, logging, error monitoring
-  - Migration risks, licensing concerns
-
-  ### 10. Documentation and Developer Experience
-  - README usefulness and accuracy
-  - Setup instructions completeness
-  - Architecture clarity
-  - Missing env var documentation
-  - Misleading or outdated docs
-
-  ## Severity Model
-  Use @severity-model.md. Every finding must include:
-  - ID (UCR-NNN)
-  - Title (prefix with [PRE-EXISTING] if flagged via dependency chain rule)
-  - Severity: critical | major | moderate | minor
-  - Category (from the 10 above)
-  - Confidence: confirmed | probable | possible
-  - Change attribution: introduced | pre-existing-dependency | pre-existing-secret
-  - Affected files with line numbers
-  - Code evidence (the actual problematic code, with secrets masked)
-  - Why it matters (specific impact, not generic)
-  - How to verify or reproduce
-  - Recommended fix (concrete, not vague)
-  - Blocks release: yes | no | conditional
-
-  ## Evidence Thresholds
-  - Critical: file + line + code snippet + reproduction path + impact assessment
-  - Major: file + line + code snippet + reasoning
-  - Moderate: file + line + reasoning
-  - Minor: file + description
-
-  ## Confidence Levels
-  - Confirmed: verified by reading the code — the issue is present
-  - Probable: strong inference from code patterns — very likely present
-  - Possible: suspicious but needs manual validation — flag for human review
-
-  ## Rules
-  - Do NOT fabricate findings. If uncertain, mark as "possible."
-  - Do NOT pad the report with low-value nits to appear thorough.
-  - Do NOT use vague language ("consider improving," "might want to").
-  - Be specific. Be direct. Show the code. Explain the impact.
-  - If blame-aware, do NOT flag issues on unchanged lines unless dependency chain rule applies.
-  - If a category has zero findings, state that explicitly with your confidence level.
-  - Cross-reference findings: if a security issue is also an architecture issue, note both.
-  - Track whether findings are in excluded paths or accepted risks from .ucrconfig.yml.
-
-  ## Output Format
-  Return your findings as a structured list grouped by severity, then by category.
-  Start with: ## REVIEW COMPLETE
-  Then: ### Summary (counts by severity and category, with introduced vs pre-existing breakdown)
-  Then: ### Findings (each with full structure above)
-  Then: ### Zero-Finding Categories (what you reviewed and found clean, with confidence)
-  Then: ### Automated Tool Results Summary
-  Then: ### Scope Limitations (what you could not adequately review and why)
-
-  ## Files to Review
-  {scoped_file_list}
-
-  {IF blame_aware}
-  Focus on the annotated diff context above. Read full files only when needed to
-  understand context around changes or to trace dependency chains.
-  {ELSE}
-  Read every file in the scope. Do not skip files. Do not sample.
-  For large repos (500+ files), prioritize: entry points, auth, API handlers, config,
-  then remaining files by likely risk.
-  {ENDIF}
-  """
+  model="{resolved_model}",
+  description="UCR Primary Review",
+  prompt="{substituted_primary_review_template}"
 )
 ```
+
+If `model` override is not supported by the current runtime, fall back to the runtime default and note it in the report.
+
+### 6.4 Output format
+
+The subagent emits **JSON-first** findings per the schema in `primary-review.md` (section "Output Format — JSON-first"). Parse the JSON block as authoritative. If the subagent also included a prose summary, ignore it for parsing — use it only for display in Step 10.
+
+If JSON parsing fails (malformed block, missing required fields):
+1. Retry once with an explicit `Re-emit your findings as valid JSON matching the schema. The prior output was malformed at: <error>.` message.
+2. If the retry also fails, fall back to best-effort markdown parsing (legacy v2.x path) and log a warning in the report's scope-limitations section.
 
 ## Step 7: Handle Primary Review Return
 
-Parse the subagent's return for `## REVIEW COMPLETE`.
+Parse the subagent's JSON output (`primary-review.md` schema). Extract:
+- `summary` (counts by severity, attribution breakdown)
+- `findings` (full array)
+- `zero_finding_categories`
+- `scope_limitations`
 
-Extract:
-- Finding count by severity
-- Finding count by category
-- Zero-finding categories with confidence
-- Scope limitations
+**Checkpoint write:** write `.ucr/state/<run-id>.json` with `phase_completed: "step_7"` and `primary_findings` = the parsed findings array.
 
-If finding count exceeds 50 critical findings OR the reviewer flagged fundamental
-architecture issues, switch to **triage-first mode**:
-- Skip adversarial pass
-- Skip standard report generation
-- Jump to Step 12 (Triage Report)
+### Triage trigger
 
-Otherwise, continue to adversarial pass.
+If `summary.critical >= 50` OR the reviewer flagged fundamental architecture issues (look for findings with category=`architecture`, severity=`critical`, and confidence=`confirmed`), switch to **triage-first mode**:
+- Skip adversarial pass (Step 8)
+- Skip Step 9 merge
+- Jump to Step 12T (Triage Report)
+
+Otherwise, continue to Step 8.
 
 ## Step 8: Adversarial Pass (Phase 4)
 
-### If engine = "both" (Sequential Adversarial)
+### 8.1 Model selection
 
-The second engine reviews the repository AND the first engine's findings:
+Resolve adversarial model:
 
-```
-Agent(
-  subagent_type="general-purpose",
-  description="UCR Adversarial Review",
-  prompt="""
-  You are an adversarial code reviewer. Your job is to challenge, verify, and improve
-  upon a primary review that was already performed.
+1. `--adversarial-model <name>` CLI arg
+2. Default based on engine mode:
+   - `engine = "both"` → Opus 4.7 (cross-check reasoning)
+   - `engine = "claude"` or `engine = "codex"` → same model as primary (self-adversarial — uncovers the primary's own blind spots without introducing a different model's biases)
 
-  ## Scan Mode
-  This review is running in {blame_aware ? "blame-aware" : "full-scan"} mode.
-  {IF blame_aware}
-  The primary review was scoped to changed lines. Verify that:
-  - Findings tagged [PRE-EXISTING] genuinely have a dependency chain to changed code
-  - No issues on changed lines were missed because the reviewer over-filtered
-  - The dependency chain analysis didn't miss important connections
-  {ENDIF}
+### 8.2 Load externalized prompt
 
-  ## Your Role
-  You are NOT rubber-stamping. You are looking for:
-  1. False positives in the primary review (findings that are wrong or overstated)
-  2. False negatives (real issues the primary review missed)
-  3. Severity miscalibration (findings rated too high or too low)
-  4. Missing cross-component interaction issues
-  5. Missing threat cases at trust boundaries
-  6. UX/accessibility issues not caught in code review
-  7. AI slop patterns that survived the first pass
-  8. Blame-scoping errors (issues on changed lines missed, or pre-existing issues incorrectly included/excluded)
+- `engine = "both"` → read `${UCR_DIR}/references/subagent-prompts/adversarial-review.md`
+- otherwise → read `${UCR_DIR}/references/subagent-prompts/self-adversarial-review.md`
 
-  ## Primary Review Findings
-  {primary_review_findings}
+Substitute placeholders:
 
-  ## Adversarial Protocol (from @adversarial-protocol.md)
+| Placeholder | Source |
+|-------------|--------|
+| `{scan_mode}` | `blame_aware ? "blame-aware" : "full-scan"` |
+| `{primary_review_findings_json}` | Step 7 parsed findings (serialized back to JSON) |
+| `{scoped_file_list}` | Step 3e |
 
-  For each HIGH-SEVERITY finding from the primary review:
-  - What evidence would make this a false positive?
-  - Read the actual code and verify the claim.
-  - If the evidence holds, mark as CONFIRMED.
-  - If the evidence is weak, mark as CHALLENGED with reasoning.
-
-  For each CATEGORY with zero findings:
-  - What class of bug would hide here?
-  - Are there files in this category that weren't adequately reviewed?
-  - Perform targeted checks for the most likely missed issues.
-
-  For each TRUST BOUNDARY identified:
-  - What happens if the other side sends malformed data?
-  - What happens if the other side is compromised?
-  - What happens under partial failure?
-
-  For each CROSS-COMPONENT INTERACTION:
-  - Do components agree on data formats, field counts, error handling?
-  - Are there timing assumptions that could break under load?
-  - Are there state assumptions that could break under concurrent access?
-
-  ## Output Format
-  Return with: ## ADVERSARIAL REVIEW COMPLETE
-  Then:
-  ### Confirmed Findings (primary findings you verified — list IDs)
-  ### Challenged Findings (primary findings you disagree with — ID, reasoning, new severity)
-  ### New Findings (issues you found that the primary review missed — full finding format)
-  ### Severity Adjustments (findings that need re-rating — ID, old severity, new severity, reasoning)
-  ### Disagreements (explicit section for any substantive disagreement with primary review)
-
-  ## Files to Review
-  {scoped_file_list}
-  """
-)
-```
-
-### If engine = "claude" or "codex" (Self-Adversarial)
-
-Use the same adversarial protocol but as a single-engine self-challenge:
+### 8.3 Spawn
 
 ```
 Agent(
   subagent_type="general-purpose",
-  description="UCR Self-Adversarial Pass",
-  prompt="""
-  You performed a primary review that produced the findings below.
-  Now challenge your own work using the adversarial protocol.
-
-  Your goal: reduce false positives, find false negatives, and calibrate severity.
-
-  {same adversarial prompt structure as above, adapted for self-review}
-  """
+  model="{resolved_adversarial_model}",
+  description="UCR Adversarial Review" | "UCR Self-Adversarial Pass",
+  prompt="{substituted_adversarial_template}"
 )
 ```
+
+### 8.4 Output
+
+Adversarial subagent emits **JSON-first** per the schema in `adversarial-review.md` / `self-adversarial-review.md`. Parse as authoritative. Same retry-once-on-malformed-JSON rule as Step 6.4.
 
 ## Step 9: Review of the Review (Phase 5)
 
-After the adversarial pass, merge and calibrate:
+After the adversarial pass, merge and calibrate. Then write checkpoint with `phase_completed: "step_9"` and the merged-calibrated findings.
+
+Merge and calibrate:
 
 1. **Merge findings**: Combine primary + adversarial new findings
 2. **Apply challenges**: For challenged findings, evaluate the adversarial reasoning.
@@ -688,7 +549,17 @@ Record the final calibrated finding list.
 
 ## Step 10: Present Findings to User
 
-Display a summary:
+### 10.0 Non-interactive short-circuit
+
+If `--non-interactive` was passed (or the skill was invoked by another agent that expects a return value), **skip the interactive menu entirely**:
+
+1. Display the summary block (10.1 below) for transcript/logging purposes.
+2. Skip to Step 12 (Report Generation) directly.
+3. Return findings + verdict to the caller as structured data (the report file path, the parsed findings JSON, and the verdict string).
+
+This path is what the `code-reviewer` agent uses when it invokes the skill, and what `/loop` / CI integrations use. Blocking on a menu prompt in those contexts deadlocks the session.
+
+### 10.1 Interactive path — display summary
 
 ```
 ## Review Complete
@@ -1012,7 +883,7 @@ Before writing the report:
 mkdir -p .ucr/history
 ```
 
-Save report to `.ucr/history/{YYYY-MM-DD}-{scope}-{strictness}.md`
+Save report to `.ucr/history/{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` (unified with `report-generation.md` as of v3.0 — the `HHmmss` segment prevents multiple same-day reviews from overwriting each other).
 
 If previous reports exist:
 ```bash

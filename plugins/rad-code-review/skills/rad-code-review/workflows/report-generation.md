@@ -22,6 +22,8 @@ This workflow governs how the orchestrator assembles, masks, and writes the fina
 
 The `scope` segment reflects the review scope (e.g., `full`, `src-only`, `api-routes`). The `strictness` segment reflects the configured strictness level (e.g., `strict`, `standard`, `lenient`).
 
+**v3.0 note.** This filename format is now the canonical form — unified with `orchestrate-review.md` Step 12. Pre-v3.0 reports written as `{YYYY-MM-DD}-{scope}-{strictness}.md` (no time segment) are still readable by the history-comparison logic, which matches on date prefix first, then falls back to filename sort.
+
 ### JSON companion (optional)
 
 - **Filename**: `rad-code-review-report.json`
