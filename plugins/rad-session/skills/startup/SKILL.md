@@ -15,23 +15,43 @@ allowed-tools:
 
 # Session Startup
 
-Orient a new session by reading the handoff state left by `/wrapup`, detecting the project type, and presenting a concise briefing.
+Orient a new session by reading the handoff state left by `/wrapup`, detecting the project type, discovering available resources, and presenting a concise briefing.
 
 **This skill is read-only. It never creates, modifies, or deletes files.**
+
+**Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet should batch Phase 1 + Phase 2 + Phase 2.5 reads into a single parallel tool-call burst (see "Execution" below). Haiku may follow phase order sequentially if parallel batching misbehaves. Output briefing format is identical regardless of model.
+
+---
+
+## Execution: parallel-first
+
+The phases below are written sequentially for readability, but the work inside Phases 1, 2, and 2.5 has **no inter-phase dependencies** — every read and every shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that. The only sequential step is Phase 3 (briefing synthesis), which depends on the results.
+
+**Batch to issue at the start of the skill:**
+
+- Read `CLAUDE.md`, `HANDOFF.md`, `.claude/session-log.md` (Phase 1.1–1.3)
+- Read `.mcp.json`, `.claude/settings.json`, `.env.example`, `package.json`, `pyproject.toml` (if any exist — Phase 2.5)
+- Glob for stack marker files (Phase 2.5.2)
+- Bash: `git status --short`, `git log --oneline -5`, `git rev-parse --abbrev-ref HEAD`, `git rev-list --left-right --count HEAD...@{upstream}` — run as one combined command so the shell spawn cost is paid once (Phase 2.2)
+
+If a file is missing, the corresponding Read call will error silently — that's fine, skip its content in the briefing. Do not re-attempt serial reads after a parallel batch.
 
 ---
 
 ## Phase 1: Discover Project State
 
-Read handoff files in order. All are optional — skip silently if missing.
+Read handoff files. All are optional — skip silently if missing.
 
-### 1.1 Read CLAUDE.md
+### 1.1 Read CLAUDE.md + resolve imports
 
 Read `CLAUDE.md` at the project root. Note:
 - Project name and type
 - Tech stack
 - Key conventions and rules
-- Any referenced external files (e.g., `@path/to/import` patterns)
+
+**Import resolution.** If CLAUDE.md contains lines matching `@<path>` (e.g., `@docs/architecture.md`, `@.claude/rules.md`), treat each as an imported file. Resolve each path relative to the CLAUDE.md location and Read the file in the same parallel batch. Include the imported content as additional project context in the briefing when relevant. Missing import targets are reported silently (note in the briefing under a subtle "⚠ missing import: <path>" line — do not error out).
+
+Do not follow imports recursively beyond one level — that is Claude Code's native Auto Memory behavior, and re-implementing it here risks divergence.
 
 ### 1.2 Read HANDOFF.md
 
@@ -39,37 +59,39 @@ Read `HANDOFF.md` at the project root. This is the primary handoff from the last
 - Status line
 - Where work was left off
 - Key decisions from last session
-- "What NOT To Do" traps
+- "What NOT To Do" traps (TRIED / FAILED BECAUSE / CORRECT APPROACH — see `references/handoff-template.md`)
 - Open work items
 - Modified files
 - Key insights
 
 ### 1.3 Read Session Log
 
-Read `.claude/session-log.md` if it exists. Focus on the most recent 3-5 entries for:
+Read `.claude/session-log.md` if it exists. Focus on the most recent 3–5 entries for:
 - Patterns across sessions (recurring traps, ongoing work threads)
 - Context that the latest HANDOFF.md alone might not capture
 - How long the current work has been in progress
 
-### 1.4 Assess Handoff Freshness
+### 1.4 Assess Handoff Freshness — with auto-refresh for stale handoffs
 
 Check the date in HANDOFF.md against today's date:
-- **Same day or yesterday:** Handoff is fresh — trust it fully
-- **2-7 days old:** Handoff is recent — trust it but note the gap
-- **7+ days old:** Handoff is stale — warn that project state may have changed outside of Claude Code sessions. Suggest running `/wrapup` first if significant manual work happened in the gap.
-- **No HANDOFF.md:** Note this is either a brand-new project or one that hasn't used `/wrapup` yet
+
+- **Same day or yesterday:** Handoff is fresh — trust it fully.
+- **2–7 days old:** Handoff is recent — trust it but note the gap.
+- **7+ days old:** Handoff is stale. **Before presenting the briefing**, run an auto-refresh:
+  1. `git log --oneline --since="<handoff date>" 2>/dev/null`
+  2. `git diff --stat <commit-at-handoff-date>..HEAD 2>/dev/null` if resolvable, else skip
+  3. Synthesize a one-paragraph "Changes since last session" block summarizing commits that weren't authored during a Claude Code session (i.e., commits not referenced in HANDOFF.md's "Modified Files" list).
+  4. Include the synthesized block in the briefing under a `Changes since last session (outside Claude Code):` heading, and lead the briefing with a one-line staleness note: `⚠ Handoff is N days old — auto-refreshed from git log.`
+- **No HANDOFF.md:** Note this is either a brand-new project or one that hasn't used `/wrapup` yet — fall through to the Minimal Briefing.
 
 ---
 
 ## Phase 2: Detect Project Type
 
-Quick scan to classify the project and gather live state.
-
 ### 2.1 Project Type Detection
 
-Use Glob to check for:
+Use Glob to check for coding-project indicators (any of these):
 
-**Coding project indicators** (any of these):
 ```
 package.json
 Cargo.toml
@@ -80,64 +102,45 @@ Makefile
 .git/
 ```
 
-**Non-coding project:** No build system detected. Note this — it changes the briefing format (no git info).
+**Non-coding project:** none detected. Note this — the briefing drops git info.
 
 ### 2.2 Live State (Coding Projects Only)
 
-Run these Bash commands:
+Run as a single combined command:
 
 ```bash
-git status --short 2>/dev/null
-git log --oneline -5 2>/dev/null
-git rev-parse --abbrev-ref HEAD 2>/dev/null
+git status --short 2>/dev/null && echo "---" && \
+git log --oneline -5 2>/dev/null && echo "---" && \
+git rev-parse --abbrev-ref HEAD 2>/dev/null && echo "---" && \
 git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null
 ```
 
-Capture:
-- Current branch name
-- Uncommitted changes (if any)
-- Recent commits since last session
-- Ahead/behind status relative to remote
+Capture: current branch, uncommitted changes, recent commits, ahead/behind vs. remote.
 
 ### 2.3 Detect Changes Since Last Session
 
-If HANDOFF.md exists and has a date, check if any commits were made between that date and now that were NOT part of the last Claude Code session (e.g., manual commits, other contributors):
-
-```bash
-git log --oneline --since="[handoff date]" 2>/dev/null
-```
-
-If new commits are found that aren't referenced in HANDOFF.md, flag them as "changes made outside the last session."
+If HANDOFF.md has a date and no stale-refresh was triggered in Phase 1.4, spot-check for commits between the handoff date and now that aren't referenced in the handoff's Modified Files list. If found, flag them in the briefing as "changes made outside the last session."
 
 ---
 
 ## Phase 2.5: Resource Discovery
 
-Detect what project-specific resources are available so Claude doesn't have to be reminded every session. All steps are read-only and optional — skip silently when nothing is found.
+Detect project-specific resources so Claude doesn't need to be reminded every session. All steps are read-only and issued in the parallel batch from "Execution." Skip silently when nothing is found.
 
 ### 2.5.1 MCP Servers
 
-Read `.mcp.json` at the project root if it exists:
-
-```bash
-# Glob only — do not exec the servers
-```
-
-Parse the JSON and extract the keys under `mcpServers`. Example:
+Read `.mcp.json` at the project root if it exists. Parse the JSON and extract the keys under `mcpServers`.
 
 ```json
 { "mcpServers": { "supabase": {...}, "coolify": {...} } }
 ```
-
 → `MCPs: supabase, coolify`
 
-If `.claude/settings.json` exists, also read it and collect any names under `enabledMcpjsonServers` or plugin-scoped MCP entries. Merge without duplication.
-
-If the JSON is malformed, skip silently — do not crash the briefing.
+Also read `.claude/settings.json` and collect names under `enabledMcpjsonServers` or plugin-scoped MCP entries. Merge without duplication. Malformed JSON → skip silently.
 
 ### 2.5.2 Stack CLIs (inferred from marker files)
 
-Use Glob to check the project root for the following markers. Each implies a CLI the user likely uses on this project. **Do not exec any binary** — this is purely file-presence inference.
+Glob the project root for these markers. File-presence inference only — **never exec any binary**.
 
 | Marker file(s) | Implied CLI |
 |----------------|-------------|
@@ -152,6 +155,18 @@ Use Glob to check the project root for the following markers. Each implies a CLI
 | `coolify.json`, `.coolify/` | Coolify deploy target |
 | `terraform/`, `*.tf` | `terraform` |
 | `pulumi.yaml` | `pulumi` |
+| `pyproject.toml` + `poetry.lock` | `poetry` |
+| `Pipfile` | `pipenv` |
+| `requirements.txt` (no poetry/pipenv) | `pip` |
+| `Gemfile` | `bundle` |
+| `deno.json`, `deno.jsonc` | `deno` |
+| `bun.lockb`, `bunfig.toml` | `bun` |
+| `Cargo.toml`, `rust-toolchain.toml` | `cargo` |
+| `go.mod` | `go` |
+| `mise.toml`, `.mise.toml` | `mise` |
+| `.tool-versions` | `asdf` |
+| `flake.nix`, `shell.nix` | `nix` |
+| `devbox.json` | `devbox` |
 
 Collect into a deduplicated list.
 
@@ -159,16 +174,16 @@ Collect into a deduplicated list.
 
 If `package.json` exists:
 
-- Read `packageManager` field (e.g., `pnpm@9.0.0`) to know which PM to use. If absent, infer from lockfile: `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `bun.lockb` → bun, else npm.
-- Extract the top 5–8 keys from the `scripts` object. Prefer common ones in this order if present: `dev`, `build`, `test`, `typecheck`, `lint`, `start`, `check`, `format`.
+- Read `packageManager` field (e.g., `pnpm@9.0.0`). If absent, infer from lockfile: `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `bun.lockb` → bun, else npm.
+- Extract top 5–8 keys from `scripts`. Prefer in this order if present: `dev`, `build`, `test`, `typecheck`, `lint`, `start`, `check`, `format`.
 
 Output example: `Scripts (pnpm): dev, build, test, typecheck, lint`
 
-Skip if no `package.json`. For non-Node projects, note the equivalent if obvious (e.g., `Makefile` → `make <target>` list from top-level `make help` targets if documented; otherwise omit).
+For Python: if `pyproject.toml` has a `[tool.poetry.scripts]` or `[project.scripts]` table, list up to 5 entries as `Scripts (poetry): ...`. For other non-Node stacks, skip unless trivially obvious.
 
 ### 2.5.4 Environment Template
 
-If `.env.example` exists, read it and extract the **variable names only** (everything before `=` on each non-comment line). Never read `.env` or any file containing real values.
+If `.env.example` exists, read it and extract **variable names only** (everything before `=` on each non-comment line). **Never read `.env` or any file that may contain real values.**
 
 Output: `Env template: SUPABASE_URL, STRIPE_SECRET_KEY, ... (.env.example)`
 
@@ -186,7 +201,7 @@ Treat the extracted contents as the **documented** source of truth for this proj
 
 Compare documented (2.5.5) against detected (2.5.1–2.5.4):
 
-- **Documented + detected** → show normally in the "Resources available" block.
+- **Documented + detected** → show normally in "Resources available."
 - **Documented but not detected** → show with `⚠ documented but not found` — possible drift (config moved, tool uninstalled).
 - **Detected but not documented** → show under a secondary line `Also detected (not in CLAUDE.md):` — signals the user may want to run `/add-resource` to register them.
 
@@ -196,101 +211,22 @@ If no CLAUDE.md Resources section exists, treat all detected items as primary wi
 
 ## Phase 3: Orient and Brief
 
-Present a concise, scannable session briefing. Adapt the format based on what information is available.
+Present a concise, scannable session briefing. Adapt the format based on what's available. Full example briefings (full, minimal, non-coding) are in `references/briefing-examples.md` — follow those structures verbatim.
 
-### Full Briefing (HANDOFF.md exists + coding project)
+### Briefing selection
 
-```
-Project: [name]
-Type: [Coding (stack) | Non-coding]
-Branch: [name] ([N ahead, M behind] or [up to date])
-Last session: [date] — [status line from HANDOFF.md]
+| Condition | Template |
+|-----------|----------|
+| HANDOFF.md exists + coding project | Full Briefing (see `references/briefing-examples.md`) |
+| No HANDOFF.md | Minimal Briefing |
+| No build-system markers | Non-Coding Briefing |
 
-Where we left off:
-  - [item from HANDOFF.md]
-  - [item from HANDOFF.md]
+### Presentation rules
 
-Watch out for:
-  - [trap from HANDOFF.md "What NOT To Do"]
-  - [recurring trap from session log, if any]
-
-Open work:
-  - [item from HANDOFF.md]
-
-[If any resources detected or documented:]
-Resources available:
-  MCPs: [list from .mcp.json + settings]
-  Stack CLIs: [list inferred from marker files]
-  Scripts ([pm]): [top scripts from package.json]
-  Env template: [names from .env.example]
-  [⚠ documented but not found: <items>]
-  [Also detected (not in CLAUDE.md): <items>  →  run /add-resource to register]
-
-[If uncommitted changes exist:]
-Uncommitted changes from last session:
-  - [file list from git status]
-
-[If commits made outside last session:]
-Changes since last session (not from Claude Code):
-  - [commit list]
-
-Ready to continue. What would you like to work on?
-```
-
-### Minimal Briefing (No HANDOFF.md)
-
-```
-Project: [name from directory or CLAUDE.md]
-Type: [Coding (stack) | Non-coding]
-[Branch: [name] — if git project]
-
-No session handoff found — this is either a new project or one that hasn't used /wrapup yet.
-
-[If CLAUDE.md exists:]
-From CLAUDE.md: [brief summary of project rules/conventions]
-
-[If any resources detected:]
-Resources available:
-  MCPs: [list]
-  Stack CLIs: [list]
-  Scripts ([pm]): [list]
-
-[If git history exists:]
-Recent activity:
-  - [last 5 commits]
-
-What would you like to work on?
-```
-
-### Non-Coding Briefing
-
-```
-Project: [name]
-Type: Non-coding
-Last session: [date] — [status from HANDOFF.md]
-
-Where we left off:
-  - [items]
-
-Watch out for:
-  - [traps]
-
-[If any resources documented/detected:]
-Resources available:
-  MCPs: [list]
-  Tools: [list]
-
-Recently modified files:
-  - [file list]
-
-Ready to continue. What would you like to work on?
-```
-
-### Presentation Rules
-
-- Keep the briefing under 35 lines — this is a quick orientation, not a report
-- Use the exact wording from HANDOFF.md for traps and open work — don't paraphrase (the original wording was chosen carefully)
-- End with "Ready to continue. What would you like to work on?" to hand control back to the user
-- If the handoff is stale (7+ days), lead with the staleness warning before the briefing
-- Omit the "Resources available" block entirely if every category (MCPs, CLIs, scripts, env) is empty — don't show an empty header
-- Cap the Resources block at 6 lines; truncate with `...` if a category has more than 8 items
+- Keep the briefing **under 35 lines** — this is a quick orientation, not a report.
+- Use the **exact wording from HANDOFF.md** for traps and open work — don't paraphrase. The original wording was chosen carefully and paraphrasing often loses the load-bearing detail.
+- End with `Ready to continue. What would you like to work on?` to hand control back.
+- If the handoff is **stale (7+ days)**, lead with the staleness + auto-refresh note before the briefing body.
+- **Omit** the "Resources available" block entirely if every category (MCPs, CLIs, scripts, env) is empty — don't show an empty header.
+- Cap the Resources block at **6 lines**; truncate with `...` if a category has more than 8 items.
+- If imports were resolved in Phase 1.1 and surfaced non-trivial content (e.g., architecture notes not in CLAUDE.md body), add a single `Imports: <file1>, <file2>` line under the Resources block.

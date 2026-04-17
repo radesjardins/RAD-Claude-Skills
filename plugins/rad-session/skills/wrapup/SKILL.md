@@ -19,7 +19,9 @@ allowed-tools:
 
 # Session Wrapup
 
-Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean for the next session. The `## Resources` section is protected from deletion. Insights worth remembering are surfaced in the final summary for Claude Code's native Auto Memory to pick up on its own schedule.
+Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean. The `## Resources` section is protected from deletion. Insights worth remembering are surfaced in the final summary for Claude Code's native Auto Memory to pick up on its own schedule.
+
+**Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet should issue Phase 1 reads + git state commands as a single parallel batch; Haiku may execute sequentially. The conversation-synthesis step in Phase 1.3 uses the explicit tag-and-summarize pattern so all three models produce comparable output.
 
 **Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), and surfacing any insights..."
 
@@ -27,7 +29,7 @@ Capture the current session's state, decisions, traps, and insights into structu
 
 ## Phase 1: Gather State
 
-Collect all raw material silently — no user interaction in this phase.
+Collect all raw material silently — no user interaction in this phase. Phase 1.1 and 1.2 have no dependencies and can run in parallel.
 
 ### 1.1 Read Existing Files
 
@@ -52,28 +54,44 @@ Makefile
 .git/
 ```
 
-**If coding project detected**, run these Bash commands:
+**If coding project detected**, run as one combined command:
 ```bash
-git status --short 2>/dev/null
-git diff --stat 2>/dev/null
+git status --short 2>/dev/null && echo "---" && \
+git diff --stat 2>/dev/null && echo "---" && \
 git log --oneline -10 2>/dev/null
 ```
 
 Capture: branch name, uncommitted changes, recent commits.
 
-**If non-coding project** (none of the above found):
+**If non-coding project:**
 - Use Glob for recently modified files: `**/*` sorted by modification time
 - Note the most recently touched files as "Modified Files"
 
 ### 1.3 Synthesize Conversation Context
 
-From the current conversation already in your context (no tool call needed), extract:
+Walk the conversation already in your context — no tool call needed. To produce reliable, comparable output across models, use this explicit scan pattern instead of freeform reflection:
 
-- **Decisions made** — architectural choices, tool selections, approach decisions, with their reasoning
-- **Failed approaches** — things that were tried and didn't work, and specifically why they failed
-- **User corrections** — feedback or preferences the user expressed that adjusted your approach
-- **Open/incomplete work** — tasks started but not finished, next steps identified
-- **Non-obvious insights** — discoveries about the codebase, API quirks, environment issues, anything a fresh session would need to know but couldn't easily rediscover
+**Scan pass.** Starting from the earliest turn still visible and moving forward, tag each meaningful turn with one or more of these labels:
+
+| Label | What qualifies |
+|-------|----------------|
+| `DECISION` | Architecture choice, tool selection, naming rule, approach taken — with a stated or inferable reason |
+| `FAIL` | Something was tried and didn't work, **and** a root cause was identified |
+| `CORRECTION` | User explicitly redirected, rejected an approach, or stated a preference |
+| `INSIGHT` | Non-obvious fact about the codebase, environment, API, or user that a fresh session couldn't easily rediscover |
+| `OPEN` | Task started but not finished, or a next step that was identified but not executed |
+
+Skip turns that are pure tool output, navigation, or conversational filler. Do not re-tag the same content twice.
+
+**Synthesis pass.** After tagging, collapse the labels into the HANDOFF.md sections:
+
+- `DECISION` → Key Decisions (with the WHY preserved)
+- `FAIL` → What NOT To Do (use TRIED / FAILED BECAUSE / CORRECT APPROACH format — see below)
+- `CORRECTION` → Key Decisions (if it locks in a rule) or Key Insights (if it reveals a preference)
+- `INSIGHT` → Key Insights
+- `OPEN` → Open Work (stated as current state, not instructions)
+
+If the conversation was truncated by compaction, note this explicitly in the Last Session Summary: "Context was compacted during this session — synthesis based on remaining visible turns only."
 
 ---
 
@@ -88,6 +106,24 @@ Overwrite `HANDOFF.md` at the project root. Follow the template in `references/h
 - **Describe state, not instructions.** "Open Work" says "EBirdProvider started, API auth not wired" — not "Next, wire up the eBird API auth."
 - **Keep it scannable.** Bullet points over paragraphs. One idea per bullet.
 - **Target length:** 30-80 lines depending on session complexity.
+
+### "What NOT To Do" — canonical trap format
+
+Every entry under this section uses a structured three-part form. Small models (Haiku) and downstream parsers depend on it being literal. Opus/Sonnet can collapse to a single line when the third field is unknown; the two required prefixes remain.
+
+**Full form (preferred):**
+```
+- TRIED: [specific approach that was attempted]
+  FAILED BECAUSE: [root cause — not just "it didn't work"]
+  CORRECT APPROACH: [what actually worked, or what should be tried instead — omit the line if unknown]
+```
+
+**Compact form (acceptable when the correct approach is unknown):**
+```
+- TRIED: [approach] — FAILED BECAUSE: [root cause]
+```
+
+Do not write unstructured trap prose. The prefix tokens are how `/startup` reliably extracts the trap into the next session's briefing.
 
 ### File Structure
 
@@ -108,7 +144,9 @@ Overwrite `HANDOFF.md` at the project root. Follow the template in `references/h
 - [Decision]: [Brief reasoning — WHY, not just WHAT]
 
 ## What NOT To Do
-- [Failed approach]: [Why it failed — prevents the next session from retrying]
+- TRIED: [failed approach]
+  FAILED BECAUSE: [root cause]
+  CORRECT APPROACH: [what works, if known]
 
 ## Open Work
 - [Item]: [Current state as a description, not an instruction]
@@ -117,7 +155,7 @@ Overwrite `HANDOFF.md` at the project root. Follow the template in `references/h
 - `path/to/file` — [what changed, briefly]
 
 ## Key Insights
-[Non-obvious things: API quirks, environment gotchas, architectural constraints not in CLAUDE.md, 
+[Non-obvious things: API quirks, environment gotchas, architectural constraints not in CLAUDE.md,
 user preferences discovered during this session]
 ```
 
@@ -143,7 +181,7 @@ If `.claude/` directory doesn't exist, create it first.
 **Status:** [one-line project state]
 **Changes:** [file list or high-level summary]
 **Decisions:** [key choices made, if any]
-**Traps:** [what to avoid — only include if something actually failed or a gotcha was discovered]
+**Traps:** [compact trap form — "TRIED: X — FAILED BECAUSE: Y" — only include if something actually failed]
 ---
 ```
 
@@ -153,7 +191,7 @@ If `.claude/` directory doesn't exist, create it first.
 
 If the log now exceeds 20 entries after prepending:
 
-1. Scan entries being trimmed for "Traps" that appear 3+ times across the full log
+1. Scan entries being trimmed for "Traps" that appear 3+ times across the full log (match on the FAILED BECAUSE clause, not the TRIED clause — same root cause with different surface attempts should still count)
 2. If recurring traps found, promote them to CLAUDE.md as permanent rules (add under an appropriate existing section, or create a "Known Gotchas" section if none fits)
 3. Remove entries beyond the 20-entry cap (trim from the bottom — oldest entries)
 4. Notify the user:
@@ -233,7 +271,21 @@ CLAUDE.md changes:
   - Kept: [N] lines unchanged
 ```
 
-Wait for the user to respond. Acceptable responses:
+### Auto-proceed threshold (autonomous-friendly)
+
+The confirmation gate was added for safety on large or surprising prunes. For small, low-risk edits, blocking on a confirmation prompt breaks autonomous loops and background sessions. Evaluate this gate against the diff:
+
+**Auto-proceed is allowed only if ALL of these are true:**
+
+1. Total removals ≤ 3 lines/bullets (not including whitespace)
+2. No removed line resides in `## Tech Stack`, `## Conventions`, `## Architecture`, or any heading that matches the regex `(?i)^##\s+(rules?|principles?|guardrails?|do\s*not)` — these encode permanent rules
+3. No removed line comes from a protected Resources section
+4. No removed line contains the word "must", "never", "always", "required", or "forbidden" (signals a permanent rule the user wrote)
+5. The session is not the first run on this project (i.e., CLAUDE.md existed before this wrapup)
+
+If all five hold: proceed without waiting, and the diff block above becomes the record of what happened. Continue to Phase 5.
+
+Otherwise: wait for the user to respond. Acceptable responses:
 - "looks good" / "fine" / "ok" / approval → proceed to Phase 5
 - "undo [specific item]" → revert that change, show updated diff
 - If no changes were needed, say: "CLAUDE.md looks clean — no changes needed." and proceed
@@ -244,7 +296,7 @@ Wait for the user to respond. Acceptable responses:
 
 **What changed in 2.1:** rad-session no longer writes to `~/.claude/projects/<project>/memory/` — that path is owned by Claude Code's **native Auto Memory** (shipped in v2.1.59). Writing there would collide with the native system and confuse `/memory` and `MEMORY.md` consolidation.
 
-Instead, Phase 5 now **surfaces insights** by mentioning them in the final session summary. Claude Code's native Auto Memory will see them in the conversation context and save them on its own schedule — no duplicate write path, no collision.
+Instead, Phase 5 **surfaces insights** by mentioning them in the final session summary. Claude Code's native Auto Memory will see them in the conversation context and save them on its own schedule — no duplicate write path, no collision.
 
 ### What Qualifies as an Insight to Surface
 
@@ -289,6 +341,6 @@ End with a brief confirmation:
 Session wrapped up:
   - HANDOFF.md written ([N] lines)
   - Session log updated ([N] total entries)
-  - CLAUDE.md [pruned: N changes | unchanged | created]
+  - CLAUDE.md [pruned: N changes (auto-proceeded | confirmed) | unchanged | created]
   [- Worth remembering: N insights surfaced for native Auto Memory]
 ```

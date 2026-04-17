@@ -1,7 +1,7 @@
 {
   "name": "rad-session",
-  "version": "2.1.0",
-  "description": "Resource-aware session briefings and disciplined wrapup for Claude Code. /startup auto-detects project resources (MCPs, CLIs, scripts, env), /wrapup captures 'what NOT to do' and prunes CLAUDE.md with diff confirmation (Resources section protected), /add-resource registers new tools, and a PreCompact hook prevents silent context loss when compaction fires.",
+  "version": "2.2.0",
+  "description": "Resource-aware session briefings and disciplined wrapup for Claude Code, optimized for Opus 4.7 (Sonnet 4.6 / Haiku 4.5 compatible). /startup runs parallel-batched resource discovery (MCPs, CLIs, scripts, env, CLAUDE.md @imports) with stale-handoff auto-refresh from git log, /wrapup uses an explicit tag-and-synthesize scan to produce comparable output across models and auto-proceeds on low-risk CLAUDE.md prunes, /add-resource registers new tools via targeted edits, and a PreCompact hook enumerates six capture targets to survive thin post-compaction context.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"

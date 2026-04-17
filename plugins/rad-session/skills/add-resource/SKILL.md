@@ -20,6 +20,8 @@ Append a user-supplied resource to `CLAUDE.md`'s canonical `## Resources` sectio
 
 **This skill only writes to CLAUDE.md at the project root. It never touches other files.**
 
+**Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Always use targeted `Edit` operations to insert single lines rather than `Write` to rewrite the whole file — whole-file rewrites churn trailing whitespace and line endings on Windows, inflate diffs, and risk clobbering manual edits the user made between sessions.
+
 ---
 
 ## Phase 1: Parse the Request
@@ -128,7 +130,7 @@ Before writing, scan the target sub-bucket for an existing entry with the same n
 
 ### 3.2 Write
 
-Use `Edit` to insert the new line at the bottom of the correct sub-bucket. If the sub-bucket does not yet exist within the Resources section, add it in the order: MCPs → Stack CLIs → Scripts → Notes.
+Use `Edit` to insert the new line at the bottom of the correct sub-bucket. **Do not use `Write` to rewrite the entire CLAUDE.md** — targeted `Edit` preserves everything else byte-for-byte. If the sub-bucket does not yet exist within the Resources section, add it (still via `Edit`, anchored on the section heading) in the order: MCPs → Stack CLIs → Scripts → Notes.
 
 ### 3.3 Show the Change
 
