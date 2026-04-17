@@ -124,6 +124,18 @@ Install all five in one pass, or pick the ones that match your current work.
 
 ---
 
+## Plugin Pipelines
+
+Some plugins are designed to chain. The most common pipeline for a new project:
+
+1. **[rad-brainstormer](plugins/rad-brainstormer/)** — explore the problem space, converge on an idea, produce a design spec (`/rad-brainstormer:brainstorm-session` → `/rad-brainstormer:design-sprint`)
+2. **[rad-planner](plugins/rad-planner/)** — turn the spec into a dependency-aware implementation plan with risk review (`/rad-planner:plan-project`)
+3. **[rad-code-review](plugins/rad-code-review/)** — review the code you generate from the plan (`/rad-code-review`)
+
+Each plugin stands alone — the pipeline is a suggestion, not a requirement. The boundary between `design-sprint` and `plan-project` is: design-sprint produces a *spec* (architecture, components, APIs), plan-project produces an *ordered implementation plan* (DAG, tasks, complexity, risk).
+
+---
+
 ## Plugins
 
 ### Developer Frameworks

@@ -33,10 +33,10 @@ Complete these steps in order:
    - Error handling strategy
    - Testing strategy
    - Migration / deployment considerations (if applicable)
-7. **Write design doc** — Save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` (user preferences override)
+7. **Write design doc** — Save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (user preferences override)
 8. **Spec review loop** — Dispatch spec-reviewer agent; fix issues and re-dispatch until approved (max 5 iterations)
 9. **User reviews spec** — "Spec written and committed. Please review and let me know about any changes."
-10. **Transition** — Invoke the writing-plans skill
+10. **Transition** — Hand off to `/rad-planner:plan-project` for implementation planning (see "After the Design" below)
 
 ## Design Principles
 
@@ -77,7 +77,7 @@ Complete these steps in order:
 ## After the Design
 
 ### Write the spec document
-- Save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Save to `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Use clear, concise language
 
 ### Spec Review Loop
@@ -91,8 +91,9 @@ Complete these steps in order:
 Wait for user response. If changes requested, make them and re-run spec review.
 
 ### Transition
-Invoke the writing-plans skill to create an implementation plan.
-The ONLY skill invoked after design-sprint is writing-plans. Do NOT invoke frontend-design, mcp-builder, or any other implementation skill.
+Hand off to `/rad-planner:plan-project` to turn the approved spec into a dependency-aware implementation plan with risk review. If `rad-planner` is not installed, surface this to the user and suggest installing it, or let the user invoke their preferred implementation-planning workflow.
+
+Do NOT invoke frontend-design, mcp-builder, or any other implementation skill directly from design-sprint — implementation planning is a separate, reviewable phase.
 
 ## Visual Companion
 
