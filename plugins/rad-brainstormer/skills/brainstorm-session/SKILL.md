@@ -15,6 +15,59 @@ The ultimate brainstorming partner. Help turn problems, ideas, and blank slates 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have completed the brainstorming process and the user has approved the output. This applies regardless of perceived simplicity.
 </HARD-GATE>
 
+## Execution: parallel-first
+
+This skill chains many phases with heavy sub-agent dispatch. To keep wall-clock time and context usage sane:
+
+- **Context exploration** (Phase 1 state detection + Phase 1 file exploration + optional Phase 3 domain research) has no inter-step dependencies. Issue parallel Read/Glob/Grep calls, and if domain research is triggered, dispatch `domain-researcher` concurrently with the local file reads — do not serialize.
+- **Phase 7 design presentation** reads existing files (codebase structure, related specs). Batch those reads.
+- **Phase 11 spec review loop** — each iteration is a single `spec-reviewer` dispatch; iterations are inherently sequential, but any file reads the spec needs should be parallel within the iteration.
+- **What to serialize, always:** the anti-anchoring question sequence in Phase 2 (user must respond before you offer ideas), and the divergent → convergent transition (mixing modes defeats the protocol).
+
+Opus 4.7 and Sonnet 4.6 handle parallel batching well; Haiku 4.5 may prefer serial execution for reliability.
+
+## Mode Flags
+
+This skill honors two mode flags when passed in the invocation (`/rad-brainstormer:brainstorm-session --non-interactive`, etc.):
+
+- `--non-interactive` — Skip all user-approval gates. Produce a best-effort output, commit the artifact, and emit a trailing JSON block listing `awaiting_user_review` items (e.g., unconfirmed scope, unvalidated top pick, unresolved spec-review escalations). For agent/CI callers that deadlock on interactive menus.
+- `--resume <run-id>` — Load checkpoint state from `.brainstorm/state/<run-id>.json` and continue from the last saved phase. See "Checkpoint & Resume" below.
+
+If neither flag is present, run interactively as documented.
+
+## Checkpoint & Resume
+
+Long brainstorms (domain research + full divergent/convergent + design + spec review) are compaction-prone. Save state to `.brainstorm/state/<run-id>.json` at these transitions:
+
+1. After Phase 1 (starting state detected, context explored)
+2. After Phase 3 (domain research complete, if dispatched)
+3. End of Phase 5 (divergent phase complete — all ideas captured)
+4. End of Phase 6 (convergent phase complete — finalists selected)
+5. After Phase 10 (output document written)
+6. After each successful Phase 11 spec-review iteration
+
+Checkpoint schema:
+```json
+{
+  "run_id": "string",
+  "skill": "brainstorm-session",
+  "phase": "1 | 3 | 5 | 6 | 10 | 11-iter-N",
+  "started_at": "ISO-8601",
+  "last_saved": "ISO-8601",
+  "topic": "string",
+  "starting_state": "blank_slate | vague_idea | clear_idea | improving_existing | needs_evaluation",
+  "domain_brief": "JSON from domain-researcher or null",
+  "ideas_generated": ["string"],
+  "finalists": ["string"],
+  "recommended": "string or null",
+  "output_path": "string or null",
+  "spec_review_history": [{"iteration": 1, "status": "issues_found", "issues": []}],
+  "awaiting_user_review": ["string"]
+}
+```
+
+On `--resume <run-id>`, load the file, announce the phase you're resuming from, and continue. Do not re-run completed phases.
+
 ## Anti-Pattern: "This Is Too Simple To Need Brainstorming"
 
 Every topic goes through at minimum a light brainstorming process. A simple utility, a quick feature, a business question — all of them. "Simple" topics are where unexamined assumptions cause the most wasted work. The process can be short (a few exchanges for truly simple things), but MUST explore before committing.
@@ -111,7 +164,7 @@ If unclear, ask: "Where are you in your thinking? Are you starting from scratch,
 
 **CRITICAL — Do this BEFORE offering any ideas.**
 
-Research (arXiv Dec 2025) shows that when AI suggests ideas first, humans anchor on them — producing fewer, less varied, less original ideas. The brainstormer must counteract this:
+Research on human–AI ideation consistently shows that when AI suggests ideas first, humans anchor on them — producing fewer, less varied, less original ideas. The brainstormer must counteract this:
 
 1. Ask: "Before I share any ideas, what have you been thinking so far? Even half-formed thoughts are valuable."
 2. Ask: "What direction appeals to you intuitively, regardless of whether it seems feasible?"
@@ -127,15 +180,16 @@ Assess whether domain research would improve the brainstorming:
 - **Research not needed**: Personal/creative topics, well-understood domains, or user is the domain expert
 - **Ask if unsure**: "I want to make sure I'm well-informed about [domain]. Want me to do some quick research before we dive in?"
 
-If research is needed, dispatch the domain-researcher agent:
+If research is needed, dispatch the `domain-researcher` agent directly (it is defined in this plugin with `model: opus`, JSON-first output):
+
 ```
 Agent tool:
-  subagent_type: general-purpose (or use the plugin's domain-researcher agent)
+  subagent_type: domain-researcher
   description: "Research [domain] for brainstorming"
-  prompt: "[Research request with specific domain context]"
+  prompt: <substitute references/subagent-prompts/domain-research.md with {topic} and {session_context}>
 ```
 
-Weave research findings into questions naturally — do not dump a research report on the user.
+Parse the JSON response (markdown fallback accepted — see the agent's output contract). Weave the brief into questions naturally — do not dump a research report on the user. If the brief contains items in its `surprises` field, flag them prominently before continuing.
 
 ## Phase 4: Methodology Selection
 
@@ -194,12 +248,20 @@ Reference `references/evaluation-frameworks.md` for detailed framework instructi
 Adapt the output format to the domain:
 
 ### Software Projects
-- Present design section by section, get approval after each
+- Present design section by section, get approval after each (in `--non-interactive` mode, skip approvals and mark unconfirmed sections in `awaiting_user_review`)
 - Cover: architecture, components, data flow, error handling, testing
-- Write spec to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Run spec-reviewer agent (max 5 iterations)
+- Write spec to `docs/plans/YYYY-MM-DD-<topic>-design.md` (user preferences override)
+- Run `spec-reviewer` agent (max 5 iterations — see escalation below)
 - User reviews spec
-- Transition: invoke writing-plans skill
+- Transition: hand off to `/rad-planner:plan-project` for implementation planning. If `rad-planner` is not installed, surface this to the user and suggest installing it.
+
+#### Spec Review Loop (Phase 11)
+
+Dispatch `spec-reviewer` with the substituted `references/subagent-prompts/spec-review.md` template, passing the current `iteration` and `max_iterations` (default 5) and any prior iteration's `blocking_issues`. Parse the JSON response:
+
+- `status: approved` → proceed to user review
+- `status: issues_found` and `iteration < max_iterations` → fix blocking issues, increment iteration, re-dispatch
+- `escalation_required: true` (or `iteration >= max_iterations` with issues remaining) → stop looping. Surface the `unresolved_issues` JSON to the user with: "Spec review hit iteration cap with unresolved issues. Please decide: (a) accept these as known gaps, (b) rewrite the affected sections yourself, or (c) drop back to design phase." In `--non-interactive` mode, commit the current spec and add the unresolved issues to `awaiting_user_review`.
 
 ### Business/Strategy
 - Present as a strategic brief

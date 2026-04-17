@@ -16,6 +16,34 @@ Turn a chosen software approach into a complete, reviewable design spec ready fo
 Do NOT write any code, scaffold any project, or invoke any implementation tool until the design is approved by the user. This is a DESIGN skill, not an implementation skill.
 </HARD-GATE>
 
+## Execution: parallel-first
+
+- **Step 1 context exploration** — file reads, recent commits, and related spec discovery have no inter-step dependencies. Batch them.
+- **Step 5 unit isolation exploration** — if the design references multiple existing components or specs, Read them in parallel.
+- **Step 8 spec review loop** — iterations are sequential (each depends on the prior iteration's fixes), but any file reads within an iteration are parallel.
+- **Always serialize:** the per-section approval loop in Step 6 (user must respond before the next section). In `--non-interactive` mode, skip approvals and mark unconfirmed sections in `awaiting_user_review`.
+
+## Mode Flags
+
+This skill honors two mode flags when passed in the invocation:
+
+- `--non-interactive` — Skip user-approval gates. Produce a best-effort design doc, commit it, and emit a trailing JSON block listing `awaiting_user_review` items. For agent/CI callers that deadlock on interactive menus.
+- `--resume <run-id>` — Load checkpoint state from `.brainstorm/state/<run-id>.json` and continue from the last saved step.
+
+## Checkpoint & Resume
+
+Save state to `.brainstorm/state/<run-id>.json` at these transitions:
+
+1. After Step 1 (context explored) and Step 2 (scope confirmed)
+2. After Step 5 (isolation units mapped)
+3. After each section in Step 6 is approved (incremental — compaction during long specs is common)
+4. After Step 7 (spec written to disk)
+5. After each Step 8 spec-review iteration
+
+Checkpoint schema is the same as `brainstorm-session` (see that skill for the full JSON shape) with `skill: "design-sprint"` and phase values `1 | 2 | 5 | 6-<section> | 7 | 8-iter-N`.
+
+On `--resume <run-id>`, load the file, announce the step you're resuming from, and continue without re-running completed steps.
+
 ## Checklist
 
 Complete these steps in order:
@@ -81,9 +109,14 @@ Complete these steps in order:
 - Use clear, concise language
 
 ### Spec Review Loop
-1. Dispatch spec-reviewer agent
-2. If issues found: fix, re-dispatch, repeat until approved
-3. If loop exceeds 5 iterations, surface to human for guidance
+
+Dispatch the `spec-reviewer` agent with the substituted `references/subagent-prompts/spec-review.md` template, passing the current `iteration` and `max_iterations` (default 5) and any prior iteration's `blocking_issues`. Parse the JSON response:
+
+- `status: approved` → proceed to user review gate
+- `status: issues_found` and `iteration < max_iterations` → fix the blocking issues, increment iteration, re-dispatch
+- `escalation_required: true` (or `iteration >= max_iterations` with issues remaining) → **stop looping**. Surface the `unresolved_issues` JSON to the user with: "Spec review hit iteration cap with unresolved issues. Please decide: (a) accept these as known gaps, (b) rewrite the affected sections yourself, or (c) drop back to Step 6 to redesign." In `--non-interactive` mode, commit the current spec and add the unresolved issues to `awaiting_user_review`.
+
+Markdown fallback is accepted from the agent — parse best-effort if JSON is missing.
 
 ### User Review Gate
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start the implementation plan."
