@@ -23,6 +23,8 @@ You are orchestrating a complete project planning workflow. Your goal is to prod
 
 ### Phase 1: Strategic Discovery
 
+**Before Phase 1 — scope check:** If the user's project idea is clearly fuzzy (they're still debating what to build, which approach to take, or whether the problem is even the right one to solve), recommend they run `/rad-brainstormer:brainstorm-session` or `/rad-brainstormer:design-sprint` first and return here once the direction is locked. `plan-project` produces an implementation plan — it assumes the *what* is decided and plans the *how/order*. Proceed only once the user confirms they have a direction.
+
 **If the user provided a project description:**
 1. Summarize your understanding of the project
 2. Ask 3-5 high-information strategic questions (NOT implementation details):

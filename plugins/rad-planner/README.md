@@ -37,6 +37,21 @@ Built from research across a curated AI Code Review knowledge base (15 structure
 | **stack-advisor** | Tech stack evaluation using Golden Path matrix + live verification | Invoked by evaluate-stack skill or plan-architect |
 | **risk-assessor** | Anti-pattern detection, failure state coverage, TDD compliance review | Invoked by review-plan skill or plan-architect |
 
+## When to Use This vs rad-brainstormer
+
+`rad-planner` and [`rad-brainstormer`](../rad-brainstormer/) are designed to chain, not compete. They own different phases of the idea → ship pipeline:
+
+| Phase | Plugin | Owns | Output |
+|-------|--------|------|--------|
+| **Ideation** (divergent) | `rad-brainstormer` | Exploring the problem, generating options, stress-testing assumptions, converging on a direction | A decided idea + rough direction |
+| **Design** (post-ideation) | `rad-brainstormer:design-sprint` | Architecture, components, data flow, API design, error handling, testing strategy | A reviewable design spec |
+| **Planning** (pre-code) | `rad-planner:plan-project` | Dependency-aware task graph, complexity scoring, parallel waves, risk audit, failure states | An ordered implementation plan |
+| **Code** | your tools of choice | Implementation | Working software |
+
+**The boundary that matters:** `design-sprint` answers *"what are we building and how is it shaped?"* (spec). `plan-project` answers *"in what order do we build it, what could go wrong, and how do we know each step is done?"* (plan).
+
+**If you come in with a clear idea**, start here with `/rad-planner:plan-project`. **If the idea is still fuzzy** or you haven't settled on an approach, start with `/rad-brainstormer:brainstorm-session` first — then hand off to this plugin once the direction is locked. For non-trivial projects, running both in sequence is usually worth it.
+
 ## Reference Files
 
 The `references/` directory contains the knowledge base that agents and skills load on demand:

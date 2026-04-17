@@ -1,6 +1,6 @@
 {
   "name": "rad-planner",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "RAD Planner — structured coding project planner that enforces dependency-aware planning, risk assessment, and stack intelligence before any code is written. Prevents the 'vibe coding doom loop' with read-only exploration, failure state mapping, and machine-readable implementation plans.",
   "author": {
     "name": "RAD",
