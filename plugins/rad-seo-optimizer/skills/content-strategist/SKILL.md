@@ -3,19 +3,36 @@ name: content-strategist
 description: >
   Content strategy, content gaps, editorial calendar, topical authority, content plan,
   what should I write about. Covers topical authority mapping, gap analysis, brief
-  generation, and 12-week editorial calendar.
-argument-hint: "[site URL or topic area]"
+  generation, and 12-week editorial calendar. Most of this skill is strategic reasoning
+  over observable content + WebSearch — no Path B dependencies except for Phase 3 traffic
+  scoring (requires GSC/GA data, which the user can paste in or skip).
+argument-hint: "[site URL or topic area] [--non-interactive]"
+allowed-tools: Read Glob Grep Write Bash WebFetch WebSearch
 ---
 
 # Content Strategist
 
-Build a data-driven content strategy that establishes topical authority, fills
-competitive gaps, and produces "last click" content — pages so thorough that
-readers never need to return to the search results.
+Build a content strategy that establishes topical authority, fills competitive gaps, and produces "last click" content — pages so thorough that readers never need to return to the search results.
 
-Work through every phase in order. Do not skip phases. Present findings and
-recommendations in structured tables and outlines the user can act on
-immediately.
+Work through every phase in order. Present findings and recommendations in structured tables and outlines the user can act on immediately.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Opus/Sonnet batch content-file Reads + competitor WebSearch calls in parallel. Haiku may prefer sequential for large content inventories.
+
+## Execution: parallel-first
+
+- **Phase 3 content audit**: per-page Reads independent — batch
+- **Phase 2.3 + Phase 4.1 competitor topical coverage**: WebSearch per competitor independent — batch
+- **Phase 4.2 question gaps**: WebSearch for PAA independent — batch
+- **Phase 5 content brief generation**: per-brief reasoning, serializable (synthesis-heavy)
+
+## Capability Honesty
+
+Read `references/CAPABILITIES.md`. Key notes:
+- **Phase 3.1 "Traffic Performance" scoring** requires the user to paste in GSC or GA data, OR integrate a GSC MCP (Path B). Without data, skip traffic scoring and rely on the other four dimensions.
+- **Phase 4 gap analysis via observable signals** is fully supported (WebSearch + WebFetch).
+- **"Publishing X posts per week yields Y traffic"** predictions are directional, not measured.
 
 ---
 
@@ -89,10 +106,11 @@ For every existing page worth evaluating, score on five dimensions.
 
 ### 3.1 Scoring Criteria
 
-**Traffic Performance** (1-5)
+**Traffic Performance** (1-5) — *requires GSC/GA data or Path B GSC MCP integration*
 - 5 = growing traffic trend over 6 months
 - 3 = stable
 - 1 = declining or near-zero traffic
+- **If user has not provided traffic data**, skip this dimension and score across the other four only. Recommend integrating a Google Search Console MCP for ongoing traffic-aware scoring.
 
 **Content Quality** (1-5)
 - Depth and completeness vs. top-ranking competitors

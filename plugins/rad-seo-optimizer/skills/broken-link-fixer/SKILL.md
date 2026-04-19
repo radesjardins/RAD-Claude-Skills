@@ -2,14 +2,25 @@
 name: broken-link-fixer
 description: >
   Broken links, 404 errors, dead links, redirect chains, link checker, fix links. Scans
-  for broken internal/external links, redirect chains, mixed-content issues, and unlinked
-  brand mention opportunities.
-argument-hint: "[URL or path to check]"
+  the user's codebase for broken internal/external links, redirect chains, mixed-content
+  issues, and unlinked brand mention opportunities. Real code work — no Path B dependencies.
+argument-hint: "[URL or path to check] [--non-interactive]"
+allowed-tools: Read Glob Grep Write Bash WebFetch
 ---
 
 # Broken Link Fixer Skill
 
-Find every broken link on the target site, trace redirect chains, uncover link reclamation opportunities, and generate exact fix commands for every issue.
+Find every broken link on the target site, trace redirect chains, uncover link reclamation opportunities, and generate exact fix commands for every issue. Operates over the user's codebase (Glob + Grep for link references, verify targets) plus limited WebFetch for external link verification.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Link verification is primarily tool-call orchestration; all three models handle the batch coordination reliably.
+
+## Execution: parallel-first
+
+- **Phase 1 link discovery**: Glob + Grep across the codebase in a single batch
+- **Phase 2 link verification**: WebFetch / head requests per external link independent — batch (mindful of rate-limit politeness on any single domain)
+- **Phase 3 redirect chain tracing**: redirect walks per URL independent — batch
 
 ---
 

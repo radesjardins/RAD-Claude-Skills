@@ -58,9 +58,14 @@ Perplexity performs real-time web search and cites sources directly. Quality and
 | Recency | Recently published or updated content ranks higher |
 
 ```bash
-claude "Search Perplexity for '[TARGET QUERY]' and analyze: Is [BRAND]
-        cited? Which sources are used? What content format do cited pages
-        use? Identify what [BRAND] content needs to match."
+# Honest framing: WebSearch surfaces web results, NOT Perplexity's chat output.
+# To actually query Perplexity's chat engine you need its API (Path B MCP).
+# This command observes what content patterns Perplexity-cited pages tend to use —
+# by searching for "[BRAND]" on pages Perplexity has indexed, and observing the
+# format of those pages. Not equivalent to asking Perplexity directly.
+claude "Search for pages that discuss '[TARGET QUERY]' alongside [BRAND].
+        Observe: what content format do the most-prominent results use?
+        Identify structural patterns [BRAND] content should match."
 ```
 
 ### Claude

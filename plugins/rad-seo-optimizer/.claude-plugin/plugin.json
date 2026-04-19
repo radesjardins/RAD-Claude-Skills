@@ -1,7 +1,7 @@
 {
   "name": "rad-seo-optimizer",
-  "version": "1.1.0",
-  "description": "RAD SEO Optimizer — comprehensive SEO auditing, AEO/GEO optimization, competitor intelligence, keyword discovery, link building, content strategy, schema markup, and E-E-A-T optimization with step-by-step fix guidance.",
+  "version": "2.0.0",
+  "description": "RAD SEO Optimizer — honest, codebase-scoped SEO tooling for Claude Code. Covers codebase SEO linting, JSON-LD schema generation, AI-extractability content optimization, broken-link auditing, on-page optimization, keyword ideation + intent classification, content strategy, and observable competitive research. Does NOT pretend to measure numerical Core Web Vitals, keyword volumes, backlink profiles, or actual AI citation rates — those require Path B MCP integrations documented in references/CAPABILITIES.md.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"

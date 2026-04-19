@@ -1,91 +1,119 @@
 ---
 name: aeo-optimizer
 description: >
-  AEO, AI visibility, AI search optimization, generative engine optimization, "how does my
-  brand appear in AI", LLM seeding, AI citations, answer engine optimization, brand presence
-  in ChatGPT/Perplexity/Google AI Overviews.
-argument-hint: "[brand name or URL]"
+  AEO, AI visibility, AI search optimization, generative engine optimization, LLM seeding,
+  AI citations, answer engine optimization, brand presence in ChatGPT/Perplexity/Google AI
+  Overviews. This skill optimizes the user's OWN content structure and distribution for
+  AI-extractability. It does NOT measure actual AI citation rates — that requires direct
+  AI-platform API integration (Path B).
+argument-hint: "[brand name or URL] [--non-interactive] [--resume <run-id>]"
+allowed-tools: Read Glob Grep Write Bash WebFetch WebSearch Agent
 ---
 
 # AEO Optimizer — AI Engine Optimization Skill
 
-Make the target brand discoverable, recommended, and accurately represented by AI search engines.
+Make the target brand's content more extractable, recommended, and accurately represented by AI search engines. This skill owns what you can actually *do* about AEO — reformat your content for AI extractability, fix consistency across your owned profiles, seed authoritative sources, and build co-citation patterns. It does NOT pretend to measure how often ChatGPT/Perplexity/Gemini cite you, because that measurement requires those platforms' APIs (Path B).
 
-Traditional SEO gets a site ranked on Google. AEO gets the brand **recommended by AI**. When a user asks ChatGPT "What's the best project management tool?" or Perplexity "Compare CRM platforms" — AEO determines whether the brand appears, how it is described, and whether it is positioned favorably.
+Traditional SEO gets a site ranked on Google. AEO gets the brand recommended by AI. When a user asks ChatGPT "What's the best project management tool?" or Perplexity "Compare CRM platforms" — AEO determines whether the brand appears, how it is described, and whether it is positioned favorably. This skill produces the content patterns and distribution plan that tend to earn those citations. Whether they actually materialize requires separate measurement.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Opus/Sonnet should batch reference loads + multi-page content Reads + parallel WebSearch for consistency checks into parallel bursts. Haiku may follow phase order sequentially if parallel batching misbehaves.
+
+## Execution: parallel-first
+
+- **Phase 1 (content-structure audit)**: Glob then parallel-Read the user's content files in batches. Independent per file.
+- **Phase 3 (consistency audit)**: WebSearch + WebFetch calls for each third-party profile in parallel.
+- **Phase 4 (content conversion)**: Per-file rewrites are independent — batch.
+- **What to serialize, always**: Phase transitions (user approval gates in interactive mode), and Phase 2 seeding-plan decisions that depend on Phase 1 findings.
+
+## Capability Honesty
+
+Read `references/CAPABILITIES.md` before running. Core facts:
+- **You CAN** audit and rewrite the user's content structure, fix consistency across their owned profiles, generate distribution plans, add FAQ/Speakable schema, identify co-citation opportunities via WebSearch observation.
+- **You CANNOT** measure the user's actual brand presence in ChatGPT/Perplexity/Gemini responses. WebSearch returns web search results, not ChatGPT's answer. Without direct AI-platform API integration, any "AI visibility score" is fabricated.
+- **The honest substitute** is the Phase 1 AI-Extractability Content Linter below — it scores your *content's structural readiness* to be cited, not your actual citation rate. High extractability is a necessary but not sufficient condition for actually being cited.
+
+## Mode Flags
+
+- `--non-interactive` — Skip user-approval gates. Produce best-effort output, commit artifacts, emit trailing JSON with `awaiting_user_review` items.
+- `--resume <run-id>` — Load `.seo/state/<run-id>.json` and continue from the last saved phase.
+
+## Checkpoint & Resume
+
+Save state to `.seo/state/<run-id>.json` at these transitions: after Phase 1 (structure audit), after Phase 3 (consistency audit), after Phase 4 (content conversion), after Phase 5 (co-citation map), after output plan.
+
+Checkpoint schema (shared with other rad-seo multi-phase skills):
+```json
+{
+  "run_id": "string",
+  "skill": "aeo-optimizer | full-seo-audit | competitor-intelligence | content-strategist",
+  "phase": "string",
+  "started_at": "ISO-8601",
+  "last_saved": "ISO-8601",
+  "model": "opus | sonnet | haiku",
+  "target": "string — brand name or URL",
+  "phase_outputs": {},
+  "measurement_gaps": ["string"],
+  "awaiting_user_review": ["string"]
+}
+```
 
 ---
 
-## Phase 1: AI Visibility Audit
+## Phase 1: AI-Extractability Content Linter
 
-Score the target brand across six dimensions. Each dimension receives a 0-10 rating. The composite AEO Score (0-60) establishes the baseline.
+**This replaces the fabricated "AI Visibility Scorecard" from v1.x.** Instead of pretending to query ChatGPT/Perplexity/Gemini (which WebSearch cannot actually do), this phase scores the user's own content structure on observable signals that correlate with AI citation: question headings, direct-answer leads, quotable stats, FAQ schema, comparison tables, semantic chunking.
 
-### Scoring Dimensions
+### Inputs
 
-| # | Dimension | What It Measures | Score Range |
-|---|-----------|-----------------|-------------|
-| 1 | **Presence** | Is the brand mentioned at all in AI responses for target keywords? | 0-10 |
-| 2 | **Accuracy** | Is the information AI shares factually correct and current? | 0-10 |
-| 3 | **Sentiment** | Is the tone positive, neutral, or negative when discussing the brand? | 0-10 |
-| 4 | **Position** | Is the brand mentioned first, or buried among alternatives? | 0-10 |
-| 5 | **Completeness** | Does the AI capture the full value proposition and key differentiators? | 0-10 |
-| 6 | **Consistency** | Do different AI platforms agree on what the brand is and does? | 0-10 |
+Target for audit:
+- User's codebase content files (preferred — direct Read)
+- User's URL list (fetched via WebFetch)
+- Or both
 
-### Audit Method
+### Six Structural Dimensions
 
-Use `WebSearch` to query each major AI platform with brand-relevant prompts. Run a minimum of 10 queries per platform.
+Score each page on a 0-10 scale:
 
-**Query templates to test:**
+| # | Dimension | Observable Signal |
+|---|-----------|-------------------|
+| 1 | **Question-Format Headings** | Ratio of H2s phrased as questions / total H2s |
+| 2 | **Direct-Answer Leads** | First 1-2 sentences after each heading directly answer the implied question |
+| 3 | **Quotable Stats / Bolded Data** | Presence of specific numbers + bold formatting or `<strong>` on key claims |
+| 4 | **FAQ Schema Presence** | Valid FAQPage JSON-LD on pages with Q&A structure |
+| 5 | **Comparison / Structured Data** | Tables, feature matrices, pro/con lists |
+| 6 | **Semantic Chunking** | Short paragraphs (2-4 sentences), logical subsection density, not wall-of-text |
 
-```
-"What is [BRAND]?"
-"Best [CATEGORY] tools in 2026"
-"[BRAND] vs [COMPETITOR]"
-"Is [BRAND] worth it?"
-"[BRAND] pricing and features"
-"What are the pros and cons of [BRAND]?"
-"Alternatives to [COMPETITOR] for [USE CASE]"
-"[BRAND] review"
-"How does [BRAND] compare to [COMPETITOR]?"
-"What [CATEGORY] tool should I use for [SPECIFIC NEED]?"
-```
+### Per-Page Composite Score (0-60)
 
-**Platforms to query:**
-- Google AI Overviews (search with AI mode)
-- ChatGPT (web browsing enabled)
-- Perplexity AI
-- Claude (with web search)
-- Microsoft Copilot / Bing Chat
+Tiers (structural readiness, NOT actual AI visibility):
 
-### Generating the Scorecard
+| Score | Tier | Interpretation |
+|-------|------|----------------|
+| 0-12 | Illegible to AI | Wall-of-text, no structural signals — AI would struggle to extract anything |
+| 13-24 | Partially extractable | Some structure; AI could extract a few quotes but not full answers |
+| 25-36 | Extractable | Structure supports most extraction; add FAQ schema + bold stats to push higher |
+| 37-48 | Highly extractable | Most signals present; content is ready for AI to cite cleanly |
+| 49-60 | AI-native | Content is structurally optimal for AI extraction — actual citation depends on authority + consensus (Phases 2-8) |
 
-After collecting responses, produce a scorecard:
+### What This Score Means (and doesn't)
 
-```
-============================
-  AEO VISIBILITY SCORECARD
-============================
-Brand: [BRAND NAME]
-Date:  [DATE]
-Target Keywords: [LIST]
+- **Means**: Your content is (or isn't) structurally ready for AI to cite cleanly
+- **Does NOT mean**: AI is actually citing you right now
+- **To measure actual citations**: Add a Path B AI-platform MCP integration (see `references/CAPABILITIES.md`)
 
-Presence:    [X]/10  — Mentioned in [Y]% of AI responses
-Accuracy:    [X]/10  — [Y] factual errors found across [Z] responses
-Sentiment:   [X]/10  — [POS]% positive, [NEU]% neutral, [NEG]% negative
-Position:    [X]/10  — Listed first in [Y]% of recommendation queries
-Completeness:[X]/10  — [Y]/[Z] key features/differentiators captured
-Consistency: [X]/10  — [Y]% agreement across platforms
+### Per-Page Findings
 
-COMPOSITE AEO SCORE: [TOTAL]/60
-Rating: [Invisible|Emerging|Visible|Strong|Dominant]
+For each page, identify:
+- Missing question-format H2s (which sections would benefit)
+- Sections that lead with preamble instead of direct answers
+- Statistics that should be bolded / quotable
+- Q&A sections without FAQ schema
+- Comparison opportunities (tables, matrices)
+- Paragraphs over 5 sentences that should be broken up
 
-  0-12  = Invisible  (AI doesn't know you exist)
-  13-24 = Emerging   (Sporadic, often inaccurate mentions)
-  25-36 = Visible    (Present but not preferred)
-  37-48 = Strong     (Regularly recommended, mostly accurate)
-  49-60 = Dominant   (Default recommendation, highly accurate)
-```
-
-Record every factual error, missing feature, negative framing, or omission. These become the fix list for subsequent phases.
+These findings become the Phase 4 conversion queue.
 
 ---
 
@@ -95,15 +123,15 @@ AI models learn from the open web. Control where and how brand information appea
 
 ### WHERE to Publish (Source Priority)
 
-Publish brand-relevant content on these platforms, ordered by LLM training influence. Replace [BRAND] with the target brand name throughout:
+Publish brand-relevant content on these platforms, ordered by observed LLM training influence (exact weight varies by model and version, but the relative order is well-observed):
 
 | Priority | Platform | Why It Matters | Action |
 |----------|----------|---------------|--------|
 | 1 | **The Brand Website** | Primary source of truth. Must be crawlable, well-structured, fast. | Ensure clean HTML, proper schema markup, no JS-only rendering. |
-| 2 | **Wikipedia / Wikidata** | Highest-authority factual source for all LLMs. | Create or improve the Wikipedia page. Add Wikidata entity. |
-| 3 | **Reddit** | Massively overweighted in LLM training data. Authentic discussions. | Engage genuinely in relevant subreddits. Never astroturf. |
+| 2 | **Wikipedia / Wikidata** | High-authority factual source for most LLMs. | Create or improve the Wikipedia page (only if notability criteria are met). Add Wikidata entity. |
+| 3 | **Reddit** | Heavily weighted in many LLM training corpora. Authentic discussions. | Engage genuinely in relevant subreddits. Never astroturf. |
 | 4 | **Stack Overflow / Quora** | Q&A format is ideal for LLM extraction. | Answer questions where your product is genuinely the solution. |
-| 5 | **Medium / Substack / LinkedIn** | Long-form platforms LLMs crawl heavily. | Publish thought leadership, case studies, tutorials. |
+| 5 | **Medium / Substack / LinkedIn** | Long-form platforms LLMs crawl regularly. | Publish thought leadership, case studies, tutorials. |
 | 6 | **Industry Publications** | Authoritative third-party validation. | Guest posts, contributed articles, expert commentary. |
 | 7 | **Review Platforms** (G2, Trustpilot, Capterra) | LLMs use reviews for sentiment and feature extraction. | Actively collect reviews. Respond to all reviews. |
 | 8 | **GitHub** | Critical for developer/technical products. | Maintain active repos, quality READMEs, community engagement. |
@@ -111,24 +139,13 @@ Publish brand-relevant content on these platforms, ordered by LLM training influ
 
 ### WHAT Content Format to Use
 
-These content formats are disproportionately extracted and cited by LLMs:
+These content formats tend to be disproportionately extracted and cited by LLMs:
 
-**1. Structured "Best Of" Lists**
-```markdown
-## Best [Category] Tools in 2026
-### 1. [Your Brand] — Best for [Specific Use Case]
-**Why we chose it:** [2-sentence verdict]
-**Key features:** [Bullet list]
-**Pricing:** [Clear pricing info]
-**Best for:** [Target audience]
-```
-Always include testing methodology to establish authority.
+**1. Structured "Best Of" Lists** — Always include testing methodology to establish authority.
 
-**2. Comparison Tables**
-Create brand-vs-brand comparison content with clear verdicts. LLMs love extracting tabular data.
+**2. Comparison Tables** — LLMs extract tabular data cleanly.
 
-**3. FAQ-Style Content**
-Q&A is training data gold. Structure content as:
+**3. FAQ-Style Content** — Q&A is training data gold:
 ```markdown
 ## What is [Brand]?
 [Brand] is [direct 1-sentence definition]. It [key differentiator].
@@ -140,23 +157,21 @@ Q&A is training data gold. Structure content as:
 [Brand] excels at [strengths] while [Competitor] is better for [their strengths].
 ```
 
-**4. Original Data and Statistics**
-Publish original research, benchmarks, surveys. AI cites specific numbers. Make statistics bold and quotable:
-> **"78% of teams using [Brand] reported a 3x improvement in deployment speed"**
+**4. Original Data and Statistics** — Make statistics bold and quotable:
+> **"X% of teams using [Brand] reported a Y improvement in [metric]"**
+(Only publish numbers you've actually measured. Fabricated statistics damage long-term authority.)
 
-**5. Free Tools, Calculators, Templates**
-Create utility content that earns natural mentions and links. Examples: ROI calculators, assessment tools, framework templates.
+**5. Free Tools, Calculators, Templates** — Utility content earns natural mentions and links.
 
-**6. Branded Strategies with Memorable Names**
-Coin a methodology. Give it a name. Example: "The RAPID Framework for Content Optimization." LLMs remember and cite named frameworks.
+**6. Branded Strategies with Memorable Names** — Coin a methodology with a name. Example: "The RAPID Framework for Content Optimization." LLMs remember named frameworks.
 
 ---
 
 ## Phase 3: Consensus and Consistency Audit
 
-AI models recommend brands when **multiple independent sources agree** on the same facts. Inconsistency creates uncertainty, and uncertain LLMs hedge or omit.
+AI models recommend brands when multiple independent sources agree on the same facts. Inconsistency creates uncertainty, and uncertain LLMs hedge or omit.
 
-### Sources to Audit
+### Sources to Audit (parallel WebSearch + WebFetch)
 
 Check that the following information is identical across all platforms:
 
@@ -172,42 +187,29 @@ Check that the following information is identical across all platforms:
 | Contact information | Website, Google Business, directories |
 | Category / industry | All profiles and listings |
 
-### Audit Commands
-
-```bash
-# Search for brand mentions across platforms to compare
-claude "Search for [BRAND] on G2, Capterra, Crunchbase, and LinkedIn.
-        Compare the company description, founding date, pricing, and
-        feature list across all sources. Flag any inconsistencies."
-```
-
 ### Fix Protocol
 
 For every inconsistency found:
 1. Determine the **canonical truth** (usually your website)
-2. Update every third-party profile to match
+2. Update every third-party profile you control to match
 3. Submit corrections to platforms you don't control
-4. Re-audit in 30 days to verify propagation
+4. Re-audit periodically to verify propagation
 
 ---
 
 ## Phase 4: AI-Friendly Content Conversion
 
-Transform existing content so LLMs can extract clean, quotable answers.
+Transform existing content so LLMs can extract clean, quotable answers. Queue comes from Phase 1 findings.
 
 ### Conversion Rules
 
 **Rule 1: Convert H2 Headings to Question Format**
-
 ```
 BEFORE: ## Our Pricing Plans
 AFTER:  ## How Much Does [Brand] Cost?
 ```
 
 **Rule 2: Lead Every Section with a Direct Answer**
-
-The first 1-2 sentences after any heading must directly answer the implied question. No preamble.
-
 ```
 BEFORE:
 ## How Much Does Acme Cost?
@@ -221,53 +223,18 @@ Enterprise pricing starts at $499/month with custom configuration.
 ```
 
 **Rule 3: Make Statistics Bold and Quotable**
-
 ```
 **Acme processes over 2 million requests per day with 99.97% uptime.**
 ```
+(Only publish numbers you can actually verify.)
 
-**Rule 4: Add FAQ Schema Markup**
+**Rule 4: Add FAQ Schema Markup** — generate valid FAQPage JSON-LD for any Q&A content.
 
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [{
-    "@type": "Question",
-    "name": "How much does [Brand] cost?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "[Direct answer with pricing details]"
-    }
-  }]
-}
-```
+**Rule 5: Build Comparison Tables** for pricing, features, brand-vs-competitor.
 
-**Rule 5: Build Comparison Tables**
+**Rule 6: Use Semantic Chunking** — paragraphs 2-4 sentences, descriptive headings, bulleted lists for features, numbered lists for steps.
 
-```html
-<table>
-  <thead>
-    <tr><th>Feature</th><th>[Brand]</th><th>[Competitor A]</th><th>[Competitor B]</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Price</td><td>$29/mo</td><td>$49/mo</td><td>$39/mo</td></tr>
-    <tr><td>Free Tier</td><td>Yes</td><td>No</td><td>Yes (limited)</td></tr>
-  </tbody>
-</table>
-```
-
-**Rule 6: Use Semantic Chunking**
-
-- Paragraphs: 2-4 sentences max
-- Headings: descriptive and specific (not "Overview" but "What [Brand] Does Differently")
-- Lists: use bullets for features, numbers for steps
-- Definitions: use `<dfn>` tags or bold the term being defined
-
-**Rule 7: Add Speakable Schema**
-
-For content you want AI voice assistants to read aloud:
-
+**Rule 7: Add Speakable Schema** for voice-assistant content:
 ```json
 {
   "@context": "https://schema.org",
@@ -282,67 +249,53 @@ For content you want AI voice assistants to read aloud:
 ### Conversion Commands
 
 ```bash
-# Audit a page for AI-friendliness
-claude "Read [URL/FILE] and score it for AI extractability. Check:
-        heading format, answer directness, quotable stats, schema markup,
-        paragraph length, and semantic structure. Provide specific rewrites."
+# Audit a page for AI-extractability
+claude "Read [URL/FILE] and score it for AI extractability using the Phase 1 six
+        dimensions. Check: heading format, answer directness, quotable stats,
+        schema markup, paragraph length, and semantic structure. Provide specific rewrites."
 
 # Bulk convert headings to question format
-claude "Scan all content files in [DIRECTORY]. Convert every H2 that
-        isn't a question into question format. Preserve meaning."
+claude "Scan all content files in [DIRECTORY]. Convert every H2 that isn't a
+        question into question format. Preserve meaning."
 
 # Add FAQ schema to existing content
-claude "Read [FILE] and generate FAQPage schema markup based on
-        the existing Q&A content. Output the JSON-LD script tag."
-
-# Rewrite for AI extractability
-claude "Rewrite [FILE] following AEO content rules: question headings,
-        direct first-sentence answers, bold statistics, short paragraphs,
-        and comparison tables where relevant."
+claude "Read [FILE] and generate FAQPage schema markup based on the existing Q&A
+        content. Output the JSON-LD script tag."
 ```
 
 ---
 
 ## Phase 5: Co-Citation Strategy
 
-LLMs associate brands that appear together frequently. Get the target brand mentioned **alongside industry leaders** to inherit their authority signal.
+LLMs associate brands that appear together frequently. Get the target brand mentioned alongside industry leaders to inherit authority signal.
 
 ### Tactics
 
-**1. Publish Comparison Content**
-Create honest comparisons between the target brand and established players. Title format: "[Brand] vs [Leader]: [Specific Differentiator]"
+1. **Publish Comparison Content** — "[Brand] vs [Leader]: [Specific Differentiator]"
+2. **Earn Roundup Mentions** — Target "best of" and "top tools" articles with a clear inclusion angle
+3. **Participate in Industry Panels and Podcasts** — Transcripts get crawled
+4. **Get Listed in Curated Directories** — Industry-specific tool directories, awesome-lists on GitHub
+5. **Engage on Reddit and Quora** — Provide genuinely helpful answers mentioning the product with honest trade-offs
+6. **Joint Content and Integrations** — Co-publish with complementary (non-competing) established brands
 
-**2. Earn Roundup Mentions**
-Target "best of" and "top tools" articles. Pitch to authors with a clear angle on what makes the product worth including.
-
-**3. Participate in Industry Panels and Podcasts**
-Transcripts get crawled. Appear alongside recognized names in recorded discussions.
-
-**4. Get Listed in Curated Directories**
-Industry-specific tool directories, awesome-lists on GitHub, and curated resource pages.
-
-**5. Engage on Reddit and Quora**
-When someone asks "What's the best alternative to [Leader]?" provide a genuinely helpful answer mentioning the product **with context and honest trade-offs**. Never shill.
-
-**6. Joint Content and Integrations**
-Co-publish content with complementary (non-competing) established brands. Integration partnership pages create bidirectional co-citation.
-
-For detailed phase-by-phase execution steps for Phases 6-8, consult `references/aeo-phases.md`.
-
-### Co-Citation Audit Command
+### Co-Citation Observation Command
 
 ```bash
 claude "Search for '[BRAND]' and identify which other brands it is most
-        frequently mentioned alongside in AI responses, review sites, and
-        comparison articles. Map the co-citation network and identify gaps
-        where [BRAND] should appear but doesn't."
+        frequently mentioned alongside in review sites and comparison articles.
+        Map the observable co-citation network. Identify gaps where [BRAND]
+        should appear but doesn't. Note: this is observable from WebSearch —
+        NOT a measurement of what AI chat engines actually say, which would
+        require direct platform API integration."
 ```
+
+For detailed phase-by-phase execution steps for Phases 6-8, consult `references/aeo-phases.md`.
 
 ---
 
 ## Phase 6: Platform-Specific Optimization
 
-Each AI platform has different data sources and ranking signals. Optimize for Google AI Overviews (structured data + top-10 rankings), ChatGPT (Wikipedia + Reddit + training data), Perplexity (real-time web search + citations), Claude (depth + original research), and Microsoft Copilot (Bing index + social signals).
+Each AI platform has different data sources and ranking signals. Optimize for Google AI Overviews (structured data + top-10 rankings), ChatGPT (high-authority factual sources + Reddit + training data), Perplexity (real-time web search + citations), Claude (depth + original research), and Microsoft Copilot (Bing index + social signals).
 
 For detailed platform-by-platform signal tables and audit commands, consult `references/aeo-phases.md`.
 
@@ -350,7 +303,7 @@ For detailed platform-by-platform signal tables and audit commands, consult `ref
 
 ## Phase 7: Visual Optimization for AI
 
-Optimize visuals for AI interpretation: use real product screenshots, write descriptive full-sentence captions, add keyword-rich alt text, create infographics with embedded text, and add video transcripts.
+Optimize visuals for AI interpretation: real product screenshots, descriptive full-sentence captions, keyword-rich alt text, infographics with embedded text, video transcripts.
 
 For detailed image optimization rules and code examples, consult `references/aeo-phases.md`.
 
@@ -358,7 +311,7 @@ For detailed image optimization rules and code examples, consult `references/aeo
 
 ## Phase 8: Distribution and Seeding Plan
 
-Systematic content distribution to maximize AI training data coverage across UGC platforms (Reddit, Quora, forums), digital PR, affiliate/review coverage, expert quote placement, and content syndication.
+Systematic content distribution to maximize AI training data coverage across UGC platforms, digital PR, affiliate/review coverage, expert quote placement, and content syndication.
 
 For detailed distribution tactics and platform-specific strategies, consult `references/aeo-phases.md`.
 
@@ -369,77 +322,82 @@ For detailed distribution tactics and platform-specific strategies, consult `ref
 After completing all phases, generate a prioritized action plan organized by time horizon.
 
 ### Quick Wins (Week 1-2)
-
-These require no new content creation and have immediate impact:
-
-1. **Fix consistency issues** found in Phase 3 (update all profiles to match canonical information).
-2. **Add FAQ schema markup** to existing high-traffic pages.
-3. **Reformat top 5 pages** using Phase 4 conversion rules (question headings, direct answers, bold stats).
-4. **Update image alt text and captions** on key pages per Phase 7.
-5. **Claim and optimize** all unclaimed business profiles on review platforms.
-6. **Add Speakable schema** to homepage and product pages.
-7. **Fix any factual errors** found in AI responses by correcting source content.
+1. **Fix consistency issues** (Phase 3) — update all profiles to match canonical information
+2. **Add FAQ schema** to existing high-traffic pages
+3. **Reformat top 5 pages** using Phase 4 conversion rules
+4. **Update image alt text and captions** per Phase 7
+5. **Claim and optimize** unclaimed business profiles on review platforms
+6. **Add Speakable schema** to homepage and product pages
+7. **Fix any inconsistencies** that make LLMs hedge
 
 ### Medium-Term (Month 1-3)
-
-Content creation and platform presence building:
-
-1. **Create 10 FAQ-style pages** targeting questions AI is asked about the target category.
-2. **Publish 3 comparison pages** (brand vs top competitors) with honest, detailed analysis.
-3. **Write an original research piece** with quotable statistics about the industry.
-4. **Build Reddit presence** in 5 relevant subreddits (genuine engagement, no shilling).
-5. **Publish 5 guest articles** on industry publications and high-authority platforms.
-6. **Create or improve Wikipedia page** (if notability criteria are met).
-7. **Add Wikidata entity** with complete structured data.
-8. **Launch a branded framework or methodology** with a memorable name.
-9. **Build comparison tables** for all product/pricing pages.
+1. **Create 10 FAQ-style pages** targeting questions AI is asked in the category
+2. **Publish 3 comparison pages** with honest, detailed analysis
+3. **Write an original research piece** with verified quotable statistics
+4. **Build genuine Reddit presence** in 5 relevant subreddits
+5. **Publish 5 guest articles** on industry publications and high-authority platforms
+6. **Create or improve Wikipedia page** (if notability criteria are met)
+7. **Launch a branded framework or methodology** with a memorable name
+8. **Build comparison tables** for all product/pricing pages
 
 ### Long-Term (Month 3-12)
-
-Authority building, co-citation, and sustained digital PR:
-
-1. **Publish quarterly industry reports** with original data
+1. **Publish quarterly industry reports** with original verified data
 2. **Execute co-citation strategy** (joint content, roundup targeting, integration partnerships)
 3. **Build and maintain UGC presence** across Reddit, Quora, and forums
 4. **Launch digital PR campaign** targeting AI-crawled publications
-5. **Create free tools/calculators** that earn natural mentions and links
+5. **Create free tools/calculators** that earn natural mentions
 6. **Establish expert quote pipeline** via HARO/Connectively
-7. **Build affiliate program** to incentivize review coverage
-8. **Conduct quarterly AEO re-audits** to track score improvement
-9. **Monitor AI responses monthly** for new inaccuracies or sentiment shifts
-10. **Expand to emerging AI platforms** as new search interfaces launch
-
-### Action Plan Command
-
-```bash
-claude "Generate a complete AEO action plan for [BRAND] in the [CATEGORY]
-        space. Competitors: [LIST]. Run the full 8-phase AEO audit and
-        produce a prioritized action plan with quick wins, medium-term
-        projects, and long-term strategy. Include specific content briefs
-        for the top 5 highest-impact pieces to create."
-```
+7. **Re-run the Phase 1 extractability audit quarterly** — track structural score improvement
+8. **If Path B AI-platform MCP becomes available**: start measuring actual citation rates
 
 ---
 
+## Output JSON (for --non-interactive)
+
+```json
+{
+  "aeo_complete": true,
+  "run_id": "string",
+  "target": "string",
+  "phase_1_extractability": {
+    "pages_audited": 0,
+    "avg_score": 0,
+    "tier": "illegible | partially | extractable | highly | ai_native",
+    "conversion_queue_size": 0
+  },
+  "phase_3_consistency": {
+    "sources_checked": 0,
+    "inconsistencies_found": 0
+  },
+  "phase_4_conversions": {
+    "pages_rewritten": 0
+  },
+  "action_plan_path": "string",
+  "measurement_gaps": [
+    "actual AI citation rates require Path B AI-platform API integration",
+    "brand sentiment scoring across AI chat responses requires direct platform APIs",
+    "accuracy measurement of AI responses requires querying each AI chat interface directly"
+  ],
+  "escalation_required": false,
+  "awaiting_user_review": ["string"]
+}
+```
+
 ## Measurement and Re-Audit
 
-Track AEO progress with monthly check-ins and quarterly full audits.
+Track AEO progress with:
+- **Monthly**: Re-run the Phase 1 content-extractability audit on new/updated pages. Track structural-readiness score trend.
+- **Quarterly**: Full skill re-run. Compare phase-by-phase progress.
+- **If actual AI citation measurement matters**: integrate a Path B AI-platform MCP (see `references/CAPABILITIES.md`). Without that, you're measuring structural readiness to be cited, not actual citations.
 
-**Monthly**: Run the 10 test queries from Phase 1 across all platforms. Track changes in presence, position, accuracy, and sentiment. Log in a tracking spreadsheet.
+**Metrics you CAN track:**
+- Phase 1 avg extractability score over time
+- Number of pages with FAQ schema
+- Number of consistency issues remaining
+- Content volume published on priority distribution channels
 
-**Quarterly**: Run the full Phase 1 audit. Compare composite scores. Identify which phases need more investment.
-
-**Key metrics to track:**
-- Composite AEO Score trend (0-60)
-- Number of AI platforms mentioning the brand (out of 5)
-- First-mention rate (% of queries where brand appears first)
-- Accuracy rate (% of AI responses with zero factual errors)
-- Sentiment ratio (positive vs negative vs neutral mentions)
-- Co-citation partners (which brands the target is mentioned alongside)
-
-```bash
-claude "Run a monthly AEO check for [BRAND]. Query all 5 AI platforms
-        with our 10 standard queries. Compare results to last month's
-        baseline. Flag any new inaccuracies, sentiment shifts, or
-        position changes. Output a trend report."
-```
+**Metrics you CANNOT track without Path B:**
+- Actual mentions in ChatGPT / Perplexity / Gemini / Copilot answers
+- First-mention rate
+- Accuracy of AI responses
+- Sentiment of AI responses

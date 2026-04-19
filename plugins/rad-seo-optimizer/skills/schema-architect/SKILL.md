@@ -3,16 +3,27 @@ name: schema-architect
 description: >
   Add schema, structured data, JSON-LD, rich snippets, schema markup, generate schema.
   Generates valid JSON-LD, validates existing markup, and identifies missing schema
-  opportunities.
-argument-hint: "[URL or page for schema]"
+  opportunities. Real deliverable — Claude reliably produces valid, typed JSON-LD.
+  No Path B dependencies.
+argument-hint: "[URL or page for schema] [--non-interactive]"
+allowed-tools: Read Glob Grep Write Bash WebFetch
 ---
 
 # Schema Architect
 
-Generate valid, comprehensive JSON-LD structured data that earns rich results
-and optimizes pages for AI-driven search engines.
+Generate valid, comprehensive JSON-LD structured data that earns rich results and optimizes pages for AI-driven search engines. This is one of the plugin's highest-utility skills — Claude reliably produces valid, typed JSON-LD from observable page content.
 
 > **Reference**: See `schema-types-guide.md` for the full schema.org type catalog.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Schema generation is a well-defined structured output task all three models handle reliably.
+
+## Execution: parallel-first
+
+- **Multi-page schema audits**: per-page Reads independent — batch
+- **Schema validation per existing JSON-LD block**: parallel within a page
+- **WebFetch for URL-based schema generation**: parallel per URL
 
 ---
 

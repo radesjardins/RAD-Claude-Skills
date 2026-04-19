@@ -1,34 +1,58 @@
 ---
 name: technical-seo
 description: >
-  Site speed, Core Web Vitals, crawlability, robots.txt, sitemap issues, page speed,
-  HTTPS issues, indexation, mobile-friendly check. Covers crawlability, indexation, CWV,
-  redirects, canonicals, JS rendering, and security headers.
-argument-hint: "[URL or path to audit]"
+  Code-level technical SEO audit: crawlability, robots.txt, sitemap issues, indexation,
+  redirects, canonicals, JS rendering, security headers, URL structure, and page-speed
+  code-level risk factors. Does NOT measure numerical Core Web Vitals (LCP/CLS/INP) —
+  those require a Lighthouse/PSI MCP (Path B). Does NOT crawl whole sites — operates on
+  the user's codebase plus a provided URL list.
+argument-hint: "[URL or path to audit] [--non-interactive]"
+allowed-tools: Read Glob Grep Write Bash WebFetch
 ---
 
 # Technical SEO Skill
 
-Run a comprehensive technical SEO audit. Report every issue with a why-it-matters explanation, an exact fix command, and an expected ranking impact.
+Run a comprehensive technical SEO audit over the user's codebase and a provided URL list. Every issue includes a why-it-matters explanation, an exact fix command, and an expected impact rating. Be honest about which categories are measured vs. observable-only vs. requiring Path B integration.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Opus/Sonnet batch config Reads, template Globs, and URL fetches in parallel. Haiku may follow sequentially if parallel batching misbehaves.
+
+## Execution: parallel-first
+
+- **Section 1 (crawlability)**: robots.txt + sitemap fetch/parse + template Glob are independent — single batch
+- **Section 2 (page-speed risk factors)**: per-template Reads + per-URL fetches independent — batch
+- **Section 3 (mobile)**: inspections across URL list independent — batch
+- **Section 4 (security)**: header inspections across URL list independent — batch
+- **Section 5 (URL structure)**: config Reads + sitemap URL parsing independent — batch
+- **Section 6 (JS SEO)**: per-URL no-JS fetches independent — batch
+- **Section 7 (redirects)**: redirect chain walks can parallelize per URL
+
+## Capability Honesty
+
+Read `references/CAPABILITIES.md`. Key constraints:
+- **Numerical Core Web Vitals** (LCP/CLS/INP values) require Lighthouse or PSI API — Path B
+- **JS-rendered SPA content** requires a browser-based MCP — Path B
+- **Full-site crawl** requires a crawler MCP — Path B
+- **What this skill DOES measure honestly**: static analysis of config + templates + framework files; observable signals from WebFetch of specific URLs (no JS execution); redirect behavior (via HTTP following)
 
 ---
 
-## 1. Crawlability & Indexation
+## 1. Crawlability & Indexation (static analysis + WebFetch — scored honestly)
 
 ### 1.1 robots.txt Validation
 
-Read `robots.txt` at the site root. Check for these problems:
+Read `robots.txt` at the site root (from codebase or WebFetch). Check:
 
-- **Missing robots.txt.** Search engines treat a missing file as "allow all," but it signals neglect and prevents crawl-budget directives.
-- **Blocking important paths.** Flag any `Disallow` rule that covers pages meant to rank (e.g., `/blog/`, `/products/`).
-- **Missing sitemap directive.** `robots.txt` should contain a `Sitemap:` line pointing to the XML sitemap.
-- **Wildcard overreach.** Rules like `Disallow: /*?` can inadvertently block faceted navigation or parameterized pages that should be indexed.
+- **Missing robots.txt** — not strictly required but signals neglect
+- **Blocking important paths** — any `Disallow` rule covering pages meant to rank (e.g., `/blog/`, `/products/`)
+- **Missing sitemap directive** — robots.txt should contain `Sitemap:` line
+- **Wildcard overreach** — rules like `Disallow: /*?` can block faceted navigation unintentionally
 
-**Why it matters:** A misconfigured robots.txt can deindex entire site sections overnight.
+**Why it matters:** A misconfigured robots.txt can deindex entire site sections.
 
 **Fix command:**
 ```
-# See claude-code-fix-recipes.md — recipe: robots-txt-repair
 claude "Read robots.txt, remove rules blocking /blog and /products, add Sitemap: https://example.com/sitemap.xml, and write the corrected file."
 ```
 
@@ -36,272 +60,190 @@ claude "Read robots.txt, remove rules blocking /blog and /products, add Sitemap:
 
 ### 1.2 XML Sitemap
 
-Fetch the sitemap from the `Sitemap:` directive in robots.txt, or try `/sitemap.xml` and `/sitemap_index.xml`. Validate:
+Fetch the sitemap from the `Sitemap:` directive, or try `/sitemap.xml` and `/sitemap_index.xml`. Validate:
 
-- Sitemap exists and returns HTTP 200.
-- All URLs return 200 (no 404s, no redirects).
-- Sitemap contains fewer than 50,000 URLs per file (protocol limit).
-- `<lastmod>` dates are present and accurate.
-- No URLs blocked by robots.txt appear in the sitemap.
-- Sitemap is referenced in robots.txt.
+- Sitemap exists and returns HTTP 200
+- Listed URLs return 200 (no 404s, no redirects) — check in parallel
+- Under 50,000 URLs per file (protocol limit)
+- `<lastmod>` dates present and accurate
+- No URLs blocked by robots.txt appear in the sitemap
+- Sitemap referenced in robots.txt
 
-**Why it matters:** Sitemaps guide crawlers to new and updated content. Broken entries waste crawl budget.
+**Why it matters:** Sitemaps guide crawlers. Broken entries waste crawl budget.
 
-**Fix command:**
-```
-# See claude-code-fix-recipes.md — recipe: sitemap-generate
-claude "Crawl all public pages, generate a valid XML sitemap with accurate lastmod dates, exclude noindexed URLs, and write sitemap.xml to the public root."
-```
-
-**Expected impact:** Medium. Accelerates discovery of new pages; critical for large sites (1,000+ pages).
+**Expected impact:** Medium. Accelerates discovery; critical on large sites.
 
 ### 1.3 Canonical Tag Audit
 
-For every indexable page, inspect the `<link rel="canonical">` tag:
+For every indexable page in the codebase/URL list, inspect `<link rel="canonical">`:
 
-- **Missing canonical.** Every indexable page needs one.
-- **Conflicting canonical.** The canonical must not point to a page that itself canonicalizes elsewhere (chain).
-- **Self-referencing canonical.** Acceptable and recommended, but flag if the URL differs by trailing slash, protocol, or www.
-- **Cross-domain canonical.** Flag unless intentional (syndication).
-- **Canonical on paginated pages.** Paginated pages should canonicalize to themselves, not page 1.
+- Missing canonical on indexable pages
+- Conflicting canonical (chain)
+- Self-referencing canonical with trailing slash / protocol / www differences
+- Cross-domain canonical (flag unless intentional)
+- Paginated pages canonicalizing to page 1 (wrong — should self-canonicalize)
 
-**Why it matters:** Incorrect canonicals consolidate ranking signals to the wrong URL or cause deindexation.
+**Why it matters:** Incorrect canonicals consolidate signals to the wrong URL or cause deindexation.
 
-**Fix command:**
-```
-# See claude-code-fix-recipes.md — recipe: canonical-fix
-claude "Audit every page's canonical tag. Add self-referencing canonicals where missing. Fix any canonical that points to a redirected or noindexed URL."
-```
-
-**Expected impact:** High. Duplicate content confusion directly suppresses rankings.
+**Expected impact:** High.
 
 ### 1.4 Noindex / Nofollow Audit
 
-Scan every page for `<meta name="robots" content="noindex">` and `X-Robots-Tag` headers:
+Scan pages for `<meta name="robots" content="noindex">` and `X-Robots-Tag` headers:
 
-- Flag pages with `noindex` that appear in the sitemap.
-- Flag pages with `noindex` that receive internal links as if they are indexable.
-- Flag `nofollow` on internal links (leaks PageRank).
-- Flag conflicting directives between meta tag and HTTP header.
-
-**Why it matters:** Accidental noindex removes pages from search entirely. Internal nofollow wastes link equity.
-
-**Fix command:**
-```
-# See claude-code-fix-recipes.md — recipe: meta-robots-cleanup
-claude "Find all pages with noindex that should be indexed. Remove the noindex directive and ensure they are in the sitemap."
-```
+- Flag pages with `noindex` that appear in the sitemap
+- Flag pages with `noindex` that receive internal links as if indexable
+- Flag `nofollow` on internal links (leaks PageRank)
+- Flag conflicting directives between meta tag and HTTP header
 
 **Expected impact:** High for affected pages.
 
-### 1.5 Orphan Page Detection
+### 1.5 Orphan Page Detection (codebase + sitemap)
 
-Compare the set of URLs in the sitemap against the set of URLs reachable by following internal links from the homepage:
+Compare sitemap URLs against URLs reachable via internal links from the codebase/homepage:
+- Pages in sitemap but not internally linked → orphans
+- Pages linked but missing from sitemap → sitemap gaps
 
-- Pages in the sitemap but not linked internally are orphans.
-- Pages linked internally but missing from the sitemap are sitemap gaps.
+**Expected impact:** Medium. Orphans often gain rankings once linked.
 
-**Why it matters:** Orphan pages receive no internal link equity and are rarely crawled. Sitemap gaps slow discovery.
+### 1.6 Crawl Budget Risk Factors
 
-**Fix command:**
-```
-# See claude-code-fix-recipes.md — recipe: internal-link-orphans
-claude "Identify orphan pages. For each, suggest the most relevant existing page to add an internal link from. Generate the link markup."
-```
+Check for crawl-budget drains visible in code/config:
+- Infinite-scroll or faceted navigation generating unbounded URL permutations
+- Session IDs / tracking parameters in internal URLs
+- Soft-404 patterns (200 status + "not found" template)
+- Duplicate content accessible at multiple paths
 
-**Expected impact:** Medium. Orphan pages often see a ranking boost once internally linked.
-
-### 1.6 Crawl Budget Optimization
-
-Check for crawl-budget drains:
-
-- Infinite-scroll or faceted navigation generating unbounded URL permutations.
-- Session IDs or tracking parameters in URLs.
-- Soft-404 pages (return 200 but display "not found" content).
-- Duplicate content accessible at multiple URL paths.
-
-**Why it matters:** On large sites, wasted crawl budget means new content takes weeks to appear in search.
-
-**Fix command:**
-```
-# See claude-code-fix-recipes.md — recipe: crawl-budget-optimize
-claude "Add parameter handling rules to robots.txt. Implement rel=canonical on parameterized variants. Return proper 404 status codes for dead pages."
-```
-
-**Expected impact:** Medium-High on sites with 10,000+ pages. Negligible on small sites.
+**Expected impact:** Medium-High on sites with 10,000+ pages; negligible on small sites.
 
 ---
 
-## 2. Core Web Vitals
+## 2. Page-Speed Code-Level Risk Factors (NOT numerical CWV)
 
-### 2.1 Largest Contentful Paint (LCP) — Target < 2.5 s
+**Honest framing**: This section flags *risk factors visible in code* that tend to correlate with poor Core Web Vitals. It does NOT produce numerical LCP/CLS/INP values. Those require Lighthouse or PSI measurement (Path B).
 
-Identify the LCP element (usually hero image, heading, or video poster). Check:
+For numerical CWV measurement, integrate a Lighthouse MCP or use the PageSpeed Insights API directly.
 
-- Image is served in next-gen format (WebP/AVIF).
-- Image has explicit `width` and `height` attributes.
-- Image is preloaded with `<link rel="preload">`.
-- No render-blocking CSS or JS delays the LCP element.
-- Server response time (TTFB) is under 800 ms.
-- Critical CSS is inlined; non-critical CSS is deferred.
+### 2.1 LCP Risk Factors (observable from code)
 
-**Why it matters:** LCP is a direct Google ranking signal. Pages above 2.5 s lose ranking eligibility for Top Stories and some SERP features.
+Likely-LCP elements (hero images, heading banners, video posters) — check:
+- Image served in next-gen format (WebP/AVIF)? Flag legacy PNG/JPG for hero
+- Explicit `width` and `height` attributes? Missing → CLS risk
+- Preloaded with `<link rel="preload">` where appropriate?
+- Render-blocking CSS/JS in `<head>` without `defer`/`async`?
+- Critical CSS inlined vs. linked?
 
-**Fix commands:** See `references/platform-fixes.md` for framework-specific LCP fix commands (Next.js, React, WordPress, Static HTML).
+Framework-specific fixes: see `references/platform-fixes.md`.
 
-**Expected impact:** High. LCP improvement from 4 s to 2 s can move pages up 2-5 positions.
+### 2.2 INP Risk Factors (observable from code)
 
-### 2.2 Interaction to Next Paint (INP) — Target < 200 ms
+Scan for long-running handler patterns:
+- Synchronous `localStorage` or `sessionStorage` reads in event handlers
+- Heavy computation without Web Workers / `requestIdleCallback`
+- Debouncing absent on input handlers
+- Third-party scripts in `<head>` without defer
+- React hydration patterns (look for `hydrateRoot` placement)
 
-Identify long-running event handlers (click, keydown, pointerdown). Check:
+### 2.3 CLS Risk Factors (observable from code)
 
-- No synchronous `localStorage` or `sessionStorage` reads in event handlers.
-- Heavy computation is offloaded to Web Workers or `requestIdleCallback`.
-- Input handlers are debounced where appropriate.
-- Third-party scripts do not block the main thread for > 50 ms.
-- React hydration does not block interactivity (check for `hydrateRoot` usage).
+- Images/videos without explicit `width`/`height` or CSS `aspect-ratio`
+- Web fonts without `font-display: swap` + size-adjusted fallback
+- Ads / embeds without reserved space (`min-height`)
+- Content injected above the fold after initial paint
+- Dynamic banners (cookie consent, promos) that push content instead of using `transform`
 
-**Why it matters:** INP replaced FID as a Core Web Vital in March 2024. Poor INP directly reduces rankings.
+For framework-specific fixes, see `references/platform-fixes.md`.
 
-**Fix commands:** See `references/platform-fixes.md` for framework-specific INP fix commands (Next.js, React, WordPress, Static HTML).
+### 2.4 Numerical CWV Measurement — NOT PROVIDED
 
-**Expected impact:** High. INP violations correlate with higher bounce rates and lower rankings.
+This skill does not measure LCP, CLS, or INP numerically. To get real numbers, integrate:
+- Lighthouse CLI MCP (free, self-hosted)
+- PageSpeed Insights API MCP (free with API key)
 
-### 2.3 Cumulative Layout Shift (CLS) — Target < 0.1
-
-Detect layout-shifting elements. Check:
-
-- All images and videos have explicit `width` and `height` (or `aspect-ratio` in CSS).
-- Web fonts use `font-display: swap` with a size-adjusted fallback.
-- Ads and embeds have reserved space via `min-height`.
-- No content is injected above the fold after initial paint.
-- Dynamic banners (cookie consent, promos) use CSS `transform` instead of pushing content.
-
-**Why it matters:** CLS is a Core Web Vital. Layout shifts frustrate users and depress rankings.
-
-**Fix commands:** See `references/platform-fixes.md` for framework-specific CLS fix commands (Next.js, React, WordPress, Static HTML).
-
-**Expected impact:** Medium-High. CLS fixes produce immediate ranking improvements on mobile.
+The skill flags *risk factors*; measurement tells you *whether the factors matter in practice*.
 
 ---
 
-## 3. Mobile-First
+## 3. Mobile-First (static analysis — scored honestly)
 
 ### 3.1 Viewport Meta Tag
 
-Verify `<meta name="viewport" content="width=device-width, initial-scale=1">` is present in `<head>`. Flag if missing or if `maximum-scale=1` / `user-scalable=no` is set (accessibility violation).
+Verify `<meta name="viewport" content="width=device-width, initial-scale=1">` in `<head>`. Flag `maximum-scale=1` or `user-scalable=no` (accessibility violation).
 
-**Expected impact:** Critical. Without the viewport tag, Google treats the page as non-mobile-friendly.
+**Expected impact:** Critical when missing.
 
 ### 3.2 Mobile Content Parity
 
-Compare rendered content between mobile and desktop user agents. Flag hidden mobile content, missing images, or structured data absent from mobile markup.
+Compare rendered content between mobile and desktop user agents via WebFetch. Flag:
+- Hidden mobile content
+- Missing images / structured data on mobile markup
 
-**Expected impact:** High. Google uses mobile-first indexing; hidden mobile content is invisible to the index.
+**Expected impact:** High on mobile-first indexing.
 
 ### 3.3 Touch Target Sizing
 
-Scan interactive elements for minimum size of 48x48 CSS pixels and 8px spacing between adjacent targets.
+Scan interactive elements for minimum 48x48 CSS px and 8px spacing between adjacent targets (check CSS / Tailwind utilities).
 
 ### 3.4 Font Sizes
 
-Check that body text is at least 16px and no text block requires zooming to read.
+Body text at least 16px; no text requiring zoom.
 
 ### 3.5 Horizontal Scrolling
 
-Detect viewport overflow on mobile widths (360px-414px): fixed widths exceeding viewport, tables without scroll wrappers, images without `max-width: 100%`.
-
-See `references/platform-fixes.md` for all mobile-first fix commands.
+Detect viewport overflow on mobile widths (360-414px): fixed widths, tables without scroll wrappers, images without `max-width: 100%`.
 
 ---
 
-## 4. Security
+## 4. Security (static + header analysis)
 
 ### 4.1 HTTPS Everywhere
 
-Check all pages load over HTTPS, no mixed content, HTTP-to-HTTPS 301 redirect in place, and SSL certificate is valid and not expiring within 30 days.
+- All pages load over HTTPS (check URL list)
+- No mixed content (HTTP resources on HTTPS pages)
+- HTTP-to-HTTPS 301 redirect
+- SSL certificate valid + not expiring soon
 
-**Why it matters:** HTTPS is a confirmed ranking signal. Mixed content triggers browser warnings that destroy trust.
+**Why it matters:** HTTPS is a confirmed ranking signal.
 
 ### 4.2 HSTS Header
 
-Check for `Strict-Transport-Security` header with `max-age` of at least 31536000, `includeSubDomains`, and `preload` directives.
+`Strict-Transport-Security` header with `max-age` ≥ 31536000, `includeSubDomains`, `preload`.
 
 ### 4.3 Content-Security-Policy
 
-Check for CSP header. Flag if missing or overly permissive (`unsafe-inline`, `unsafe-eval`, `*`). Verify `frame-ancestors` is set.
+Check for CSP header. Flag if missing or overly permissive (`unsafe-inline`, `unsafe-eval`, `*`). Verify `frame-ancestors` set.
 
 ### 4.4 Sensitive File Exposure
 
-Check for publicly accessible `.env`, `.git/`, `wp-config.php`, database dumps, and backup files.
+Check for publicly accessible `.env`, `.git/`, `wp-config.php`, database dumps, backup files (via WebFetch of known paths).
 
-**Expected impact:** Low ranking impact but critical for site safety. Hacked sites get deindexed.
-
-See `references/platform-fixes.md` for all security fix commands.
+**Expected impact:** Low ranking impact, critical for site safety. Hacked sites get deindexed.
 
 ---
 
-## 5. URL Structure
+## 5. URL Structure (static analysis)
 
 ### 5.1 Clean, Descriptive URLs
 
-Evaluate URL patterns across the site:
-
-- URLs contain readable words, not IDs or hashes (bad: `/p/12345`; good: `/products/blue-widget`).
-- URLs reflect site hierarchy (`/category/subcategory/page`).
-- URLs are not excessively deep (4+ path segments).
-
-**Fix command:**
-```
-claude "Identify URLs that use numeric IDs or hashes. Propose slug-based alternatives. Generate 301 redirect rules from old to new URLs."
-```
-
-**Expected impact:** Medium. Descriptive URLs improve click-through rates in SERPs and provide keyword signals.
+Evaluate URL patterns:
+- Readable words, not IDs or hashes (bad: `/p/12345`; good: `/products/blue-widget`)
+- Hierarchy reflects site structure
+- Not excessively deep (4+ path segments)
 
 ### 5.2 Lowercase, Hyphen-Separated
 
-Check all internal URLs:
-
-- Flag uppercase characters in paths.
-- Flag underscores (use hyphens instead).
-- Flag spaces or encoded characters (%20).
-
-**Fix command:**
-```
-claude "Add a server-side middleware that lowercases all URL paths and 301-redirects uppercase variants. Replace underscores with hyphens in all route definitions."
-```
-
-**Expected impact:** Low. Prevents duplicate content from case variants.
+Flag uppercase characters, underscores, spaces, encoded characters in paths.
 
 ### 5.3 Query Parameters on Important Pages
 
-Identify pages that rank or should rank and check whether their canonical URL uses query parameters:
-
-- Flag important content accessible only via query strings (`?id=123`).
-- Flag sorting/filtering parameters that generate indexable duplicate pages.
-
-**Fix command:**
-```
-claude "Convert query-parameter-based routes to path-based routes. Add canonical tags to parameterized variants pointing to the clean URL. Update internal links."
-```
-
-**Expected impact:** Medium. Clean URLs outperform parameterized URLs in CTR and perceived relevance.
+Flag important content accessible only via query strings (`?id=123`). Flag sorting/filtering that generates indexable duplicates.
 
 ### 5.4 Pagination Handling
 
-Check paginated content (blog listings, product categories):
-
-- Each paginated page is self-canonicalized (not to page 1).
-- `rel="next"` and `rel="prev"` are present (still used by some engines).
-- Paginated pages are in the sitemap.
-- No infinite scroll without progressive-enhancement URLs.
-
-**Fix command:**
-```
-claude "Add self-referencing canonicals to each paginated page. Add rel=next/prev link tags. Ensure all paginated URLs appear in the sitemap."
-```
-
-**Expected impact:** Medium for content-heavy sites with deep pagination.
+- Each paginated page self-canonicalized (not to page 1)
+- `rel="next"` / `rel="prev"` link tags
+- Paginated pages in sitemap
+- No infinite scroll without progressive URLs
 
 ---
 
@@ -309,15 +251,20 @@ claude "Add self-referencing canonicals to each paginated page. Add rel=next/pre
 
 ### 6.1 Server-Side Rendering Check
 
-Fetch each key page with JavaScript disabled. Flag client-side-only rendering (empty `<body>` with only a root `<div>` and `<script>`). Verify title, meta description, headings, and body text are in the initial HTML. Verify internal links are `<a href>` elements.
+Fetch each key URL without JS (WebFetch returns raw HTML). Flag:
+- Empty `<body>` with only root `<div>` + `<script>` → client-side-only rendering
+- Title, meta description, headings, body text missing from initial HTML
+- Internal links as elements other than `<a href>`
 
-**Why it matters:** Googlebot queues JS pages for rendering, delaying indexation by hours to weeks.
+**Why it matters:** Googlebot queues JS pages for rendering, delaying indexation.
 
 **Expected impact:** Critical. Client-side-only rendering can delay indexation by days.
 
+**Note:** Full SPA analysis requires a browser MCP (Path B). This skill detects the symptom; diagnosing specific hydration issues needs a browser runtime.
+
 ### 6.2 Dynamic Rendering Detection
 
-Detect Rendertron/Puppeteer/prerender.io setups. Verify rendered output matches client-side. Flag if used as a permanent solution instead of SSR.
+Detect Rendertron / Puppeteer / prerender.io setups. Flag if used as permanent solution instead of SSR.
 
 ### 6.3 JavaScript-Dependent Content
 
@@ -325,9 +272,9 @@ Identify critical content loaded asynchronously (prices, reviews, article text, 
 
 ### 6.4 Lazy-Loading Implementation
 
-Above-the-fold images must NOT be lazy-loaded (harms LCP). Below-the-fold images should use `loading="lazy"`. Verify lazy-loaded images have `<noscript>` fallbacks.
-
-See `references/platform-fixes.md` for all JavaScript SEO fix commands by framework.
+- Above-the-fold images MUST NOT be lazy-loaded (harms LCP risk)
+- Below-the-fold images use `loading="lazy"`
+- Lazy-loaded images have `<noscript>` fallbacks
 
 ---
 
@@ -335,97 +282,68 @@ See `references/platform-fixes.md` for all JavaScript SEO fix commands by framew
 
 ### 7.1 Redirect Chain Detection
 
-Follow every redirect path to its final destination. Flag:
+Follow every redirect to its final destination. Flag:
+- Chains of 2+ hops
+- Chains exceeding 3 hops (Googlebot may stop after 5)
+- Internal links pointing to URLs that redirect
 
-- Chains of 2+ redirects (A -> B -> C). Flatten to A -> C.
-- Chains exceeding 3 hops (Googlebot may stop following after 5).
-- Internal links pointing to URLs that redirect (update the link target instead).
+### 7.2 Mixed Redirect Types
 
-**Why it matters:** Each redirect hop adds latency (100-300 ms) and leaks a small amount of PageRank.
-
-**Fix command:**
-```
-claude "Map all redirect chains. Generate updated redirect rules that point directly to the final destination. Update all internal links to use the final URL."
-```
-
-**Expected impact:** Medium. Flattening chains improves crawl efficiency and preserves link equity.
-
-### 7.2 Mixed Redirect Types (301 vs. 302)
-
-Audit every redirect for the correct status code:
-
-- Permanent moves must be 301 or 308 (passes full link equity).
-- Temporary redirects (302, 307) must only be used for genuinely temporary situations.
-- Flag 302 redirects that have been in place for more than 30 days (likely should be 301).
-
-**Fix command:**
-```
-claude "Find all 302 redirects. For each, determine if the move is permanent. Convert permanent moves to 301. Document any that should remain 302 with a comment explaining why."
-```
-
-**Expected impact:** Medium. 302 redirects may not pass full link equity, diluting rankings over time.
+- Permanent moves → 301 or 308
+- Temporary → 302 or 307, but flag 302s in place 30+ days (probably should be 301)
 
 ### 7.3 Redirect Loops
 
-Detect circular redirects where URL A redirects to B and B redirects back to A (or longer cycles):
+Detect circular redirects. Flag any redirect that doesn't terminate in a 200 within 10 hops.
 
-- Flag any redirect that does not terminate in a 200 response within 10 hops.
-- Check for conditional redirect loops triggered by user-agent, cookies, or geo-location.
-
-**Fix command:**
-```
-claude "Trace all redirect paths. Identify loops. Break each loop by removing the offending rule and pointing to the correct final destination."
-```
-
-**Expected impact:** Critical. Redirect loops make pages completely inaccessible to both users and search engines.
+**Expected impact:** Critical. Redirect loops make pages inaccessible.
 
 ---
 
 ## Output Format
 
-Present results as a scorecard followed by categorized issues.
+```
+## Summary Scorecard
+| Category | Score | Method | Critical | Warnings | Passed |
+|----------|-------|--------|----------|----------|--------|
+| Crawlability & Indexation | A-F | static-analysis | count | count | count |
+| Page-Speed Risk Factors | A-F | static-analysis | count | count | count |
+| Page-Speed CWV (numerical) | N/A | not-measured (Path B: Lighthouse MCP) | — | — | — |
+| Mobile-First | A-F | static-analysis | count | count | count |
+| Security | A-F | static + headers | count | count | count |
+| URL Structure | A-F | static-analysis | count | count | count |
+| JavaScript SEO | A-F | static + no-JS fetch | count | count | count |
+| Redirects | A-F | http-following | count | count | count |
+| **Overall (measured categories only)** | **A-F** | | | | |
 
-### Summary Scorecard
-
-| Category | Score | Critical | Warnings | Passed |
-|----------|-------|----------|----------|--------|
-| Crawlability & Indexation | A-F | count | count | count |
-| Core Web Vitals | A-F | count | count | count |
-| Mobile-First | A-F | count | count | count |
-| Security | A-F | count | count | count |
-| URL Structure | A-F | count | count | count |
-| JavaScript SEO | A-F | count | count | count |
-| Redirects | A-F | count | count | count |
-| **Overall** | **A-F** | **total** | **total** | **total** |
+## Measurement Gaps
+- Numerical Core Web Vitals (LCP, CLS, INP): integrate Lighthouse MCP or PSI API
+- JS-rendered SPA content: integrate browser MCP (Playwright-based)
+- Full-site crawl: integrate crawler MCP (Screaming Frog / Sitebulb)
+```
 
 ### Issue Format
 
-For every issue found, output:
-
 ```
 ### [CRITICAL|WARNING] Issue Title
-
 **Category:** Category Name > Sub-check
-**Why it matters:** One-sentence explanation of the SEO impact.
+**Why it matters:** One-sentence SEO impact
 **Affected URLs:** List of URLs or "site-wide"
-**Fix command:**
-  claude "Exact command to fix the issue — see claude-code-fix-recipes.md"
-**Expected impact:** High | Medium | Low — brief explanation.
+**Fix command:** claude "exact fix command"
+**Expected impact:** High | Medium | Low — brief explanation
 ```
 
 ### Priority Order
 
-Sort issues by expected impact:
-
-1. Critical issues blocking indexation (noindex on key pages, redirect loops, missing SSR).
-2. Core Web Vitals failures.
-3. Mobile-first violations.
-4. Redirect problems.
-5. URL structure issues.
-6. Security hardening.
+1. Critical issues blocking indexation (noindex on key pages, redirect loops, missing SSR)
+2. Page-speed risk factors with high user-visibility impact
+3. Mobile-first violations
+4. Redirect problems
+5. URL structure issues
+6. Security hardening
 
 ---
 
 ## Framework Detection
 
-Auto-detect the framework before running checks. See `references/platform-fixes.md` for framework detection signals and tailored fix commands. When the framework is ambiguous, ask before proceeding.
+Auto-detect the framework from package.json / config files / HTML signals before running checks. See `references/platform-fixes.md` for framework detection patterns and tailored fix commands. When ambiguous, ask before proceeding.

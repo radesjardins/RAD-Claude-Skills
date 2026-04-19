@@ -1,35 +1,60 @@
 ---
 name: keyword-discovery
 description: >
-  Keyword research, find keywords, what keywords should I target, keyword analysis, search
-  volume, keyword difficulty. Covers seed discovery, expansion, intent classification,
-  difficulty, and topic clustering. Produces 150-300 prioritized keywords.
-argument-hint: "[topic or seed keyword]"
+  Keyword research, find keywords, what keywords should I target, keyword analysis.
+  Covers seed discovery, expansion, intent classification, qualitative difficulty
+  assessment, and topic clustering. Produces 150-300 prioritized keywords. Does NOT
+  return numerical search volumes or difficulty scores — those require a keyword-data
+  MCP (DataForSEO / Ahrefs / Semrush — Path B). Instead, uses observable SERP signals
+  for relative assessment.
+argument-hint: "[topic or seed keyword] [--non-interactive]"
+allowed-tools: Read Glob Grep Write Bash WebFetch WebSearch
 ---
 
 # Keyword Discovery Skill
 
-Walk the user through a complete keyword research pipeline, producing a
-prioritized keyword plan they can act on immediately. Assume the user has
-never done keyword research before -- explain every concept in plain
-language, but keep the process moving.
+Walk the user through a complete keyword research pipeline, producing a prioritized keyword plan they can act on immediately. Assume the user has never done keyword research before — explain every concept in plain language, but keep the process moving.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Expansion + intent classification + clustering all benefit from batch parallelism where per-keyword work is independent.
+
+## Execution: parallel-first
+
+- **Phase 1 seed gathering**: user interview serializes naturally
+- **Phase 2 expansion**: long-tail / question / modifier / LSI / medium-tail expansion runs per-seed; per-seed WebSearch-autocomplete checks parallelize
+- **Phase 3 intent classification**: per-keyword SERP inspection independent — batch WebSearch calls
+- **Phase 4 difficulty assessment**: per-keyword SERP + competitor inspection independent — batch
+- **Phase 5 clustering**: synthesis step, not parallelizable
+- **Phase 6 prioritization**: synthesis step, not parallelizable
+
+## Capability Honesty
+
+Read `references/CAPABILITIES.md`. Key constraints:
+- **Real search volume numbers** (e.g., "1,200 searches/month") require a keyword-data API — Path B
+- **Real keyword difficulty scores** (e.g., "KD 42") require link-graph + SERP competitor strength — Path B
+- **What this skill DOES provide**: observable SERP signals (who ranks, SERP feature presence, autocomplete prominence, competition density) interpreted qualitatively (High/Medium/Low, Easy/Moderate/Hard)
+
+When the user wants real numbers, recommend a DataForSEO / Ahrefs / Semrush MCP integration.
+
+## Mode Flags
+
+- `--non-interactive` — Use reasonable defaults for Phase 1 questions, record unanswered items in `awaiting_user_review`
 
 ---
 
 ## Overview
 
-This skill executes six phases in order:
+Six phases in order:
 
-1. **Seed Keyword Discovery** -- gather raw inputs
-2. **Keyword Expansion** -- broaden the list
-3. **Search Intent Classification** -- tag every keyword
-4. **Difficulty Assessment** -- gauge competition
-5. **Topic Cluster Mapping** -- organize into a hierarchy
-6. **Prioritization** -- produce a ranked action plan
+1. **Seed Keyword Discovery** — gather raw inputs
+2. **Keyword Expansion** — broaden the list
+3. **Search Intent Classification** — tag every keyword
+4. **Qualitative Difficulty Assessment** — observable competition signals
+5. **Topic Cluster Mapping** — organize into hierarchy
+6. **Prioritization** — produce ranked action plan
 
-Work through each phase sequentially. Present findings after each phase
-before moving on. Ask clarifying questions only in Phase 1; after that,
-execute without unnecessary interruptions.
+Work through each phase sequentially. Present findings after each phase before moving on.
 
 ---
 
@@ -37,103 +62,60 @@ execute without unnecessary interruptions.
 
 ### Gather Context
 
-Before generating a single keyword, ask the user these questions. Do not
-skip any. Wait for answers before proceeding.
+Before generating a single keyword, ask:
 
-1. **Business basics**: What does the business do? What products or
-   services does it offer?
-2. **Target audience**: Who are the ideal customers? What language or
-   jargon do they use when talking about this space?
-3. **Top 3 competitors**: Name up to three competitors (websites or
-   brands) considered the main rivals.
-4. **Existing keywords**: Are there any keywords already being targeted?
-   If so, list them. If not, say "none" and start fresh.
+1. **Business basics** — What does the business do? Products / services?
+2. **Target audience** — Ideal customers? Language / jargon they use?
+3. **Top 3 competitors** — Up to three main rivals (URLs or brands)
+4. **Existing keywords** — Already targeting any? List them, or "none"
 
 ### Seed Sources
 
-Once you have the answers, mine seeds from every source below. For each
-source, explain briefly what it is and why it matters.
+Mine seeds from every source below:
 
 | Source | What to extract |
 |---|---|
 | **Business context** | Industry terms, product names, service categories, brand modifiers |
-| **Competitor analysis** | Terms competitors rank for on page 1; recurring themes in their title tags, H1s, and meta descriptions |
-| **Customer language** | Phrases from support tickets, reviews, forum posts, and testimonials -- the words *customers* use, not marketing copy |
-| **Question mining** | Questions from Reddit, Quora, and AnswerThePublic-style tools (autocomplete expansions, "People Also Ask" boxes) |
-| **Google autocomplete** | Type each seed into Google and capture the suggested completions; do the same for YouTube and Amazon if relevant |
-| **Internal site search** | If the user has site-search data, pull the top queries visitors type on-site -- these reveal unmet content needs |
+| **Competitor analysis** | Terms competitors rank for (from WebSearch of competitor sites); recurring themes in their title tags, H1s, meta descriptions |
+| **Customer language** | Phrases from support tickets, reviews, forum posts, testimonials — words *customers* use, not marketing copy |
+| **Question mining** | Questions from Reddit, Quora, "People Also Ask" boxes (observable via WebSearch) |
+| **Google autocomplete** | Type each seed + capture suggested completions; same for YouTube + Amazon if relevant |
+| **Internal site search** | If available, top queries visitors type on-site |
 
-Deliver the seed list as a simple numbered table:
-
-```
-#  | Seed Keyword            | Source
-1  | project management tool | Business context
-2  | how to manage remote teams | Question mining
-...
-```
-
-Aim for **30-50 seed keywords** before moving on.
+Deliver as a numbered table. Aim for **30-50 seed keywords** before moving on.
 
 ---
 
 ## Phase 2: Keyword Expansion
 
-Take every seed and expand it using the four strategies below. The goal
-is to go from ~40 seeds to **150-300 candidate keywords**.
+Expand each seed using four strategies. Go from ~40 seeds to **150-300 candidate keywords**.
 
 ### 2a. Long-Tail Variations (3-5 word phrases)
-
-Add specificity to each seed. Long-tail keywords convert better because
-they match a precise need.
-
-> Seed: "project management"
-> Long-tail: "project management for startups", "free project management
-> software for small teams"
+Add specificity. Long-tail keywords convert better because they match precise needs.
 
 ### 2b. Question-Based Keywords
-
-Prepend question words: **who, what, when, where, why, how**.
-
-> "how to choose project management software"
-> "what is agile project management"
-> "why do projects fail"
+Prepend: who, what, when, where, why, how.
 
 ### 2c. Modifier Keywords
-
-Append common modifiers to seeds:
-
-- **Best / Top / Review / Comparison / vs** -- commercial intent
-- **Alternative / Cheap / Free** -- budget-conscious buyers
-- **Near me / [City]** -- local intent
-- **Template / Example / Checklist** -- resource seekers
-- **For beginners / For enterprises / For [audience]** -- audience fit
+- **Best / Top / Review / Comparison / vs** — commercial intent
+- **Alternative / Cheap / Free** — budget-conscious buyers
+- **Near me / [City]** — local intent
+- **Template / Example / Checklist** — resource seekers
+- **For beginners / For enterprises / For [audience]** — audience fit
 
 ### 2d. LSI / Semantic Keywords
-
-List related terms and concepts that are not exact synonyms but appear
-alongside the seed in top-ranking content. These help search engines
-understand topical depth.
-
-> Seed: "project management"
-> LSI: "Gantt chart", "sprint planning", "work breakdown structure",
-> "resource allocation"
+Related terms that appear alongside the seed in top-ranking content.
 
 ### 2e. Medium-Tail Keywords
+"Sweet spot" — 2-3 words, moderate competition. Often fastest wins.
 
-Identify the "sweet spot" keywords -- 2-3 words, moderate search volume,
-and moderate competition. These are often the fastest wins.
-
-> "agile project management", "project scheduling tools"
-
-Present the expanded list grouped by strategy so the user can see where
-each keyword came from.
+Group the expanded list by strategy so the user can see where each keyword came from.
 
 ---
 
 ## Phase 3: Search Intent Classification
 
-Every keyword must be tagged with exactly one intent. Explain each
-intent type, then classify the full list.
+Every keyword gets exactly one intent tag.
 
 ### Intent Types
 
@@ -141,85 +123,74 @@ intent type, then classify the full list.
 |---|---|---|
 | **Informational** | how to, what is, guide, tutorial, why, tips | Blog posts, Wikipedia, knowledge panels, videos |
 | **Commercial** | best, top, review, comparison, vs, alternative | Listicles, review sites, comparison tables |
-| **Transactional** | buy, price, discount, coupon, sign up, download, order | Shopping results, product pages, pricing pages, CTAs |
-| **Navigational** | [brand name], login, support, contact, app | Official site, login pages, app store links |
+| **Transactional** | buy, price, discount, coupon, sign up, download | Shopping results, product pages, pricing pages |
+| **Navigational** | [brand name], login, support, contact, app | Official site, login, app store |
 
 ### How to Classify
 
-The definitive method is to look at the actual search results page:
+Look at the actual SERP (WebSearch):
+- Shopping carousel / product ads → Transactional
+- Video pack or PAA → likely Informational
+- Comparison articles dominate → Commercial
+- Single brand dominates positions 1-3 → Navigational
 
-- **Shopping carousel or product ads?** Transactional.
-- **Video pack or "People Also Ask" boxes?** Likely informational.
-- **Comparison articles dominate?** Commercial.
-- **Single brand dominates positions 1-3?** Navigational.
+Mixed intent → label dominant, note secondary.
 
-If a keyword shows mixed intent, label it with the *dominant* intent and
-note the secondary one.
-
-### Output Format
-
-Add an "Intent" column to the keyword table:
-
-```
-#  | Keyword                              | Intent        | Notes
-1  | how to manage remote teams           | Informational |
-2  | best project management software     | Commercial    |
-3  | buy Asana subscription               | Transactional |
-4  | Trello login                         | Navigational  |
-```
+Add an "Intent" column to the keyword table.
 
 ---
 
-## Phase 4: Difficulty Assessment
+## Phase 4: Qualitative Difficulty Assessment
 
-For each keyword (or at minimum the top 50), assess ranking difficulty.
-You do not need paid tools to make a useful estimate.
+**Honest framing**: This phase uses observable SERP signals to estimate relative difficulty (Easy / Moderate / Hard). It does NOT produce numerical difficulty scores. For real Keyword Difficulty metrics, integrate a DataForSEO / Ahrefs / Semrush MCP (Path B).
 
-### Factors to Evaluate
+### Factors to Evaluate (per target keyword, batch WebSearch)
 
-| Factor | What to look for | Easy signal | Hard signal |
-|---|---|---|---|
-| **Who ranks now** | Domain authority of page-1 sites | Forums, small blogs, thin content | Major brands, .gov, Wikipedia |
-| **Content format** | Type of content on page 1 | Short articles, outdated posts | In-depth guides, interactive tools |
-| **SERP features** | Featured snippets, PAA, video | Featured snippet = chance to leapfrog | Knowledge panel from Wikipedia = hard to displace |
-| **Commercial value** | Ad spend on this term | No ads = lower commercial value | Heavy ads = lucrative but competitive |
+| Factor | Easy signal | Hard signal |
+|---|---|---|
+| **Who ranks now** | Forums, small blogs, thin content | Major brands, .gov, Wikipedia |
+| **Content format** | Short articles, outdated posts | In-depth guides, interactive tools |
+| **SERP features** | Featured snippet available | Knowledge panel from Wikipedia |
+| **Commercial value** | No ads = lower commercial value | Heavy ads = lucrative but competitive |
+| **Domain diversity** | 10 different domains on p1 | 3 domains own 7 results |
+| **Content age** | Many results from 3+ years ago | All results from last 6 months |
 
-### Difficulty Scale
+### Difficulty Scale (qualitative)
 
-Assign one of three levels:
+- **Easy**: Thin/outdated content ranks; few strong domains; featured snippet available. Well-written article can rank in weeks.
+- **Moderate**: Mix of strong and weak pages; requires comprehensive content + some backlinks. Expect 2-6 months.
+- **Hard**: P1 is all high-authority with deep content. Requires significant authority, backlinks, time (6-12+ months).
 
-- **Easy**: Thin or outdated content ranks; few strong domains; featured
-  snippet available. A well-written article can rank in weeks.
-- **Moderate**: Mix of strong and weak pages; requires comprehensive
-  content and some backlinks. Expect 2-6 months.
-- **Hard**: Page 1 is all high-authority domains with deep content.
-  Requires significant authority, backlinks, and time (6-12+ months).
-
-Add "Difficulty" and "Opportunity" columns to the table:
+Add "Difficulty" and "Observed Opportunity" columns:
 
 ```
-#  | Keyword                          | Intent       | Difficulty | Opportunity
-1  | project management for nonprofits| Commercial   | Easy       | Featured snippet available
-2  | project management software      | Commercial   | Hard       | Heavy ad spend, high value
+#  | Keyword | Intent | Difficulty | Observed Opportunity
+1  | project management for nonprofits | Commercial | Easy | Featured snippet slot available, weak top-3
+2  | project management software | Commercial | Hard | Heavy ad spend, strong DR domains
 ```
+
+### Volume Signal (qualitative, not numerical)
+
+Use observable signals to estimate relative volume:
+- **High signal**: prominent autocomplete, multiple SERP features, heavy ad coverage
+- **Medium signal**: autocomplete present, some SERP features
+- **Low signal**: no autocomplete, thin SERP, no ads
+
+Do NOT invent "monthly search volume" numbers. Mark relative volume as High/Medium/Low.
 
 ---
 
 ## Phase 5: Topic Cluster Mapping
 
-Organize the keyword list into a content hierarchy. This is how modern
-SEO works: you do not target keywords in isolation; you build *clusters*
-of related content that reinforce each other through internal links.
+Organize keywords into a content hierarchy.
 
 ### Hierarchy
 
 ```
-Pillar Topic (broad, 1-2 words, high volume)
-  |
+Pillar Topic (broad, 1-2 words, high relative volume)
   +-- Subtopic A (medium-tail, 2-3 words)
   |     +-- Long-tail query 1
   |     +-- Long-tail query 2
-  |
   +-- Subtopic B
         +-- Long-tail query 3
         +-- Long-tail query 4
@@ -227,135 +198,66 @@ Pillar Topic (broad, 1-2 words, high volume)
 
 ### How to Build Clusters
 
-1. **Identify pillars**: Pick the broadest, highest-volume terms. Each
-   pillar becomes a comprehensive "pillar page" (2,000-4,000 words).
-2. **Group subtopics**: Assign medium-tail keywords as subtopics. Each
-   gets its own supporting article (1,000-2,000 words).
-3. **Attach long-tail queries**: These become sections within subtopic
-   articles, standalone FAQ entries, or short blog posts.
-4. **Map internal links**: Every subtopic article links up to the pillar
-   page. The pillar page links down to every subtopic. Subtopics in the
-   same cluster link to each other where relevant.
+1. **Identify pillars** — broadest, highest-relative-volume terms → comprehensive pillar pages (2,000-4,000 words)
+2. **Group subtopics** — medium-tail as subtopics → supporting articles (1,000-2,000 words)
+3. **Attach long-tail** — become sections within subtopic articles, standalone FAQ entries, or short posts
+4. **Map internal links** — every subtopic links up to pillar; pillar links down to every subtopic; subtopics in same cluster link to each other where relevant
 
-### Example Cluster
-
-```
-PILLAR: Project Management
-  |
-  +-- Subtopic: Agile Project Management
-  |     +-- what is a sprint in agile
-  |     +-- agile vs waterfall comparison
-  |
-  +-- Subtopic: Project Management Tools
-  |     +-- best free project management software
-  |     +-- Asana vs Monday.com
-  |
-  +-- Subtopic: Remote Project Management
-        +-- how to manage remote teams effectively
-        +-- remote team communication best practices
-```
-
-Present the full cluster map and confirm it with the user before
-moving to prioritization.
+Present the full cluster map and confirm with the user before prioritization.
 
 ---
 
 ## Phase 6: Prioritization
 
-This is the final deliverable. Score every keyword cluster and produce
-three ranked lists the user can act on immediately.
-
-### Scoring Criteria
-
-Rate each keyword on these dimensions:
+### Scoring Criteria (qualitative)
 
 | Criterion | Scale | Description |
 |---|---|---|
-| **Business relevance** | 1-10 | How closely does this keyword relate to the product or service? |
-| **Search volume indicator** | High / Medium / Low | Estimated relative search volume based on autocomplete prominence and SERP competition |
+| **Business relevance** | 1-10 | How closely does this keyword relate to the product/service? |
+| **Volume signal (relative)** | High / Medium / Low | From observable SERP signals — NOT numerical volume |
 | **Competition level** | Easy / Moderate / Hard | From Phase 4 |
-| **Content gap** | Yes / No | Does the site already have content targeting this keyword? |
-| **Estimated effort** | Low / Medium / High | Time and resources needed to create ranking content |
+| **Content gap** | Yes / No | Does the site already have content targeting this? |
+| **Estimated effort** | Low / Medium / High | Time + resources to create ranking content |
 
 ### The Three Lists
 
 #### 1. Top 10 Quick Wins
-
-Keywords where content already exists (or is easy to create), competition
-is low, and you can rank within weeks.
-
-```
-#  | Keyword                           | Intent       | Difficulty | Action
-1  | project management for nonprofits | Commercial   | Easy       | Optimize existing /nonprofits page
-2  | free Gantt chart template         | Transactional| Easy       | Create downloadable template
-...
-```
+Keywords where content already exists (or is easy to create), competition signals easy, rank in weeks.
 
 #### 2. Top 10 Strategic Targets
-
-High-value keywords with moderate competition. These require dedicated
-content creation and some link building. Expect results in 2-6 months.
-
-```
-#  | Keyword                           | Intent       | Difficulty | Action
-1  | best project management software  | Commercial   | Moderate   | Write 3,000-word comparison guide
-2  | agile project management guide    | Informational| Moderate   | Create pillar page with video
-...
-```
+High-relevance with moderate competition. Dedicated content + some link building. Expect results in 2-6 months.
 
 #### 3. Top 10 Long-Term Plays
-
-High-competition, high-reward keywords. Build toward these by first
-ranking for related easier keywords, then consolidating authority.
-
-```
-#  | Keyword                           | Intent       | Difficulty | Action
-1  | project management software       | Commercial   | Hard       | Build cluster, earn backlinks
-2  | project management                | Informational| Hard       | Pillar page + 10 subtopics
-...
-```
+High-competition, high-reward. Build toward these by first ranking for easier related keywords.
 
 ### Content Type Recommendations
 
-For each keyword, recommend the best content format:
-
 | Content Type | When to use |
 |---|---|
-| **Blog post** | Informational long-tail queries, how-tos |
-| **Landing page** | Transactional keywords, product comparisons |
-| **Comprehensive guide** | Pillar topics, informational medium-tail |
-| **Tool or calculator** | "Calculator", "template", "generator" queries |
-| **Video** | "How to" queries where Google shows video results |
-| **FAQ section** | Question-based long-tail keywords |
-| **Case study** | "[Industry] + results/example" queries |
+| Blog post | Informational long-tail, how-tos |
+| Landing page | Transactional, product comparisons |
+| Comprehensive guide | Pillar topics, informational medium-tail |
+| Tool or calculator | "Calculator", "template", "generator" queries |
+| Video | "How to" queries where Google shows video results |
+| FAQ section | Question-based long-tail |
+| Case study | "[Industry] + results/example" |
 
 ### The 70/20/10 Content Mix
 
-Apply this framework to the content calendar:
+- **70% Foundation** — how-to guides, tutorials, listicles, FAQ. Safe, proven formats. Start here.
+- **20% Growth** — original research, data-driven posts, expert roundups, detailed comparisons. Higher effort, differentiates.
+- **10% Moonshots** — interactive tools, contrarian pieces, original frameworks, viral-potential content. Most underperform but wins are outsized.
 
-- **70% Foundation** (safe, proven formats): How-to guides, tutorials,
-  listicles, FAQ content. These reliably attract traffic and build
-  topical authority. Start here.
-- **20% Growth** (builds on the foundation, moderate risk): Original
-  research, data-driven posts, expert roundups, detailed comparisons.
-  Higher effort but differentiates the site from competitors.
-- **10% Moonshots** (innovative, high risk): Interactive tools,
-  contrarian opinion pieces, original frameworks, viral-potential
-  content. Most will underperform but the wins are outsized.
-
-When building the content calendar, tag each piece with its mix
-category to maintain the balance over time.
+Tag each content calendar entry with its mix category.
 
 ---
 
 ## Delivery Checklist
 
-Before finishing, confirm you have delivered:
-
 - [ ] 30-50 seed keywords with sources
 - [ ] 150-300 expanded keywords grouped by strategy
 - [ ] Every keyword tagged with search intent
-- [ ] Top 50+ keywords assessed for difficulty
+- [ ] Top 50+ keywords assessed for qualitative difficulty
 - [ ] Complete topic cluster map with pillar-subtopic hierarchy
 - [ ] Internal linking plan between cluster pages
 - [ ] Top 10 Quick Wins with specific actions
@@ -363,20 +265,12 @@ Before finishing, confirm you have delivered:
 - [ ] Top 10 Long-Term Plays with cluster-building roadmap
 - [ ] Content type recommendation for each priority keyword
 - [ ] 70/20/10 mix labels on all recommended content
-
-If any item is incomplete, go back and finish it before presenting the
-final plan to the user.
-
----
+- [ ] Measurement-gaps note: "For numerical search volumes and KD scores, integrate a DataForSEO / Ahrefs / Semrush MCP"
 
 ## Tone and Style
 
-- Use plain language. Define jargon the first time you use it.
-- Be specific. "Write a blog post" is not actionable. "Write a
-  2,000-word comparison of X vs Y targeting commercial intent" is.
-- Use tables for any list longer than five items.
-- After each phase, give a brief summary of what was found and what
-  comes next, so the user always knows where they are in the process.
-- When you lack real search volume data, say so honestly and use
-  relative estimates (high/medium/low) based on observable signals
-  like autocomplete prominence and SERP competition density.
+- Plain language. Define jargon first time used.
+- Specific actions. "Write a blog post" is not actionable. "Write a 2,000-word comparison of X vs Y targeting commercial intent" is.
+- Tables for any list > 5 items.
+- Summary after each phase.
+- When lacking real search volume data, say so honestly and use relative estimates based on observable signals.

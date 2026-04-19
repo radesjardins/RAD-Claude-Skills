@@ -1,36 +1,94 @@
-# rad-seo-optimizer — Full-site SEO audit, keyword strategy, and AI search visibility — without leaving your editor.
+# rad-seo-optimizer — Honest codebase-scoped SEO tooling for Claude Code.
 
-SEO has always meant switching tools, switching contexts, and waiting for separate reports. rad-seo-optimizer brings the whole workflow into Claude Code — crawl your site for technical issues, find keyword gaps, fix structured data, and optimize for AI search engines like ChatGPT and Perplexity that increasingly control discovery. Twelve skills, three autonomous agents, one place.
+This plugin does real work on the surface area where Claude Code has edge — static analysis of your codebase, content structure auditing and rewriting, JSON-LD schema generation, and observational research over the open web. It does NOT replace measurement-dependent SEO platforms (Ahrefs, Semrush, Screaming Frog, Lighthouse) because the underlying measurement infrastructure isn't available to the Claude Code runtime. See [`references/CAPABILITIES.md`](./references/CAPABILITIES.md) for the full capability statement and the Path B integrations that would unlock the gaps.
 
-## What You Can Do With This
+## What You Can Actually Do With This
 
-- Run a complete site-wide SEO audit with a scored report and prioritized fix list
-- Find out how your brand appears in AI-generated answers (ChatGPT, Perplexity, Gemini) and improve it
-- Research keywords, map search intent, and identify content gaps your competitors are filling
-- Fix specific issues: broken links, missing schema, slow Core Web Vitals, bad meta descriptions
+- **Lint your codebase for SEO issues** — find missing meta, bad H1 hierarchies, absent alt text, invalid canonicals, broken JSON-LD, robots.txt misconfigurations
+- **Generate valid JSON-LD schema** — from observable page content, any schema.org type
+- **Score your content on AI-extractability** — structural readiness to be cited by ChatGPT/Perplexity/Gemini (NOT actual citation rates, which need Path B)
+- **Rewrite content for AEO** — convert H2s to question format, lead with direct answers, add FAQ schema, add comparison tables
+- **Fix broken links** — crawl your repo, verify targets, patch 404s and redirect chains
+- **Audit internal linking** — orphan pages, over/under-linked pages, hub-and-spoke gaps
+- **Observe SERP features** — who owns featured snippets, FAQ rich results, PAA for your target keywords
+- **Ideate keywords** — seed expansion, intent classification, semantic clustering (qualitative competitiveness signals, NOT numerical volume/difficulty)
+- **Research competitor content** — topics they cover, content patterns they use, SERP feature ownership
+- **Plan content strategy** — topical authority mapping, gap analysis, 12-week editorial calendar
+- **Plan link building** — linkable asset identification, tactic selection, 12-week outreach cadence with templates
 
-## How It Works
+## What This Plugin Explicitly Does NOT Do (Without Path B)
+
+- **Measure numerical Core Web Vitals** (LCP, CLS, INP) — needs Lighthouse/PSI MCP
+- **Return real search volumes or keyword difficulty scores** — needs DataForSEO/Ahrefs/Semrush MCP
+- **Count backlinks or measure domain authority** — needs Ahrefs/Majestic/Semrush/Moz MCP
+- **Estimate organic traffic** — needs Similarweb/Semrush MCP (competitors) or GSC MCP (own site)
+- **Crawl entire live sites** — needs a crawler MCP (Screaming Frog / Sitebulb / Playwright-based)
+- **Analyze JavaScript-rendered SPA content** — needs a browser MCP
+- **Measure actual AI citation rates** in ChatGPT/Perplexity/Gemini/Claude/Copilot — needs direct AI-platform API integration
+
+When you ask a question requiring any of the above, the plugin will observe what it CAN from your codebase + WebSearch + WebFetch, fill `measurement_gaps[]` in its JSON output with the specific gap, and name the Path B MCP that would unlock it. It never fabricates numbers.
+
+## Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `full-seo-audit` | Complete site-wide SEO audit with prioritized findings |
-| `on-page-optimizer` | Title tags, meta descriptions, headings, internal linking |
-| `keyword-discovery` | Keyword research, search intent analysis, opportunity mapping |
-| `competitor-intelligence` | Competitor content, ranking, and strategy analysis |
-| `content-strategist` | Content gaps, topic clusters, editorial calendar planning |
-| `link-building-strategy` | Backlink opportunities, outreach templates, domain authority |
-| `schema-architect` | JSON-LD structured data, rich snippets, schema.org markup |
-| `technical-seo` | Core Web Vitals, crawlability, robots.txt, sitemaps, site speed |
-| `aeo-optimizer` | AI search visibility, GEO optimization, brand presence in AI answers |
-| `fix-seo` | Step-by-step fix guidance for specific SEO issues |
-| `broken-link-fixer` | Find and fix 404 errors, dead links, redirect chains |
-| `seo-report-generator` | Generate formatted audit reports with scores and recommendations |
+| `full-seo-audit` | Scoped 6-phase audit over codebase + URL list (not full site crawl) |
+| `on-page-optimizer` | Title tags, meta, headings, internal linking, E-E-A-T signals (code transforms) |
+| `keyword-discovery` | Seed expansion, intent classification, qualitative difficulty, topic clustering |
+| `competitor-intelligence` | Observable competitor research — content, SERP features, AI citation patterns (NOT backlinks) |
+| `content-strategist` | Topical authority mapping, content gap analysis, 12-week editorial calendar |
+| `link-building-strategy` | Linkable assets, tactic selection, 12-week outreach playbook with templates |
+| `schema-architect` | JSON-LD generation + validation (one of the plugin's strongest capabilities) |
+| `technical-seo` | Crawlability, canonicals, redirects, page-speed CODE-LEVEL risk factors (NOT numerical CWV) |
+| `aeo-optimizer` | AI-extractability content linter + seeding strategy + consistency audit + content conversion |
+| `fix-seo` | Issue router + remediation (applies fixes, doesn't just diagnose) |
+| `broken-link-fixer` | Crawl repo for hrefs, verify targets, fix 404s and redirect chains |
+| `seo-report-generator` | Aggregate audit findings into prioritized report with honest measurement-gap surfacing |
+
+## Agents
 
 | Agent | Purpose |
 |-------|---------|
-| `seo-dominator` | Full-site autonomous SEO audit with scored report and prioritized fixes |
-| `competitor-spy` | Autonomous competitor research — content, links, SERP features, AI visibility |
-| `content-auditor` | Content quality and AEO readiness audit with refresh/rewrite recommendations |
+| `seo-dominator` | Autonomous scoped SEO audit with honest measurement-gap handling |
+| `competitor-spy` | Autonomous observable competitor research |
+| `content-auditor` | Autonomous content quality + AI-extractability audit over user's own content |
+
+All three agents default to **Opus 4.7** (Sonnet 4.6 is a first-class fallback; Haiku 4.5 for narrow-scope). All emit **JSON-first output** per the schemas in `references/subagent-prompts/` for reliable cross-model parsing.
+
+## What's New in 2.0
+
+This is a major revision. The previous 1.x version marketed itself as a full SEO tool replacement but silently fabricated scores for categories it couldn't actually measure. 2.0 retrenches to what's honestly measurable from Claude Code alone, and marks every gap with its Path B MCP unlock.
+
+**Honesty changes:**
+- **Retired the fake 6-dimension AI visibility scorecard** (Presence/Accuracy/Sentiment/Position/Completeness/Consistency querying ChatGPT/Perplexity/Gemini via WebSearch — which returned web search results, not AI chat responses). Replaced with the **AI-Extractability Content Linter** that scores the user's *own content structure* on signals that tend to earn AI citations.
+- **Dropped numerical keyword volume and difficulty scores.** Keyword-discovery now produces qualitative competitiveness signals from observable SERP patterns.
+- **Dropped backlink count / domain authority claims.** Competitor-intelligence and link-building-strategy now produce qualitative observations + tactical playbooks.
+- **Dropped numerical Core Web Vitals scoring.** Technical-seo and full-seo-audit now report *code-level page-speed risk factors*, not measured LCP/CLS/INP numbers.
+- **Added `references/CAPABILITIES.md`** — explicit statement of what the plugin can and cannot measure, with the Path B MCP that would unlock each gap.
+- **Every agent + skill surfaces `measurement_gaps[]`** in its JSON output — gaps are declared, not papered over.
+
+**4.7 platform pass (applied to the honest surface):**
+- Opus-default on all three agents, Sonnet 4.6 documented as first-class fallback
+- JSON-first subagent output contracts at plugin-level `references/subagent-prompts/{site-audit,competitor-research,content-audit}.md`
+- Flattened agent layout: `agents/<name>/AGENT.md` → `agents/<name>.md`
+- Fixed broken hex color codes — runtime doesn't recognize them. Switched to named colors (orange, teal, purple).
+- Cross-model notes on every skill
+- Parallel-first execution guidance in multi-phase skills
+- `--non-interactive` mode on `full-seo-audit`, `aeo-optimizer`, `competitor-intelligence`, `content-strategist`, `evaluate-stack` equivalents
+- `--resume <run-id>` + shared checkpoint schema at `.seo/state/<run-id>.json`
+
+## Path B Roadmap (v3.0 direction)
+
+When you want the measurement capabilities back, these are the highest-leverage MCP integrations in priority order:
+
+1. **Lighthouse / PageSpeed Insights MCP** — real Core Web Vitals. Free API.
+2. **Google Search Console MCP** — real ranking + traffic data for your own site. Free for site owners.
+3. **DataForSEO MCP** — keyword volume + difficulty + SERP analysis. Paid but reasonable.
+4. **Browser/crawler MCP (Playwright)** — JS-rendered content + real site crawling. Open-source options.
+5. **Ahrefs / SEMrush MCP** — backlink data + competitor traffic. Expensive.
+6. **AI-platform query MCP** (when ToS-compatible options emerge) — real AI citation measurement.
+
+Each integration is additive — skills detect presence and use real measurement when available, fall back to honest observation when not.
 
 ## Quick Start
 
@@ -38,16 +96,17 @@ SEO has always meant switching tools, switching contexts, and waiting for separa
 claude plugins add ./RAD-Claude-Skills/plugins/rad-seo-optimizer
 ```
 
-> **Using Claude.ai instead of CLI?** See [`skills/rad-seo-aeo-reviewer/`](../../skills/rad-seo-aeo-reviewer/) for the Claude.ai skill version — a single ZIP with 4 consolidated workflows, URL fetching, web search, and artifact output. No CLI required.
+> **Using Claude.ai instead of CLI?** See [`skills/rad-seo-aeo-reviewer/`](../../skills/rad-seo-aeo-reviewer/) for the Claude.ai skill version — a single ZIP with consolidated workflows, URL fetching, web search, and artifact output. No CLI required. (Note: the Claude.ai version will be refreshed to match 2.0's honesty pass in a follow-up release.)
 
-Then just ask:
+Then ask:
 
 ```
-Audit my SEO
-How do I get recommended by ChatGPT?
-Find keyword opportunities I'm missing
-Check my competitor's SEO strategy
+Audit my SEO (codebase + URL list)
+Score my content for AI-extractability
+Find keyword ideation opportunities
+Check my competitors' observable SEO signals
 Fix my missing meta descriptions
+Generate FAQPage schema for my FAQ pages
 ```
 
 ## License

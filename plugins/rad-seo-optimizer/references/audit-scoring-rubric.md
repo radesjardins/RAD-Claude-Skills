@@ -103,9 +103,21 @@ Always present fixes in priority order: highest impact, lowest effort first.
 
 ## Comparison Benchmarks
 
-When comparing against competitors, use these benchmarks:
-- **Page speed**: Compare LCP, INP, CLS against top 3 ranking competitors
-- **Content depth**: Word count, topic coverage, unique insights vs. competitors
-- **Backlink profile**: Domain authority, referring domains, link quality vs. competitors
-- **Schema coverage**: Schema types implemented vs. competitors
-- **AEO readiness**: AI citation frequency vs. competitors
+When comparing against competitors, use these benchmarks (flagged by whether they're measurable from this plugin alone or require Path B integration):
+
+- **Page-speed code-level risk factors** (static analysis): comparable from fetched HTML
+- **Page-speed numerical CWV (LCP/INP/CLS)**: *requires Lighthouse / PSI MCP (Path B)*
+- **Content depth**: word count, topic coverage, unique insights vs. competitors — comparable from WebFetch
+- **Backlink profile**: *requires Ahrefs / Majestic / Semrush / Moz MCP (Path B)* for numerical DA/DR/referring-domain comparison
+- **Schema coverage**: comparable from fetched HTML (parse JSON-LD)
+- **AI-extractability structure**: comparable from competitor content structure (NOT their actual AI citation rates, which require direct AI-platform APIs)
+
+## Scoring with Measurement Gaps
+
+If a category cannot be measured from available tools, DO NOT fabricate a score. Instead:
+1. Mark the category as `method: not-measured` in the JSON output
+2. Record it in `measurement_gaps[]` with the Path B MCP that would unlock it
+3. Redistribute that category's weight proportionally across measured categories when computing the overall score
+4. Surface the gap prominently in the human-readable report
+
+The 2.0 plugin version never invents numerical scores for categories whose measurement infrastructure is absent.

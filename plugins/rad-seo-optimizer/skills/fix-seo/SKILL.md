@@ -1,15 +1,28 @@
 ---
 name: fix-seo
 description: >
-  Fix my SEO, fix this SEO issue, fix missing meta, fix broken links, fix page speed,
-  fix schema — user has a specific SEO problem to remediate. Routes to specialized skills
-  and applies fixes. For diagnosis without fixing, use full-seo-audit instead.
-argument-hint: "[SEO issue to fix]"
+  Fix my SEO, fix this SEO issue, fix missing meta, fix broken links, fix page speed
+  code-level risk, fix schema — user has a specific SEO problem to remediate. Routes to
+  specialized skills and applies fixes. For diagnosis without fixing, use full-seo-audit
+  instead. Fixes that require numerical measurement (e.g., "fix my LCP to 2.5s") need a
+  Path B MCP to verify — surfaced in the route.
+argument-hint: "[SEO issue to fix] [--non-interactive]"
+allowed-tools: Read Glob Grep Edit Write Bash WebFetch
 ---
 
 # Fix SEO — Issue Router and Remediation
 
-Fix the specified SEO issue by identifying all instances, explaining the impact, applying the fix, and verifying the result.
+Fix the specified SEO issue by identifying all instances, explaining the impact, applying the fix, and verifying the result. Routes to the appropriate specialist skill when the fix category matches.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Fix application is primarily code transforms + verification; all three models handle reliably.
+
+## Execution: parallel-first
+
+- **Issue identification**: Glob + Grep across the codebase in parallel
+- **Bulk fixes** (e.g., adding alt text across multiple images): per-file Edits independent — batch
+- **Verification**: re-reads post-fix independent — batch
 
 ---
 

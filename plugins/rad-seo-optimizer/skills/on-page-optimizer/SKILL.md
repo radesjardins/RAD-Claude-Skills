@@ -3,14 +3,25 @@ name: on-page-optimizer
 description: >
   Optimize this page, title tags, meta descriptions, heading structure, E-E-A-T, on-page
   SEO, content quality score — single page optimization. Covers title tags, meta, headings,
-  keyword usage, E-E-A-T signals, and image alt text.
-argument-hint: "[URL or page to optimize]"
+  keyword usage, E-E-A-T signals, and image alt text. Real code transforms over the user's
+  content — no Path B dependencies.
+argument-hint: "[URL or page to optimize] [--non-interactive]"
+allowed-tools: Read Glob Grep Write Bash WebFetch
 ---
 
 # On-Page SEO + E-E-A-T Optimizer
 
-Analyze and optimize individual pages for search visibility, content quality, and E-E-A-T
-compliance. Every issue includes a Claude Code fix command.
+Analyze and optimize individual pages for search visibility, content quality, and E-E-A-T compliance. Every issue includes a Claude Code fix command. This skill works directly on the user's content files — no external measurement infrastructure required.
+
+## Cross-model note
+
+Works identically on Opus 4.7 / Sonnet 4.6 / Haiku 4.5. Per-page rewrites are independent; batch across pages in parallel when auditing multiple pages.
+
+## Execution: parallel-first
+
+- **Multi-page audits**: Reads across pages independent — batch
+- **Per-page rewrites**: each section's audit independent (title, meta, headings, alt text) — batch within a page
+- **WebFetch for URL-based audit**: parallel per URL
 
 ---
 

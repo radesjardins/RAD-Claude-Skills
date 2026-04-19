@@ -30,7 +30,8 @@ Quick reference for all known Google ranking systems. Understanding these helps 
 
 ### Page Experience System (Core Web Vitals)
 **What it does:** Evaluates real-world UX via LCP (loading), INP (responsiveness), CLS (visual stability). Also considers HTTPS and mobile-friendliness.
-**Optimize by:** LCP < 2.5s, INP < 200ms, CLS < 0.1. Compress images, minimize CSS/JS, fast hosting, no intrusive interstitials.
+**Optimize by:** Google-published thresholds: LCP < 2.5s, INP < 200ms, CLS < 0.1. Compress images, minimize CSS/JS, fast hosting, no intrusive interstitials.
+**Measurement note:** This plugin can flag *code-level risk factors* that correlate with poor CWV (unoptimized hero images, render-blocking scripts, missing image dimensions), but the numerical LCP/INP/CLS values require a Lighthouse / PageSpeed Insights integration (Path B). See `CAPABILITIES.md`.
 
 ### Freshness Systems
 **What it does:** Shows fresher content for queries that deserve freshness (breaking news, recent events, new releases).

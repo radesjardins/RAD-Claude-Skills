@@ -70,7 +70,7 @@ Include clear, bold statements that AI systems can instantly extract:
 - Statistics with specific numbers: "Companies using X saw a 47% increase in Y"
 - Definitive claims: "X is the most effective method for Y because..."
 - Named frameworks: "The Three-Pillar Approach to..."
-- Pages with direct quotes and statistics achieve 30-40% higher AI visibility
+- Observation: pages with direct quotes and specific statistics tend to be cited more often by AI systems. The exact lift varies by niche and measurement methodology — treat as directional, not as a specific measured rate.
 
 ### FAQ-Style Headings
 Format subheadings as actual customer questions:
@@ -146,19 +146,19 @@ AI models increasingly use image processing (CLIP) to understand visuals:
 - [ ] Video content with accurate transcripts
 
 ### Monitoring & Measurement
-- [ ] Regularly query AI platforms with your target keywords to check citations
-- [ ] Track brand mention frequency across AI responses
-- [ ] Compare AI visibility against top 3 competitors
-- [ ] Monitor Google Search Console for AI Overview impressions
-- [ ] Track referral traffic from AI platforms (Perplexity, ChatGPT browse)
 
-## AEO Scoring Dimensions
+**Honest framing**: actual AI citation tracking requires direct AI-platform API integration (Path B — see `CAPABILITIES.md`). Without that, the best available proxies are:
 
-Score brand AI visibility across 6 dimensions (0-10 each):
+- [ ] **Manual spot-checks** — manually query ChatGPT / Perplexity / Gemini with target questions, screenshot results, compare over time. Labor-intensive but real.
+- [ ] **Google Search Console AI Overview impressions** — GSC reports AI Overview impressions for your own site. Requires the user's own GSC integration.
+- [ ] **Referral traffic from AI platforms** — server log analysis or GA4 for `referrer=perplexity.ai`, `referrer=chat.openai.com`, etc. Captures users who clicked through from an AI citation.
+- [ ] **Re-run the AI-Extractability Content Linter** (`aeo-optimizer` Phase 1) on your content quarterly — tracks your *structural readiness to be cited*. This is NOT the same as measured citations; high extractability is necessary but not sufficient for actual citation.
+- [ ] **Consistency audit** (`aeo-optimizer` Phase 3) — re-run to verify your canonical info stays consistent across platforms.
 
-1. **Presence**: Is the brand mentioned at all in AI responses?
-2. **Accuracy**: Is the information AI shares about you correct?
-3. **Sentiment**: Is the tone positive, neutral, or negative?
-4. **Position**: Where does your brand appear (first mentioned, or buried)?
-5. **Completeness**: Does AI capture your full value proposition?
-6. **Consistency**: Do different AI platforms say the same thing about you?
+## The Retired 6-Dimension AEO Scorecard
+
+The original v1.x of this plugin claimed to score brands across six dimensions (Presence / Accuracy / Sentiment / Position / Completeness / Consistency) by querying AI platforms via WebSearch. **That scorecard was retired in v2.0 because WebSearch returns web search results, NOT ChatGPT/Perplexity/Gemini responses — the scoring was measuring something it couldn't actually measure.**
+
+What replaced it (see `skills/aeo-optimizer` Phase 1): the **AI-Extractability Content Linter**, which scores the user's own content structure on signals that tend to earn AI citations — question-format headings, direct-answer leads, quotable stats, FAQ schema, comparison tables, semantic chunking. This is a *measurement of your content's readiness to be cited*, not a measurement of *actual citations*.
+
+For real citation measurement, integrate an AI-platform API MCP (Path B). Until then, the content linter + manual spot-checks are the honest baseline.
