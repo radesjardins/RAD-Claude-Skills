@@ -75,7 +75,7 @@ These 14 anti-patterns are extracted from documented failures, common AI archite
 
 ### 14. Do Not "Shoot and Forget"
 **What:** Accepting AI code output without formal verification and test-driven validation.
-**Why it fails:** 45% higher vulnerability rate, 8x more technical debt when AI output isn't reviewed.
+**Why it fails:** Industry reports consistently show higher vulnerability rates and accumulated technical debt when AI output is integrated without review — the specific magnitude varies by codebase and review rigor, but the direction is unambiguous.
 **Instead:** Mandate that every AI-generated artifact is reviewed against strict architectural specifications before integration. AI is a draft generator, not an independent developer.
 
 ## How to Use This List

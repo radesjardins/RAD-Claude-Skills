@@ -1,18 +1,20 @@
 # Context Management: Document & Clear Protocol
 
-AI reasoning quality degrades as context windows fill. This isn't a theoretical concern -- it's the primary failure mode in long coding sessions. The planner must proactively manage context to prevent "hallucination entropy."
+AI reasoning quality degrades as context windows fill. This is the primary failure mode in long coding sessions. The planner must proactively manage context to prevent "hallucination entropy."
 
 ## The Document & Clear Pattern
 
 ### Step 1: Status Checkpoint (Dump)
 Before clearing, instruct the AI to write a handoff document capturing:
-- **Completed milestones** -- what's done and verified
-- **Current state** -- what files were modified, what's in progress
-- **Open decisions** -- unresolved questions that need human input
-- **Traps to avoid** -- approaches that were tried and failed
-- **Immediate next steps** -- exactly what to do when resuming
+- **Completed milestones** — what's done and verified
+- **Current state** — what files were modified, what's in progress
+- **Open decisions** — unresolved questions that need human input
+- **Traps to avoid** — approaches that were tried and failed (TRIED / FAILED BECAUSE / CORRECT APPROACH format)
+- **Immediate next steps** — exactly what to do when resuming
 
-Save to: `HANDOFF.md`, `activeContext.md`, or `SCRATCHPAD.md`
+Save to: `HANDOFF.md`, `activeContext.md`, or `SCRATCHPAD.md`.
+
+For active skill runs, also save to `.planner/state/<run-id>.json` per the shared checkpoint schema below. This enables `--resume <run-id>` on `plan-project`, `review-plan`, and `evaluate-stack`.
 
 ### Step 2: Wipe
 Run `/clear` to completely reset the session. This erases all conversational context.
@@ -24,7 +26,38 @@ Start a fresh session. Point the AI to:
 3. Any committed changes in the Git branch
 4. The project's CLAUDE.md for conventions
 
+If a `.planner/state/<run-id>.json` file exists for a skill that was in flight, use the skill's `--resume <run-id>` flag instead of re-orienting from scratch.
+
 The AI now operates with a pristine context window, focused only on the next phase of work.
+
+## Shared Checkpoint Schema
+
+All three multi-phase skills (`plan-project`, `review-plan`, `evaluate-stack`) share a single state file format at `.planner/state/<run-id>.json`:
+
+```json
+{
+  "run_id": "string",
+  "skill": "plan-project | review-plan | evaluate-stack",
+  "phase": "string — skill-specific phase identifier",
+  "started_at": "ISO-8601",
+  "last_saved": "ISO-8601",
+  "model": "opus | sonnet | haiku",
+  "project_summary": "string",
+  "codebase_context": {
+    "root": "string",
+    "claude_md_present": false,
+    "stack_detected": ["string"]
+  },
+  "stack_recommendation": "JSON from stack-advisor or null",
+  "plan_path": "string or null",
+  "tasks_path": "string or null",
+  "risk_history": [{"iteration": 1, "verdict": "REVISE", "issue_count": 0}],
+  "escalation": {"required": false, "reason": "", "route_to": ""},
+  "awaiting_user_review": ["string"]
+}
+```
+
+Skills may add skill-specific fields without breaking the shared contract — use additive extension, not renaming. The `checkpoint` skill can read and write this file generically by passing `--run-id`.
 
 ## Trigger Conditions
 
@@ -39,7 +72,7 @@ The AI now operates with a pristine context window, focused only on the next pha
 ### Warning Triggers (Clear soon)
 | Condition | Why |
 |-----------|-----|
-| **Approaching 60% context capacity** | Reasoning quality begins degrading at 20-40% |
+| **Approaching context capacity** | Reasoning quality begins degrading well before the hard limit |
 | **Agent starts repeating itself** | Sign of attention mechanism losing earlier instructions |
 | **Responses getting vague** | Model losing grip on specific details |
 | **Unexpected suggestions** | AI proposing things outside the plan scope |
@@ -48,7 +81,7 @@ The AI now operates with a pristine context window, focused only on the next pha
 | Condition | Why |
 |-----------|-----|
 | **Agent stuck in correction loop** | 2+ failed attempts = polluted context. STOP. Clear. Restart. |
-| **Auto-compaction triggered** | At ~83.5% capacity, AI silently summarizes history -- lossy and unpredictable |
+| **Auto-compaction triggered** | The runtime silently summarizes history near capacity — lossy and unpredictable |
 | **Agent hallucinating file paths or APIs** | Confidence in non-existent code = context corruption |
 
 ## Context Budget Rules
@@ -94,6 +127,7 @@ This "progressive disclosure" pattern keeps the active context lean while making
 **Milestone:** [M1/M2/etc.]
 **Last completed task:** [Task ID and title]
 **Next task:** [Task ID and title]
+**Active run:** [run-id if a planner skill was in flight, else "none"]
 
 ## What Changed This Session
 - [File 1]: [What was done]
@@ -104,13 +138,16 @@ This "progressive disclosure" pattern keeps the active context lean while making
 - [ ] [Decision needed about X — context: Y]
 
 ## Traps (Do NOT Retry)
-- [Approach A failed because B — do not attempt again]
+- **TRIED:** [Approach A]
+  **FAILED BECAUSE:** [Specific reason]
+  **CORRECT APPROACH:** [What to do instead]
 
 ## To Resume
 1. Read this file
-2. Read PLAN.md, focus on Phase [N]
-3. Start with task [ID]: [title]
-4. Run `[validation command]` to verify current state
+2. If active run-id exists: `/rad-planner:<skill> --resume <run-id>`
+3. Otherwise: read PLAN.md, focus on Phase [N]
+4. Start with task [ID]: [title]
+5. Run `[validation command]` to verify current state
 ```
 
 ## Integration with Plan Checkpoints
@@ -119,6 +156,6 @@ The plan template includes checkpoints after every milestone. Each checkpoint sh
 1. Run all validation checks for completed tasks
 2. Commit all verified work to git
 3. Generate/update the handoff document
-4. Assess context usage (are we near 60%?)
-5. If context is high: dump state, recommend `/clear`, provide rehydration instructions
+4. If a planner skill is in flight, update `.planner/state/<run-id>.json`
+5. Assess context usage — if approaching capacity, dump state, recommend `/clear`, provide rehydration instructions
 6. If context is low: continue to next phase

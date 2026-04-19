@@ -65,7 +65,23 @@ The `references/` directory contains the knowledge base that agents and skills l
 | `failure-state-template.md` | Triple-component validation (Action → Validation → Rollback) |
 | `tdd-constraints.md` | Red-Green-Refactor + mutation testing requirements |
 | `claude-md-template.md` | WHY/WHAT/HOW template for CLAUDE.md generation |
-| `context-management.md` | Document & Clear triggers and handoff protocol |
+| `context-management.md` | Document & Clear triggers, handoff protocol, shared checkpoint schema |
+| `subagent-prompts/stack-eval.md` | JSON-first dispatch template for `stack-advisor` |
+| `subagent-prompts/risk-assessment.md` | JSON-first dispatch template for `risk-assessor` |
+
+## What's New in 2.0
+
+Platform-level optimization pass for Opus 4.7 (Sonnet 4.6 and Haiku 4.5 fully supported):
+
+- **Opus-default on all three agents.** `plan-architect`, `stack-advisor`, and `risk-assessor` all run on Opus 4.7 by default. Sonnet 4.6 is a first-class fallback per agent; Haiku 4.5 for narrow-scope use.
+- **JSON-first subagent output contracts.** `stack-advisor` and `risk-assessor` emit structured JSON matching schemas at `references/subagent-prompts/{stack-eval,risk-assessment}.md`. Dispatching skills parse the JSON authoritatively; markdown fallback remains for model variance.
+- **Externalized subagent prompt templates** at plugin-level `references/subagent-prompts/` (multi-skill-plugin pattern — shared across `plan-project`, `review-plan`, `evaluate-stack`).
+- **`--non-interactive` mode** on `plan-project`, `review-plan`, `evaluate-stack`, and `generate-project-config` for agent/CI callers that deadlock on interactive menus. Auto-proceed thresholds documented per skill.
+- **`--resume <run-id>` + shared checkpoint schema** at `.planner/state/<run-id>.json`. Long planning runs survive compaction; the `checkpoint` skill writes the same format that the three multi-phase skills read via `--resume`.
+- **Parallel-first execution guidance** in every multi-phase skill — codebase exploration reads, reference file loads, and independent subagent dispatches batch into single tool-call bursts.
+- **Escalation path to brainstormer.** When `risk-assessor` returns `RETHINK` or `stack-advisor` sets `escalation_required`, the dispatching skill surfaces `/rad-brainstormer:design-sprint` as the re-entry point rather than looping on patches that can't fix architectural problems.
+- **Flattened agent layout** — `agents/<name>/AGENT.md` → `agents/<name>.md` to match every other plugin in the repo.
+- **Honest claims audit** across references — unsourced specific statistics softened to honest language about direction and magnitude.
 
 ## Quick Start
 

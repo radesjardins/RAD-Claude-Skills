@@ -6,7 +6,7 @@ description: >
   from plan", "write my CLAUDE.md", "setup project for AI coding", "generate architecture
   docs", or wants to create the persistent reference files (CLAUDE.md, ARCHITECTURE.md,
   etc.) that execution agents need after an implementation plan has been approved.
-argument-hint: "[path to approved plan] [--output-dir path]"
+argument-hint: "[path to approved plan] [--output-dir path] [--non-interactive]"
 user-invocable: true
 allowed-tools: Read Glob Grep Write
 ---
@@ -16,6 +16,19 @@ allowed-tools: Read Glob Grep Write
 Generate the project-level configuration files that execution agents need to work effectively. These files persist across sessions and provide the "constitution" that keeps AI agents aligned with the project's architecture and conventions.
 
 **Prerequisite:** An approved implementation plan should exist. If no plan exists, recommend running `/rad-planner:plan-project` first.
+
+## Cross-model note
+
+This skill works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. The plan read, existing-config discovery, and reference-template load are all independent and should be batched in parallel.
+
+## Execution: parallel-first
+
+Step 1 (read plan) + Step 2 (discover existing config) + loading `references/claude-md-template.md` are all independent. Issue a single parallel batch. Only serialize when Step 3's generation needs the parsed plan contents.
+
+## Mode Flags
+
+- `--output-dir <path>` — Write generated files to a specific directory rather than project root
+- `--non-interactive` — Skip the preview-and-confirm gate in Step 3; write files directly and emit a trailing JSON summary
 
 ## What Gets Generated
 
@@ -80,9 +93,9 @@ Read the implementation plan and extract:
 - Test strategy and commands
 - File structure (target files section)
 
-### Step 2: Check Existing Config
+### Step 2: Check Existing Config (parallel with Step 1)
 
-Look for existing project configuration:
+Look for existing project configuration — issue these in parallel with Step 1:
 - CLAUDE.md — merge with existing content, don't overwrite
 - .claude/rules/ — check for existing rules
 - README.md — extract stack/convention info
@@ -92,9 +105,9 @@ Look for existing project configuration:
 ### Step 3: Generate Files
 
 Generate each file following its template. For each file:
-1. Show the user a preview of what will be generated
+1. Show the user a preview of what will be generated (skip in `--non-interactive`)
 2. Explain key decisions (what was included and why, what was excluded and why)
-3. Get confirmation before writing
+3. Get confirmation before writing (auto-confirm in `--non-interactive`)
 
 ### Step 4: Token-Saving Audit
 
@@ -114,6 +127,18 @@ Files are written to the project root (or `--output-dir` if specified):
 - `docs/ARCHITECTURE.md` — Architecture documentation (if applicable)
 - `tasks.md` — Machine-readable task list (if not already present)
 - `.claude/rules/*.md` — Path-scoped rules (if large project)
+
+In `--non-interactive` mode, emit a trailing JSON summary:
+
+```json
+{
+  "config_complete": true,
+  "files_written": ["CLAUDE.md", "docs/ARCHITECTURE.md"],
+  "files_merged": [],
+  "claude_md_line_count": 0,
+  "awaiting_user_review": ["string"]
+}
+```
 
 ## Key Reference
 

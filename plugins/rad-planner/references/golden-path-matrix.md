@@ -1,6 +1,6 @@
 # Golden Path: AI-Native Technology Selection Matrix
 
-AI models perform best with strongly typed, highly opinionated, and extensively documented frameworks that have massive presence in their training data. TypeScript is the non-negotiable default -- its strict type safety acts as a continuous feedback loop that catches up to 40% of logical errors during code generation.
+AI models perform best with strongly typed, highly opinionated, and extensively documented frameworks that have massive presence in their training data. TypeScript is the non-negotiable default — its strict type safety acts as a continuous feedback loop that catches a substantial fraction of logical errors at generation time (exact rate depends on the code domain, but the effect is consistent and well-observed in AI-assisted workflows).
 
 ## AI-Native Proficiency Tiers
 
