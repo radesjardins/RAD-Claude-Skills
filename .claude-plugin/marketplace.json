@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more.",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -27,67 +27,11 @@
       "license": "Apache-2.0"
     },
     {
-      "name": "rad-react",
-      "source": "./plugins/rad-react",
-      "description": "Modern React best practices — functional components, hooks, JSX, props, state, routing, forms, data fetching, server/client boundaries, accessibility, TypeScript, testing, performance optimization, and code organization. No class components.",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-react",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "rad-nextjs",
-      "source": "./plugins/rad-nextjs",
-      "description": "Next.js coding standards, security hardening, testing patterns, and troubleshooting — App Router architecture, Server/Client components, data fetching, caching, Core Web Vitals, authentication, OWASP protection, Vitest/Cypress/Playwright, and common bug diagnosis.",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-nextjs",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "rad-astro",
-      "source": "./plugins/rad-astro",
-      "description": "Astro framework coding standards, security hardening, accessibility (WCAG 2.2), performance optimization, and troubleshooting — Islands architecture, Content Layer API v2, Astro Actions, Server Islands, Core Web Vitals, CSP/XSS/CSRF protection, and anti-pattern enforcement. Updated for Astro 5/6.",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-astro",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "rad-typescript",
-      "source": "./plugins/rad-typescript",
-      "description": "Production-grade TypeScript standards — strict-mode architecture, type narrowing and discriminated unions, parse-don't-validate at API boundaries, Result-type error handling, TS 4.9-5.7 modern features, and AI codegen guardrails. Enforces zero-any policy.",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-typescript",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "rad-zod",
-      "source": "./plugins/rad-zod",
-      "description": "Expert Zod v4 guidance — schema composition, parse-don't-validate mental model, error handling, security review, Zod v4 migration and new APIs, and framework integrations (Fastify, Next.js, React Hook Form, tRPC).",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-zod",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "rad-fastify",
-      "source": "./plugins/rad-fastify",
-      "description": "Fastify framework coding standards — encapsulation model, plugin DAG, hook lifecycle, JSON Schema validation (Ajv), response serialization, Pino logging, TypeScript type providers, in-process testing, production hardening, and anti-pattern enforcement.",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-fastify",
-      "license": "Apache-2.0"
-    },
-    {
       "name": "rad-chrome-extension",
       "source": "./plugins/rad-chrome-extension",
       "description": "Comprehensive MV3 Chrome extension development standards — WXT framework architecture, MV3 security, permission minimization, typed messaging, storage patterns, service worker lifecycle, React UI, testing, and Chrome Web Store troubleshooting.",
       "category": "development",
       "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-chrome-extension",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "rad-stripe-fastify-webhooks",
-      "source": "./plugins/rad-stripe-fastify-webhooks",
-      "description": "Production-grade Stripe webhook handling with Fastify and Zod — signature verification, subscription state machine, idempotent event processing, Zod schema contracts, entitlement engine architecture, thin events migration, reconciliation patterns, security boundaries, and testing.",
-      "category": "development",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-stripe-fastify-webhooks",
       "license": "Apache-2.0"
     },
     {
