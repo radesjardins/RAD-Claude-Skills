@@ -1,6 +1,9 @@
 # Golden Path: AI-Native Technology Selection Matrix
 
-AI models perform best with strongly typed, highly opinionated, and extensively documented frameworks that have massive presence in their training data. TypeScript is the non-negotiable default — its strict type safety acts as a continuous feedback loop that catches a substantial fraction of logical errors at generation time (exact rate depends on the code domain, but the effect is consistent and well-observed in AI-assisted workflows).
+> **Last verified:** 2026-04-25 (model knowledge cutoff: January 2026)
+> **Status:** Opinionated reference. The `stack-advisor` agent live-checks framework versions and breaking changes via Context7 / WebSearch — **trust the live verification when it disagrees with this matrix.** Frameworks evolve faster than this file is updated.
+
+AI models tend to produce more reliable code in strongly typed, opinionated, well-documented frameworks that are heavily represented in training data. TypeScript is the recommended default — its strict type safety acts as a continuous feedback loop that surfaces logical errors at generation time. The exact rate of caught errors depends on the code domain; the directional benefit is widely observed in AI-assisted workflows but not precisely measured here.
 
 ## AI-Native Proficiency Tiers
 
@@ -106,3 +109,10 @@ Always verify with Context7 or web search when:
 - Evaluating new frameworks not in training data
 - Comparing performance benchmarks (results change with releases)
 - Checking library compatibility with specific framework versions
+
+## Honest limits of this matrix
+
+- The tier assignments are based on the maintainer's experience with AI codegen accuracy as of the date in the header — they are not derived from a published benchmark.
+- "Massive presence in training data" is a real factor for code accuracy but cannot be precisely quantified per framework — treat tier rankings as directional, not authoritative.
+- The Niche/Legacy tier is not a verdict on framework quality. Rails and Django produce excellent applications when humans write the code; the matrix is specifically about AI codegen reliability.
+- This file ages quickly. If the date in the header is more than 6 months stale, weight live verification more heavily than the tier list.

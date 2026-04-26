@@ -13,9 +13,15 @@ allowed-tools: Read Glob Grep Write
 
 # Generate Project Config — Persistent Reference File Generation
 
-Generate the project-level configuration files that execution agents need to work effectively. These files persist across sessions and provide the "constitution" that keeps AI agents aligned with the project's architecture and conventions.
+Generate the project-level configuration files that execution agents read. These files persist across sessions and act as a project "constitution" — they bias AI agents toward the architecture and conventions of the project, but they don't mechanically enforce anything.
 
 **Prerequisite:** An approved implementation plan should exist. If no plan exists, recommend running `/rad-planner:plan-project` first.
+
+## What this skill does NOT do
+
+- Does not validate that CLAUDE.md is actually loaded by every session (depends on the AI tool's loading rules).
+- Does not enforce the rules it generates — those are instructions to the model.
+- Does not detect inconsistencies between the plan and existing project files; it merges, but conflicts surface for the user to resolve.
 
 ## Cross-model note
 

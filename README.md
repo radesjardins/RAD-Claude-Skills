@@ -129,7 +129,7 @@ Install all five in one pass, or pick the ones that match your current work.
 Some plugins are designed to chain. The most common pipeline for a new project:
 
 1. **[rad-brainstormer](plugins/rad-brainstormer/)** — explore the problem space, converge on an idea, produce a design spec (`/rad-brainstormer:brainstorm-session` → `/rad-brainstormer:design-sprint`)
-2. **[rad-planner](plugins/rad-planner/)** — turn the spec into a dependency-aware implementation plan with risk review (`/rad-planner:plan-project`)
+2. **[rad-planner](plugins/rad-planner/)** — turn the spec into a dependency-aware implementation plan with risk review and mechanical DAG/checklist validation (`/rad-planner:plan-project`, or `--lite` for small work)
 3. **[rad-code-review](plugins/rad-code-review/)** — review the code you generate from the plan (`/rad-code-review`)
 
 Each plugin stands alone — the pipeline is a suggestion, not a requirement. The boundary between `design-sprint` and `plan-project` is: design-sprint produces a *spec* (architecture, components, APIs), plan-project produces an *ordered implementation plan* (DAG, tasks, complexity, risk).
@@ -158,7 +158,7 @@ Each plugin stands alone — the pipeline is a suggestion, not a requirement. Th
 | [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, 3 review roles | CLI, Desktop |
 | [rad-stack-guide](plugins/rad-stack-guide/) | 2 | 0 | Stack detection & review orchestration — detects your stack, configures CLAUDE.md, dispatches specialist reviewers + rad-code-review final gate | CLI, Desktop |
 | [rad-session](plugins/rad-session/) | 3 | 0 | Resource-aware session briefings + disciplined wrapup. `/startup` auto-detects MCPs/CLIs/stack (Phase 2.5 Resource Discovery), `/wrapup` captures "what NOT to do" and prunes CLAUDE.md with diff confirmation (Resources section protected), `/add-resource` registers new tools. PreCompact hook prevents silent context loss on compaction. | CLI, Desktop |
-| [rad-planner](plugins/rad-planner/) | 5 | 3 | Structured project planning — dependency-aware implementation plans, stack evaluation, risk assessment (14 anti-patterns), failure state mapping, context management | CLI, Desktop |
+| [rad-planner](plugins/rad-planner/) | 6 | 3 | Structured implementation-planning scaffolding — 6-phase workflow with Python validators (DAG cycle detection, field-presence checklist, JSON Schema validation) backing the parts templates can't enforce. Includes `--lite` mode, `/status` skill, executor handoff manifest, real example artifacts. | CLI, Desktop |
 
 ### Productivity & Content
 

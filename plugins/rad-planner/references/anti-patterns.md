@@ -1,13 +1,14 @@
-# AI Coding Anti-Patterns: The "Do Not Do" Constraint List
+# AI Coding Anti-Patterns: 14 Documented Failure Modes
 
-These 14 anti-patterns are extracted from documented failures, common AI architectural hallucinations, and coding dead-ends. The planner must check every proposed plan against this list before approval.
+These 14 patterns are drawn from documented failures, AI architectural hallucinations observed in practice, and coding dead-ends reported across the planning-tool ecosystem. They are not laws — some are opinions with thresholds (clearly marked). The risk-assessor agent uses this list as a starting point for judgment passes; the mechanical validator (`scripts/plan-lint.py`) handles the deterministic ones.
 
 ## Architecture Anti-Patterns
 
-### 1. Do Not Use the "Vector Sidecar" Pattern
-**What:** Maintaining a separate vector database alongside your primary transactional database.
-**Why it fails:** Synchronization gaps, brittle ETL pipelines, stale data retrieval, combinatorial explosion of access control logic.
-**Instead:** Use hybrid search within a unified relational schema (PostgreSQL + pgvector).
+### 1. Prefer pgvector Until Scale Justifies a Dedicated Vector DB
+**What:** Reaching for a separate vector database (Pinecone, Weaviate, Qdrant, Milvus) on greenfield projects without a concrete reason to leave PostgreSQL.
+**Why this is often the wrong default:** For projects under ~1M vectors with PostgreSQL already in the stack, pgvector avoids a second system to operate, sync, and reason about access control across.
+**When a dedicated vector DB is the right call:** >10M vectors, sub-50ms latency targets at high QPS, multi-tenant isolation requirements pgvector can't meet, or hybrid retrieval needs that exceed pgvector's capabilities.
+**Rule:** Justify the dedicated DB with concrete numbers from one of the categories above. Don't default to it.
 
 ### 2. Do Not Over-Engineer MCP Servers
 **What:** Building complex abstraction layers around MCP servers for AI agents.
@@ -80,7 +81,15 @@ These 14 anti-patterns are extracted from documented failures, common AI archite
 
 ## How to Use This List
 
-During plan review, the risk-assessor agent checks every proposed task against these 14 constraints. If any task instruction could trigger one of these anti-patterns, it must be flagged with:
+During plan review, the risk-assessor agent checks every proposed task against these 14 patterns. If any task instruction could trigger one, it must be flagged with:
 - The specific anti-pattern number and name
 - Why the current plan risks triggering it
 - A concrete alternative approach
+
+### What the mechanical validator handles vs. what needs judgment
+
+`scripts/plan-lint.py` handles parts of #6 (search boundaries are inferable from task scope), #7 (line-count check on CLAUDE.md output), and #12 (validation/rollback presence). Everything else needs LLM judgment because it's about the *intent* of a plan or task, not its structural shape.
+
+### These are starting points, not laws
+
+Anti-patterns 1, 9, 10, and 13 in particular are opinions with thresholds. A "this is wrong" verdict from the risk-assessor on these should always include the concrete reason — not just "violates anti-pattern #N".

@@ -10,12 +10,14 @@ description: >
   code generation accuracy.
 argument-hint: "[project type or description] [--existing] [--non-interactive] [--resume <run-id>]"
 user-invocable: true
-allowed-tools: Read Glob Grep WebSearch WebFetch Agent Write
+allowed-tools: Read Glob Grep WebSearch WebFetch Agent Write Bash
 ---
 
 # Evaluate Stack — AI-Native Technology Selection
 
-Evaluate and recommend technology stacks optimized for AI-assisted development. Recommendations are grounded in the Golden Path proficiency matrix and verified against current information.
+Evaluate and recommend technology stacks optimized for AI-assisted development. Recommendations are grounded in the Golden Path proficiency matrix and verified against current information via Context7 / WebSearch where available.
+
+The matrix itself reflects the maintainer's opinion plus dated observations of model behavior — see the date stamp in `references/golden-path-matrix.md`. Always trust the live verification over the matrix when they disagree.
 
 ## Cross-model note
 
@@ -69,8 +71,17 @@ The stack-advisor will:
 - Use Context7 MCP (if available) to fetch current framework documentation
 - Use WebSearch to verify current stable versions and recent breaking changes
 - Check compatibility between all recommended components
-- Confirm no security vulnerabilities in recommended versions
-- Return JSON per the `stack-eval.md` schema
+- Confirm no known security vulnerabilities in recommended versions
+- Return JSON per the `stack-eval.md` contract and `stack-eval.schema.json` schema
+
+**Validate the agent's JSON output before consuming:**
+
+```bash
+echo "$AGENT_OUTPUT" | python3 ${plugin_root}/scripts/validate-json.py \
+  ${plugin_root}/references/subagent-prompts/stack-eval.schema.json - --extract-from-markdown
+```
+
+Re-prompt the agent once on schema failure with the validation errors. If a second attempt also fails, fall back to the markdown structure documented in `agents/stack-advisor.md`.
 
 Save checkpoint after Step 4.
 
@@ -120,7 +131,15 @@ In `--non-interactive` mode, emit:
 }
 ```
 
+## What this skill does NOT do
+
+- Does not test framework choices in your project — it recommends, you validate.
+- Does not guarantee the stack is suitable for your specific scale / team / constraints; the rationale is documented but the call is yours.
+- Does not migrate an existing stack — `--existing` evaluates fit, doesn't generate a migration plan.
+
 ## Key References
 
-- `references/golden-path-matrix.md` — Complete decision matrix, proficiency tiers, project-type recommendations
+- `references/golden-path-matrix.md` — Decision matrix, proficiency tiers, project-type recommendations (date-stamped)
 - `references/subagent-prompts/stack-eval.md` — Stack-advisor dispatch template
+- `references/subagent-prompts/stack-eval.schema.json` — JSON contract validated before consumption
+- `scripts/validate-json.py` — Schema validator

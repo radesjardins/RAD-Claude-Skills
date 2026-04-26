@@ -2,7 +2,9 @@
 
 Template for dispatching the `stack-advisor` agent from a skill. Substitute the `{placeholder}` tokens before passing to the `Agent` tool.
 
-**Cross-model note.** This prompt is neutral across Opus 4.7 / Sonnet 4.6 / Haiku 4.5. The agent is defined with `model: opus` because cross-layer stack evaluation with live version verification rewards careful multi-dimensional reasoning. Sonnet is a first-class fallback. Output is JSON-first (see `## Output Format` below) so downstream parsing is robust across model variance.
+**Schema:** Output is validated against `stack-eval.schema.json` by the calling skill via `scripts/validate-json.py`. The skill re-prompts on schema failure; required fields are not optional.
+
+**Cross-model note.** This prompt is neutral across Opus 4.7 / Sonnet 4.6 / Haiku 4.5. The agent is defined with `model: opus` because cross-layer stack evaluation with live version verification rewards careful multi-dimensional reasoning. Sonnet is a first-class fallback.
 
 ---
 

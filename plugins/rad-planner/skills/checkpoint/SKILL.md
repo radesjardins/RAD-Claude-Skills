@@ -16,9 +16,11 @@ allowed-tools: Read Glob Grep Write Bash
 
 # Checkpoint — Document & Clear Context Management
 
-Preserve the current session state so work can be resumed in a fresh session without loss. This implements the "Document & Clear" pattern that prevents context rot — the degradation of AI reasoning quality as context windows fill.
+Preserve the current session state so work can be resumed in a fresh session without loss. This implements the "Document & Clear" pattern, which mitigates context rot — the observed degradation of AI reasoning quality as context windows fill. The skill writes a handoff file; the user runs `/clear` and starts the new session themselves. Nothing here is automatic.
 
 Checkpoint at milestone boundaries, after 2 consecutive failures, or when context degradation signs appear (vague responses, hallucinated paths, correction loops). See `references/context-management.md` for the full trigger matrix and the shared checkpoint schema.
+
+For a quick read of *where you are* in an in-flight plan without writing a checkpoint, use `/rad-planner:status` instead.
 
 ## Cross-model note
 

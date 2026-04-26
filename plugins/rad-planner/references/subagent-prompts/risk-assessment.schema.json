@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "rad-planner/risk-assessment.schema.json",
+  "title": "rad-planner risk-assessor output contract",
+  "description": "JSON contract emitted by the risk-assessor agent. Validated by scripts/validate-json.py before the dispatching skill (plan-project / review-plan) consumes it.",
+  "type": "object",
+  "required": ["assessment_complete", "iteration", "verdict", "summary", "blocking_issues", "advisory_issues", "escalation_required"],
+  "properties": {
+    "assessment_complete": { "type": "boolean", "const": true },
+    "iteration": { "type": "integer" },
+    "plan_name": { "type": "string" },
+    "verdict": { "enum": ["APPROVE", "REVISE", "RETHINK"] },
+    "summary": {
+      "type": "object",
+      "required": ["critical_count", "high_count", "medium_count", "low_count"],
+      "properties": {
+        "anti_pattern_violations": { "type": "integer" },
+        "critical_count": { "type": "integer" },
+        "high_count": { "type": "integer" },
+        "medium_count": { "type": "integer" },
+        "low_count": { "type": "integer" },
+        "missing_failure_states": { "type": "integer" },
+        "dag_issues": { "type": "integer" },
+        "tdd_gaps": { "type": "integer" },
+        "context_concerns": { "type": "integer" }
+      }
+    },
+    "blocking_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "category", "severity", "issue", "fix"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "category": { "enum": ["anti-pattern", "failure-state", "dag", "tdd", "context", "stack-arch"] },
+          "severity": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+          "issue": { "type": "string" },
+          "anti_pattern_ref": { "type": ["string", "null"] },
+          "fix": { "type": "string" }
+        }
+      }
+    },
+    "advisory_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "category", "severity", "issue", "fix"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "category": { "type": "string" },
+          "severity": { "enum": ["MEDIUM", "LOW"] },
+          "issue": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    },
+    "positive_observations": { "type": "array", "items": { "type": "string" } },
+    "escalation_required": { "type": "boolean" },
+    "escalation_reason": { "type": "string" },
+    "unresolved_issues": { "type": "array", "items": { "type": "string" } }
+  }
+}

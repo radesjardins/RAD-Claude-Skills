@@ -28,7 +28,7 @@ Tasks use unique hierarchical identifiers for precise parent-child referencing:
 
 ### Core Rules
 1. **Explicit mapping:** Every task's blockers listed in `Dependencies` field as array of task IDs
-2. **No circular dependencies:** If A blocks B, B cannot block A (DAG enforcement)
+2. **No circular dependencies:** If A blocks B, B cannot block A (verified by `scripts/plan-lint.py --mode dag`)
 3. **Transitive blocking:** If A blocks B and B blocks C, then C cannot start until both A and B are complete
 4. **No assumed order:** Agents determine execution order from the dependency graph, NOT from document position
 
@@ -40,9 +40,11 @@ When multiple tasks are unblocked simultaneously, execute in this order:
 4. **Task ID:** Lower ID first (as tiebreaker)
 
 ### Cycle Detection
-Before finalizing any plan, verify no cycles exist:
-- Task A blocks B, B blocks C, C blocks A = DEADLOCK (forbidden)
-- If detected, restructure by breaking the cycle at the least-coupled point
+Before finalizing any plan, run:
+```bash
+python3 scripts/plan-lint.py --mode dag <tasks-file>
+```
+The script does DFS-based cycle detection — Task A blocks B, B blocks C, C blocks A → DEADLOCK reported as a CRITICAL issue with the cycle path. If detected, restructure by breaking the cycle at the least-coupled point. (Manual review will miss subtle multi-hop cycles in plans with > 15 tasks; don't rely on it.)
 
 ## Complexity Scoring
 

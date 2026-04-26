@@ -1,6 +1,6 @@
 # Context Management: Document & Clear Protocol
 
-AI reasoning quality degrades as context windows fill. This is the primary failure mode in long coding sessions. The planner must proactively manage context to prevent "hallucination entropy."
+AI reasoning quality tends to degrade as context windows fill — observable in longer coding sessions as repeated suggestions, hallucinated paths, and dropped instructions. The exact threshold and mechanism varies by model and workload; the directional effect is widely reported. The planner provides a Document & Clear protocol to mitigate this; the user (or a wrapping skill) must actually invoke `/clear` and rehydrate from the saved file.
 
 ## The Document & Clear Pattern
 

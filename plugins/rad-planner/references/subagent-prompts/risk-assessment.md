@@ -2,7 +2,9 @@
 
 Template for dispatching the `risk-assessor` agent from a skill. Substitute the `{placeholder}` tokens before passing to the `Agent` tool.
 
-**Cross-model note.** This prompt is neutral across Opus 4.7 / Sonnet 4.6 / Haiku 4.5. The agent is defined with `model: opus` because the six-pass audit (14 anti-patterns + failure-state coverage + DAG integrity + TDD + context management + architecture) rewards careful multi-dimensional reasoning. Sonnet is a first-class fallback. Output is JSON-first so the review loop can detect verdict/issues programmatically.
+**Schema:** Output is validated against `risk-assessment.schema.json` by the calling skill via `scripts/validate-json.py`. The skill re-prompts on schema failure; do not omit required fields.
+
+**Cross-model note.** This prompt is neutral across Opus 4.7 / Sonnet 4.6 / Haiku 4.5. The agent is defined with `model: opus` because the judgment-required passes (anti-patterns + architectural concerns + TDD strategy quality) reward careful multi-dimensional reasoning. Sonnet is a first-class fallback. The mechanical passes (DAG, field presence, vague language) are handled by `scripts/plan-lint.py` so the agent can focus on judgment.
 
 ---
 
@@ -34,18 +36,20 @@ referenced section.
 
 ## Audit Passes
 
-Run all six passes. For each potential issue, record:
+**Pass 0 (mechanical, run first):** Invoke `scripts/plan-lint.py --mode all <plan-or-tasks-path> --json`. The script handles DAG integrity, field presence, and vague language deterministically. Surface its issues directly in `blocking_issues[]` with category=`dag` or `failure-state`. Skip the redundant parts of Pass 2 / Pass 3 below.
+
+For each remaining issue you find via judgment, record:
 - Task ID (or `plan-level` for global issues)
 - Category (one of: anti-pattern | failure-state | dag | tdd | context | stack-arch)
 - Severity (CRITICAL | HIGH | MEDIUM | LOW)
 - Specific issue (cite the exact text/field)
 - Concrete fix suggestion
 
-**Pass 1 — Anti-pattern scan:** Check every task against all 14 anti-patterns in `references/anti-patterns.md`.
+**Pass 1 — Anti-pattern scan:** Check every task against the 14 anti-patterns in `references/anti-patterns.md`. Several (1, 9, 13) are opinions with thresholds — flag with the concrete reason, not just the rule number.
 
-**Pass 2 — Failure-state coverage:** Every task needs validation check, rollback procedure, and user checkpoint for high-risk operations (per `references/failure-state-template.md`).
+**Pass 2 — Failure-state quality (mechanical parts covered by Pass 0):** Focus on whether validation commands actually test the change, whether rollbacks restore correct state (not just file state), and whether user checkpoints sit at the right operations (auth/payment/data destructive).
 
-**Pass 3 — DAG integrity:** No cycles, no orphans, no phantom dependencies, complexity ≤ 7 (or subtasks present), priority consistency (per `references/task-format.md`).
+**Pass 3 — DAG semantic check (mechanical parts covered by Pass 0):** Focus on priority consistency and logical ordering — does a high-priority task depend on a low-priority one? Is the DB migration before the model that uses it?
 
 **Pass 4 — TDD compliance:** Every code-generating task specifies test strategy, edge cases, coverage target, mocked vs. real boundaries (per `references/tdd-constraints.md`).
 

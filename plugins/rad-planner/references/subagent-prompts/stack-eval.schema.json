@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "rad-planner/stack-eval.schema.json",
+  "title": "rad-planner stack-advisor output contract",
+  "description": "JSON contract emitted by the stack-advisor agent. Validated by scripts/validate-json.py before the dispatching skill (plan-project / evaluate-stack) consumes it.",
+  "type": "object",
+  "required": ["evaluation_complete", "project_type", "summary", "recommendation", "compatibility_verified", "confidence", "escalation_required"],
+  "properties": {
+    "evaluation_complete": { "type": "boolean", "const": true },
+    "project_type": { "type": "string" },
+    "summary": { "type": "string" },
+    "recommendation": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["layer", "choice", "version", "ai_tier", "rationale"],
+        "properties": {
+          "layer": { "type": "string" },
+          "choice": { "type": "string" },
+          "version": { "type": "string" },
+          "ai_tier": { "enum": ["Primary", "Secondary", "Niche", "Data"] },
+          "rationale": { "type": "string" }
+        }
+      }
+    },
+    "alternatives_considered": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["layer", "alternative", "why_rejected"],
+        "properties": {
+          "layer": { "type": "string" },
+          "alternative": { "type": "string" },
+          "why_rejected": { "type": "string" }
+        }
+      }
+    },
+    "compatibility_verified": { "type": "boolean" },
+    "compatibility_notes": { "type": "array", "items": { "type": "string" } },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk", "mitigation"],
+        "properties": {
+          "risk": { "type": "string" },
+          "mitigation": { "type": "string" }
+        }
+      }
+    },
+    "version_pins": { "type": "object" },
+    "verification_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "checked_on"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "checked_on": { "type": "string" }
+        }
+      }
+    },
+    "confidence": { "enum": ["high", "medium", "low"] },
+    "escalation_required": { "type": "boolean" },
+    "escalation_reason": { "type": "string" }
+  }
+}
