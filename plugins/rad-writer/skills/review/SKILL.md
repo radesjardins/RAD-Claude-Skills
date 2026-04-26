@@ -8,11 +8,16 @@ description: >
   categories and specific findings. For thorough multi-pass review of longer or high-stakes
   documents, dispatches the writing-reviewer agent. Works across all 9 writing domains.
 argument-hint: "[paste text or provide file path] [--domain email|blog|web-copy|report|research|presentation|prose|technical|social] [--thorough] [--coach]"
+allowed-tools: Read Glob Grep Agent Bash
 ---
 
 # Review Skill
 
 Diagnostic feedback on writing quality. Tells you what's working, what's not, and where to focus — without rewriting the text for you.
+
+## Honest framing
+
+The "AI patterns" category in this review reports patterns associated with AI output, **not authorship verdicts**. Perfect AI detection is structurally impossible in 2026 (arXiv:2509.11915). Treat findings in this category as craft signals — convergent patterns across multiple categories are informative; any single pattern is weak evidence.
 
 ## Setup
 
@@ -52,8 +57,17 @@ Pass the text, detected domain, and domain reference to the agent.
 
 ### Step 4: Analyze (Standard Review)
 
+**Run the deterministic scans first to ground the review in real numbers (not eyeballed):**
+
+```bash
+python3 ${plugin_root}/scripts/text-stats.py <text-file> --json
+python3 ${plugin_root}/scripts/check-blocklist.py <text-file> --json
+```
+
+The first returns burstiness, em-dash density, hedging density, transition density, paragraph distribution, and lexical-tell counts. The second returns line-located word matches with replacement suggestions. Use these as the basis for the AI-pattern category — don't re-eyeball what the scripts already computed.
+
 **Load now** (needed for analysis):
-- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md` (AI patterns category)
+- `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md` (AI patterns category — note the tier organization; lead with Tier 1 durable signals, treat Tier 3 lexical tells as soft style noise)
 - `${CLAUDE_SKILL_DIR}/../../references/word-blocklist.md` (lexical tells)
 - If sentence/structure issues are found: `${CLAUDE_SKILL_DIR}/../../references/sentence-craft.md`
 

@@ -5,10 +5,16 @@ description: >
   "rewrite this", "fix this writing", "polish this", "edit this", "tighten this up", "help me
   rewrite", "make this more professional", "make this sound better", "make this less AI",
   "humanize this", or pastes/uploads text and wants it improved. Takes existing text and produces
-  an improved version with numbered changes the user can accept or reject individually.
-  Works across all 9 writing domains with domain-aware improvements and light AI pattern detection.
+  an improved version with numbered changes the user can accept or reject individually. Runs
+  scripts/check-blocklist.py first for deterministic word matches, then layers craft suggestions
+  on top. Works across all 9 writing domains.
 argument-hint: "[paste text or provide file path] [--domain email|blog|web-copy|report|research|presentation|prose|technical|social] [--coach]"
+allowed-tools: Read Glob Grep Write Edit Bash
 ---
+
+## Honest framing
+
+This skill makes existing writing better. It catches stale clichés, structural uniformity, vague attribution, and weak word choice. **It does not "humanize" your writing for AI-detection evasion** — that framing is dishonest in 2026 (perfect AI detection is mathematically impossible per arXiv:2509.11915, and most universities have disabled AI detectors institutionally). The improvements stand on their own as craft work.
 
 # Improve Skill
 
@@ -47,6 +53,15 @@ Infer the domain from content:
 If uncertain, ask. Load: `${CLAUDE_SKILL_DIR}/../../references/domain-[type].md`
 
 ### Step 3: Analyze and Improve
+
+**Run the deterministic scans first (saves tokens, reproducible):**
+
+```bash
+# Pre-flag specific words so the LLM doesn't have to scan
+python3 ${plugin_root}/scripts/check-blocklist.py <text-file> --json
+```
+
+The script returns line/column locations for every blocklist match with replacement suggestions. Use these directly in the numbered changes below — the LLM doesn't need to find them again.
 
 **Load now** (needed for analysis):
 - `${CLAUDE_SKILL_DIR}/../../references/ai-writing-patterns.md`

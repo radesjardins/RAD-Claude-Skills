@@ -34,7 +34,7 @@ RAD-Claude-Skills/
 │   ├── rad-stripe-fastify-webhooks/   # Stripe webhook handling with Fastify
 │   ├── rad-supabase/                  # Full-stack Supabase development
 │   ├── rad-typescript/                # Production TypeScript standards
-│   ├── rad-writer/                    # Domain-aware writing (9 domains, AI pattern removal)
+│   ├── rad-writer/                    # Domain-aware writing (9 domains) + Python validators for measured AI patterns
 │   └── rad-zod/                       # Zod v4 validation patterns
 └── skills/                            # Claude.ai skills (ZIP upload / Project Knowledge)
     ├── rad-brainstormer/              # Ideation — Claude.ai adaptation of rad-brainstormer
@@ -117,7 +117,7 @@ Not sure which plugins to install first? These five deliver the most value acros
 | [rad-code-review](plugins/rad-code-review/) | Catches bugs, AI anti-patterns, and security issues in your current diff — regardless of language or framework | CLI, Desktop |
 | [rad-session](plugins/rad-session/) | Resource-aware `/startup` briefings (auto-detects MCPs, CLIs, stack), disciplined `/wrapup` with prune protection, PreCompact safety net | CLI, Desktop |
 | [rad-typescript](plugins/rad-typescript/) | Enforces strict mode and catches the 14 most common AI-generated TypeScript mistakes | CLI, Desktop |
-| [rad-writer](plugins/rad-writer/) | Domain-aware writing across 9 content types, with structured review and AI pattern removal | CLI, Desktop, Claude.ai |
+| [rad-writer](plugins/rad-writer/) | Domain-aware writing across 9 content types with measured AI-pattern auditing (Python validators), honest about what detection can/can't claim in 2026 | CLI, Desktop, Claude.ai |
 | [rad-stack-guide](plugins/rad-stack-guide/) | Detects your full stack, recommends which rad-* plugins to install, and orchestrates pre-ship reviews | CLI, Desktop |
 
 Install all five in one pass, or pick the ones that match your current work.
@@ -166,7 +166,7 @@ Each plugin stands alone — the pipeline is a suggestion, not a requirement. Th
 |--------|--------|--------|-------------|-----------|
 | [rad-seo-optimizer](plugins/rad-seo-optimizer/) | 12 | 3 | Full SEO toolkit — site audits, AEO/AI visibility, keyword research, competitor analysis, link building, schema, technical SEO | CLI, Desktop, Claude.ai |
 | [rad-brainstormer](plugins/rad-brainstormer/) | 10 | 3 | Structured ideation — SCAMPER, Six Hats, Five Whys, reverse brainstorming, design sprints, pre-mortem analysis | CLI, Desktop, Claude.ai |
-| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-aware writing across 9 content types — email, blog, web copy, reports, technical docs, social media. Structured review, AI pattern removal, voice profiles | CLI, Desktop, Claude.ai |
+| [rad-writer](plugins/rad-writer/) | 4 | 2 | Domain-aware writing across 9 content types — email, blog, web copy, reports, technical docs, social media. Python validators (`text-stats.py` for burstiness/em-dash/hedging/transitions, `check-blocklist.py` for word-list scans). AI patterns reorganized by durability tier. Honest about detection (impossible) and voice cloning (informal-genre limits). 2.0 honesty pass. | CLI, Desktop, Claude.ai |
 | [rad-para-second-brain](plugins/rad-para-second-brain/) | 5 | 2 | PARA second brain — organize notes, run weekly reviews, progressive summarization, session handoffs, 12 favorite problems | CLI, Desktop |
 | [rad-context-prompter](plugins/rad-context-prompter/) | 2 | 1 | Prompt engineering — write, debug, and optimize prompts for 30+ AI platforms. Includes decompiler for reverse-engineering existing prompts | CLI, Desktop |
 

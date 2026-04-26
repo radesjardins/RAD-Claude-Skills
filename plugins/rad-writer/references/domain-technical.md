@@ -173,8 +173,8 @@ Complete request + response example
 
 ### Code Examples in Documentation
 
-#### The "Single Concept" Rule
-Each code snippet should demonstrate one function, one concept, one technique. When a snippet tries to show initialization, configuration, error handling, and a real API call all at once, the reader can't tell which part solves their problem. Break compound examples into focused, sequential snippets.
+#### One Concept Per Snippet (descriptive principle, not a named rule)
+Universally advocated in technical writing style guides but not a citable named "Rule" — treat as descriptive principle. Each code snippet should demonstrate one function, one concept, one technique. When a snippet tries to show initialization, configuration, error handling, and a real API call all at once, the reader can't tell which part solves their problem. Break compound examples into focused, sequential snippets.
 
 #### Replace Abstract Placeholders
 Use specific, human-readable values instead of abstract placeholders. "Alice sends 50 USD to Bob" is immediately understandable. "User A sends Token X to User B" forces the reader to mentally substitute real values at every step. Concrete examples reduce cognitive load and make edge cases visible.

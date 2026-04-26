@@ -79,17 +79,23 @@ Write the text following these constraints:
 - Follow the positive patterns from the loaded domain reference
 - Avoid the domain-specific anti-patterns
 
-**AI pattern avoidance (active during generation, not post-processing):**
-- Never use words from the always-avoid list in `word-blocklist.md`
+**AI pattern avoidance (active during generation, framed honestly):**
+
+Generate writing that doesn't trip the patterns in `ai-writing-patterns.md`. The goal is craft quality — *this writing happens to also avoid the structural patterns associated with AI output, but framing this as "evading detection" is dishonest in 2026 (perfect AI detection is mathematically impossible — see arXiv:2509.11915).*
+
+Concrete generation constraints:
+- Avoid words from the always-avoid list in `word-blocklist.md` (these are stale clichés regardless of who's writing)
 - Vary sentence length deliberately (target SD > 7)
 - Vary paragraph length — mix short and long
-- Use natural transitions, not mechanical connectors (Furthermore, Additionally)
-- No em dash overuse (max 2-3 per page)
-- No throat-clearing openers
-- No performative hedging clusters
-- No formulaic section structure (topic sentence → evidence → conclusion, every time)
-- No rule-of-three lists unless genuinely appropriate
-- Include at least one specific, concrete detail per major section
+- Use transitions when they mark a real turn in the argument, not as mechanical glue (Furthermore, Additionally, Moreover)
+- Em dashes sparingly — max ~2-3 per 250 words; reserve for genuine emphasis or interruption
+- No throat-clearing openers ("It's important to note...", "In today's [X] landscape...")
+- No performative hedging clusters ("may potentially," "could possibly")
+- Break the topic-sentence → evidence → summary formula sometimes
+- Don't reflexively use rule-of-three lists; vary list lengths
+- **Include specific, concrete detail per major section** (named cases, numbers, dates — this is the durable Tier 1 signal of human writing)
+- Use the same word for the same concept; resist synonym rotation
+- Replace "serves as" / "stands as" with "is" wherever it works
 
 **Voice profile (if loaded):**
 - Match the sentence length distribution from the profile
@@ -130,9 +136,10 @@ If `--coach` flag is set or user says "explain your choices" / "turn on coach mo
 
 ## Critical Rules
 
-1. **Never use words from the always-avoid blocklist** — this is non-negotiable during generation
-2. **Never produce uniform sentence lengths** — actively vary rhythm
+1. **Avoid the always-avoid blocklist words** — these are clichés regardless of authorship
+2. **Vary sentence and paragraph length deliberately** — target burstiness SD > 7
 3. **Gather context before writing** — don't generate blindly from a vague request
 4. **Respect the domain** — an email and a research paper have different rules
-5. **Voice profile is an enhancement, not a gate** — produce excellent output without one
-6. **Don't announce AI pattern avoidance** — just write well. The user doesn't need to know the sausage-making
+5. **Voice profile is an enhancement, not a gate** — produce good output without one; with one, treat it as descriptive baseline (see `references/voice-profile-schema.md` on what voice profiles can and can't do)
+6. **Don't claim to evade AI detection** — the goal is craft quality. See `references/wikipedia-signs-of-ai-writing.md` on why detection-evasion is not a defensible claim in 2026.
+7. **Don't announce the constraints in the output** — just write well. The user reads the text, not the meta-commentary.

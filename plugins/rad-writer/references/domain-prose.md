@@ -69,8 +69,8 @@ The principle: abstraction is forgettable. Specificity is memorable. "The meetin
 
 ### Paragraph Development
 
-#### The "Burrito Paragraph"
-A paragraph should be tightly wrapped around a single topic — if you throw it, it shouldn't spill. This test reveals when a paragraph is trying to cover two ideas or when sentences have drifted from the controlling thought.
+#### The "Burrito Paragraph" (informal pedagogy term)
+A K-12-classroom analogy with no canonical academic source — useful as a mnemonic, not as a citable principle. A paragraph should be tightly wrapped around a single topic — if you threw it, it shouldn't spill. The test reveals when a paragraph is trying to cover two ideas or when sentences have drifted from the controlling thought.
 
 A paragraph is a unit of thought, not a unit of length. Each paragraph should:
 1. Introduce one idea (topic sentence, explicit or implied)
