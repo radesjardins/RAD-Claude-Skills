@@ -1,41 +1,55 @@
 ---
 name: agentic-operations
-description: This skill should be used when the user asks about "daily operating rhythm", "agentic operations", "token optimization", "credential rotation", "autonomous agent patterns", "headless mode", "agent failure recovery", "morning briefing", "agent monitoring", "context compaction strategy", "PARA methodology for agents", or wants guidance on running and maintaining an agentic company day-to-day.
+description: This skill should be used when the user asks about "daily operating rhythm", "agentic operations", "token optimization", "credential rotation", "autonomous agent patterns", "headless mode", "agent failure recovery", "morning briefing", "agent monitoring", "context compaction strategy", "PARA methodology for agents", "Routines", "scheduled agents", or wants guidance on running and maintaining a Claude Code workspace day-to-day.
 user-invocable: true
+allowed-tools: Read Glob Grep
 ---
 
-# Agentic Company Operations Guide
+# Agentic Operations Reference
 
-Reference guide for the daily operating rhythm, autonomous execution patterns, cost optimization, and maintenance practices needed to run an agentic company effectively. Based on The Agentic Bible 2026.
+Practical guidance for daily Claude Code workspace operations. Every claim in this file is grounded in current Anthropic documentation (verified April 2026); the previous version of this skill propagated several outdated and fictional claims that have been removed in 2.0.
 
-## The Three-Checkpoint Daily Rhythm
+## Source
 
-### Morning Review (7:00-8:30 AM)
-- Check overnight scheduled task results — verify output files exist with valid data
-- Scan error logs via dashboards or `ccusage` CLI
-- Run `/cost` or check Anthropic Console for overnight spend against daily budget
-- Verify all MCP servers are responsive
+- [Claude Code official docs](https://docs.claude.com/en/docs/claude-code/)
+- [Best practices for agentic coding](https://code.claude.com/docs/en/best-practices)
+- [Routines (cloud-scheduled tasks)](https://claude.ai/code/routines) — formerly called "Cowork"
+- [Anthropic pricing and prompt caching](https://docs.claude.com/en/docs/build-with-claude/prompt-caching)
+
+---
+
+## The three-checkpoint daily rhythm
+
+This is one workable pattern; not the only one. Adapt to your team's reality.
+
+### Morning review (suggested 15-30 min)
+- Check overnight scheduled task results — verify expected output files exist with valid data
+- Scan error logs / dashboards for the prior 24 hours
+- Run `/cost` or check Anthropic Console for spend against your daily budget
+- Verify connected MCP servers are responsive (`/mcp` in Claude Code)
 - Check credential expiration dates (flag anything due within 7 days)
-- Set the day's agent task queue based on results
+- Set the day's task queue based on results
 
-### Midday Monitoring (12:00-1:00 PM)
-- Watch running agents for stalls (no checkpoint heartbeat in >10 minutes)
-- Monitor context window utilization (intervene before 85%)
-- Check current session token burn rate
+### Midday spot-check (~10 min)
+- Watch in-progress agents for stalls (no checkpoint heartbeat in >10 minutes)
+- Monitor context window utilization on long-running sessions (intervene before ~85%)
+- Check session-level token burn rate
 - Handle agents hitting errors or rate limits
 - Kill zombie tasks and re-queue with adjusted parameters
 
-### Evening Wrap-Up (5:00-6:00 PM)
-- Assess quality of all agent output, accept or reject
+### End-of-day wrap (~15 min)
+- Assess quality of agent output, accept or reject
 - Review total daily token spend
-- Queue overnight tasks using Batch API (50% discount) for non-urgent work
+- Queue overnight tasks (if you use Routines or scheduled agents)
 - Plan tomorrow's priority tasks
 
-## Autonomous Execution Patterns
+---
 
-### Headless Mode (`-p` / `--print`)
+## Autonomous execution patterns
 
-Run Claude Code as a one-shot process for CI/CD, cron jobs, and scripted workflows:
+### Headless mode (`claude -p` / `--print`)
+
+Run Claude Code as a one-shot process for CI/CD, cron jobs, scripted workflows.
 
 ```bash
 claude -p "Implement the user profile endpoint from tasks/plans/user-profile.md" \
@@ -45,85 +59,111 @@ claude -p "Implement the user profile endpoint from tasks/plans/user-profile.md"
   --output-format json
 ```
 
-Three permission strategies for autonomous runs:
+All of these flags are documented and current as of April 2026.
+
+**Three permission strategies for autonomous runs:**
 1. `--allowedTools` whitelist — safest, explicit tool list
-2. Auto mode (Sonnet classifier) — middle ground, 3 denials or 20 total terminates
+2. `--permission-mode auto` — middle ground; the auto mode lets Claude decide whether to prompt. Specific termination behavior (e.g., "stops after N denials") is not documented in detail; verify behavior in your context before relying on it for unattended runs.
 3. `--dangerously-skip-permissions` — sandboxed environments only
 
-### The `/loop` Command
+### `/loop` (in-session polling)
 
-Session-scoped recurring tasks:
-- Syntax: `/loop <interval> <prompt>`
-- Intervals: seconds (min 1m), minutes, hours, days
-- Cron expressions: standard 5-field (`minute hour day month weekday`)
-- Session-scoped: dies when terminal closes
-- 3-day auto-expiration
-- Up to 10% jitter on recurring tasks
+`/loop <interval> <prompt>` runs the prompt repeatedly while the session stays open. Examples:
 
-### Fresh-Agent Iterative Pattern ("Ralph Wiggum")
+```
+/loop 5m /check-deploy
+/loop 2h /review-pending-prs
+```
 
-Most reliable autonomous pattern: pick task -> implement -> validate (run tests) -> commit -> update status -> reset context -> repeat. A fresh agent is spawned each iteration to prevent context degradation. State is persisted through files (task list, CLAUDE.md, git history, test results).
+Omit the interval to let Claude self-pace. **`/loop` does NOT support cron expressions** — that's a different feature (`/schedule`, see Routines below). `/loop` dies when the session ends.
 
-## Token Cost Optimization
+### `/schedule` and Routines (cloud-scheduled tasks)
 
-Average Claude Code cost: ~$6/developer/day (90% of users below $12).
+For scheduled tasks that run independent of any open session, use **Routines** at [claude.ai/code/routines](https://claude.ai/code/routines) or via the `/schedule` command. Key facts:
 
-### Strategies (60-80% reduction possible)
+- **Run on Anthropic-managed cloud infrastructure.** Your laptop can be closed, asleep, off — the routine still fires at its scheduled time.
+- **Schedule options:** hourly, daily, weekdays, weekly, or one-off manual runs. Cron expressions supported.
+- **A few minutes of stagger** is normal at scheduled times (load distribution).
 
-1. **Prompt caching** — cache read tokens cost 10% of standard input. Pays off after single read within 5-minute window.
-2. **Model routing** — Sonnet for 80% of tasks, Opus only for architecture/review, Haiku for classification.
-3. **Context hygiene** — `/clear` between unrelated tasks, `/compact` with custom instructions.
-4. **Token-efficient tool use** — beta header `token-efficient-tools-2025-02-19`.
-5. **Output constraints** — output tokens cost 5x input, so format constraints have outsized impact.
+This is the correct mechanism for "every Monday morning, generate the deploy-readiness report" or "in two weeks, open a cleanup PR for the feature flag we just shipped."
 
-## Credential Rotation Schedule
+### Fresh-agent iterative pattern ("Ralph Wiggum")
 
-| Credential | Rotation Period |
-|-----------|----------------|
-| Production API keys | 60-90 days |
-| OAuth access tokens | 15-30 minutes (automatic) |
-| OAuth refresh tokens | 7-14 days |
-| MCP server credentials | 60-90 days |
+A reliable autonomous pattern: pick task → implement → validate (run tests) → commit → update status → reset context → repeat. A fresh agent each iteration prevents context degradation. State persists through files (task list, CLAUDE.md, git history, test results).
+
+This pattern shows up in many production agentic-coding workflows. The cost: each iteration pays the context-rebuild tax. The benefit: each iteration's reasoning is fresh and uncontaminated by prior failed attempts.
+
+---
+
+## Token cost optimization
+
+Anthropic's `/cost` telemetry produces an average around **$6/dev/day** in some published summaries; the company's enterprise documentation cites a **$13/active-day** figure for organizational deployments. The two numbers cover different cohorts. Either way: 90% of users are well below $30/active-day. Heavy autonomous use can blow past these without noticing.
+
+### Strategies that move the needle
+
+1. **Prompt caching** — cache reads cost 0.1× standard input tokens. The default cache TTL is 5 minutes (this is a recent regression from a previous 1-hour default — track Anthropic's changelog if you need the 1-hour tier). Pays off after a single read within the TTL window for the 5-minute tier.
+2. **Model routing** — Sonnet for ~80% of tasks, Opus for architecture/review/judgment-heavy work, Haiku for classification or pattern-matching jobs.
+3. **Context hygiene** — `/clear` between unrelated tasks, `/compact` with custom instructions when switching focus.
+4. **Output constraints** — output tokens cost ~5x input. Format constraints ("respond in 3 bullets") have outsized impact.
+5. **Avoid stale beta headers** — the previous version of this skill recommended the `token-efficient-tools-2025-02-19` beta header. Anthropic's current docs explicitly state this header is a no-op on Claude 4+ models and should be removed. **Don't add it.**
+
+---
+
+## Credential rotation
+
+| Credential | Rotation period |
+|---|---|
+| Production API keys | 60–90 days |
+| OAuth access tokens | 15–30 minutes (automatic) |
+| OAuth refresh tokens | 7–14 days |
+| MCP server credentials | 60–90 days |
 | SSH keys | Annually (or on compromise) |
 
-Automate via CI/CD. Implement grace periods (old + new keys valid simultaneously). Never hardcode.
+Automate via your CI/CD pipeline or secrets manager. Implement grace periods (old + new keys valid simultaneously). Never hardcode.
 
-## Failure Modes and Recovery
+---
 
-### Common Failures
-- **Loop stalls** — agent calls same tool with identical args. Fix: external deduplication enforcement.
-- **Context exhaustion** — silent quality degradation before window fills. Fix: compaction + sub-agent decomposition.
-- **Zombie tasks** — alive by metrics but producing no output. Fix: wall-clock timeouts at 2x expected duration.
+## Failure modes and recovery
 
-### Recovery Preference Order
+### Common failures
+- **Loop stalls** — agent calls the same tool with identical args repeatedly. Fix: external deduplication enforcement (a hook or wrapper script that detects the pattern).
+- **Context exhaustion** — silent quality degradation before the window fills. Symptoms: vague responses, hallucinated paths, dropped instructions. Fix: compact + sub-agent decomposition + the fresh-agent iterative pattern.
+- **Zombie tasks** — alive by metrics but producing no useful output. Fix: wall-clock timeouts at 2× expected duration.
+
+### Recovery preference order
 1. Resume from checkpoint
 2. Degrade gracefully with partial results
 3. Kill and re-queue
 4. Escalate to human
 
-### Architecture Principles
+### Architecture principles
 - **Idempotent operations** — running a task twice must be safe
 - **Explicit timeouts** on every external call
 - **State externalization** to files (enables process restart without replay)
 - **External loop guardrails** — runtime enforces termination limits, not the agent
 
-## PARA for Agent Context
+---
 
-The PARA methodology (Projects, Areas, Resources, Archives) maps to agentic architecture:
+## PARA for workspace context
 
-- **Projects** (short-term, defined goals) -> Active engineering projects with dedicated agents
-- **Areas** (ongoing responsibilities) -> Company divisions with standing CLAUDE.md instructions
-- **Resources** (reference material) -> Shared knowledge bases, documentation, vendor docs
-- **Archives** (inactive items) -> Completed projects, old specs, deprecated configs
+The PARA methodology (Tiago Forte) maps cleanly to a workspace folder hierarchy:
 
-The folder hierarchy IS the PARA structure. Division folders are Areas. Project folders are Projects. The `references/` and `vendor-docs/` folders are Resources.
+- **Projects** (short-term, defined goals) → Active engineering projects with dedicated agents
+- **Areas** (ongoing responsibilities) → Workspace divisions with standing CLAUDE.md instructions
+- **Resources** (reference material) → Shared knowledge bases, vendor docs
+- **Archives** (inactive items) → Completed projects, old specs, deprecated configs
 
-## Cowork Scheduling
+The folder hierarchy IS the PARA structure. Division folders are Areas. Project folders are Projects. The `references/` and `vendor-docs/` folders are Resources. This is the most credible organizational framework for structuring agent context.
 
-Cowork supports: hourly, daily, weekly, weekdays, manual. Critical constraint: **computer must be awake and Claude Desktop open**. Missed runs catch up with one execution on wake.
+---
 
-For always-on operation:
-- Dedicated machine that stays powered on
-- Energy management settings to prevent sleep
-- Docker containers or cloud VMs for persistent compute
-- GitHub Actions for periodic autonomous work
+## Honest scope of this skill
+
+This skill is a **reference guide**, not an executable workflow. It describes patterns; you decide which to adopt. Specifically:
+
+- The "three-checkpoint rhythm" is one workable pattern, not a prescription
+- The cost figures are starting estimates; your actual spend depends entirely on usage patterns
+- The credential rotation periods are common-sense defaults, not regulatory minimums
+- The PARA mapping works well for many people; if your workflow doesn't match, ignore it
+
+When operational claims appear elsewhere in the plugin docs, they should be cross-checked against this file. If they conflict, this file is more recent and more honest.

@@ -45,17 +45,22 @@ All code must be production-quality on first review.
 Software development division. All application projects live here.
 
 ## Conventions
-- Every project uses the wrapper/repo pattern (management context above git, dev instructions inside git)
+- Default project layout: project root = git root (Anthropic-canonical). Wrapper-above-git layout is opt-in via `scaffold-project --wrapper`; see that skill for tradeoffs.
 - Shared packages live in `shared-packages/` for cross-project code
 - Code review is mandatory before merge — use the reviewer agent
 - All projects must have CI/CD configured before first production deploy
 
 ## Project structure
-Each project follows:
-- `{project}/CLAUDE.md` — Project management context (sprint goals, architecture decisions)
-- `{project}/task-specs/` — Agent task specifications
+Default layout (each project):
+- `{project}/CLAUDE.md` — Committed project context
+- `{project}/CLAUDE.local.md` — Personal/gitignored notes (Anthropic's recommended split)
+- `{project}/.claude/` — Settings, agents, skills
+
+Wrapper layout (opt-in only — see scaffold-project warnings):
+- `{project}/CLAUDE.md` — Project management context (above git)
+- `{project}/task-specs/` — Agent task specs (above git)
 - `{project}/repo/` — Git boundary (actual source code)
-- `{project}/artifacts/` — Cowork output staging area
+- `{project}/artifacts/` — Routines/scheduled-task output staging area
 
 ## Standards
 - Test coverage minimum: 80% on changed files

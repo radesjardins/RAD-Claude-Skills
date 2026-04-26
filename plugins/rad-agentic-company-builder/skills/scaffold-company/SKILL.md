@@ -1,117 +1,146 @@
 ---
 name: scaffold-company
-description: This skill should be used when the user says "scaffold a company", "create agentic company", "set up company structure", "build company folder structure", "initialize agentic workspace", "create company hierarchy", "set up divisions", or wants to create the full agentic company directory layout with CLAUDE.md files at every level. Also triggers on "agentic bible setup" or "company architecture".
-argument-hint: "[company-name] [--divisions engineering,product,operations,marketing,finance]"
+description: This skill should be used when the user says "scaffold a company", "set up workspace", "create company structure", "build company folder structure", "initialize agentic workspace", "create company hierarchy", "set up divisions", or wants to create a Claude Code workspace with hierarchical CLAUDE.md context files at each directory level. Be honest about what this creates: organized folders with context files, not a self-running company.
+argument-hint: "[company-name] [--divisions engineering,product,operations,marketing,finance] [--root path] [--skip-divisions]"
 user-invocable: true
+allowed-tools: Read Glob Grep Write Edit Bash
 ---
 
-# Scaffold Agentic Company Structure
+# Scaffold a Claude Code Workspace
 
-Create a complete agentic company folder hierarchy following the architecture from The Agentic Bible 2026. The structure uses CLAUDE.md files at every directory level to provide scoped agent context — company-wide rules at the root, division-specific conventions in the middle, and project-specific instructions at the bottom.
+Create a folder hierarchy with CLAUDE.md context files at each level. Claude Code discovers CLAUDE.md files by walking upward from the current working directory, so a hierarchical folder structure becomes a hierarchical instruction set: company-wide rules at the root, division-specific conventions in the middle, project-specific instructions at the bottom.
 
-## Core Architecture Principle
+**What this skill creates:** organized folders + context files + a sane permissions config.
 
-Claude Code discovers CLAUDE.md files by walking **upward from the current working directory** to the filesystem root. A hierarchical folder structure directly translates into a hierarchical instruction set. The folder tree IS the org chart for agents.
+**What this skill does NOT create:** any agent that operates marketing, finance, operations, or product. Those are filing organization. Agents come from `generate-agents` (engineering team) and `add-function-agent` (opt-in business functions where verified write-capable MCPs exist).
 
-## Scaffolding Process
+## Source of the patterns
 
-### Step 1: Gather Requirements
+- Hierarchical CLAUDE.md discovery: documented in [Claude Code Memory & CLAUDE.md docs](https://docs.claude.com/en/docs/claude-code/memory)
+- Permission allow/deny patterns: [Claude Code Settings reference](https://docs.claude.com/en/docs/claude-code/settings)
+- Folder organization conventions: opinionated by this plugin's author. Reasonable defaults; not Anthropic-canonical.
 
-Collect from the user (use `$ARGUMENTS` if provided, otherwise ask interactively):
+## Workflow
 
-1. **Company name** — used for root directory and CLAUDE.md identity (e.g., "radorigin", "acmecorp")
-2. **Root location** — where to create the company directory (default: user's home directory)
-3. **Divisions** — which divisions to create. Standard set:
-   - `engineering/` — Software development
-   - `product/` — Specs, roadmaps, user research
-   - `operations/` — Infrastructure, DevOps, runbooks
-   - `marketing/` — Content, campaigns, brand
-   - `finance/` — Invoices, projections, tax
-4. **Founder/team context** — solo founder or team size (affects CLAUDE.md tone)
-5. **Primary tech stack** — used in engineering CLAUDE.md (e.g., "Next.js, React, TypeScript, PostgreSQL")
+### Step 1: Gather requirements
 
-### Step 2: Create Directory Structure
+Use `$ARGUMENTS` if provided, otherwise ask:
 
-Generate the full tree using Bash:
+1. **Company name** — used for root directory and CLAUDE.md identity (e.g., `radorigin`, `acmecorp`)
+2. **Root location** — default: user's home directory; user may override
+3. **Divisions** — which division folders to create. Default set: `engineering`, `product`, `operations`, `marketing`, `finance`. **These are filing organization** — they get CLAUDE.md context files describing the division's purpose, but no agents until you opt in via `add-function-agent`.
+4. **Primary tech stack** — for the engineering CLAUDE.md (e.g., "Next.js, React, TypeScript, PostgreSQL")
+5. **Team context** — solo founder vs. team; affects CLAUDE.md tone but not structure
+
+### Step 2: Create directory structure
 
 ```
 {company}/
-├── CLAUDE.md
+├── CLAUDE.md                          # Company-wide context
 ├── .claude/
-│   ├── settings.json
+│   ├── settings.json                  # Permissions allow/deny
 │   └── rules/
 │       ├── code-standards.md
 │       └── security-policy.md
 ├── engineering/
-│   ├── CLAUDE.md
-│   └── (projects added via scaffold-project skill)
-├── product/
+│   ├── CLAUDE.md                      # Engineering division context
+│   └── (projects added via scaffold-project)
+├── product/                           # Optional, --skip-divisions to omit
 │   ├── CLAUDE.md
 │   ├── roadmaps/
 │   ├── specs/
 │   └── user-research/
-├── operations/
+├── operations/                        # Optional
 │   ├── CLAUDE.md
 │   ├── runbooks/
 │   ├── infrastructure/
 │   └── vendor-docs/
-├── marketing/
+├── marketing/                         # Optional
 │   ├── CLAUDE.md
 │   ├── content/
 │   ├── campaigns/
 │   └── brand/
-└── finance/
+└── finance/                           # Optional
     ├── CLAUDE.md
     ├── invoices/
     ├── projections/
     └── tax/
 ```
 
-### Step 3: Generate CLAUDE.md Files
+The non-engineering division folders are **organizational only** until you add a function-specific agent for that division (e.g., `/rad-agentic-company-builder:add-function-agent --function bookkeeping` puts a bookkeeping-agent under `finance/.claude/agents/`).
 
-Create a CLAUDE.md at each level with appropriate content:
+### Step 3: Generate CLAUDE.md files
 
-**Company root CLAUDE.md** must include:
+Load `references/claude-md-templates.md` and create a CLAUDE.md at each level.
+
+**Company root CLAUDE.md should include:**
 - Identity block (company name, structure, team size)
 - Universal rules (branch policy, secrets policy, test-before-complete, root-cause-over-patches)
-- Code style standards (strict TypeScript, named exports, function/file length limits, actionable errors)
+- Code style standards (strict TypeScript, named exports, function/file length limits, actionable errors) — these are opinions; mark as such or omit if you disagree
 - Communication standards (completion reports, blocker reporting)
 
-**Division CLAUDE.md files** must include:
-- Division identity and purpose
-- Division-specific conventions and workflows
-- Scoped rules that only apply when agents work inside that division
+**Division CLAUDE.md files should include:**
+- Division purpose
+- Conventions and workflows specific to that division
+- Note about which function-agents (if any) operate in this division
 
-Refer to `references/claude-md-templates.md` for complete template content for each division.
+Keep each file under 200 lines. The Anthropic threshold is "frontier LLMs reliably follow 150–200 instructions"; bloated context files degrade reliability.
 
-### Step 4: Generate Settings and Rules
+### Step 4: Generate settings and rules
 
 **`.claude/settings.json`** at company root:
-- Permission allow-list for safe commands (git, npm, node, standard file ops)
-- Permission deny-list for dangerous patterns (rm -rf /, curl pipe bash, .env reads)
-- NODE_ENV=development default
+- `permissions.allow` — safe commands the user shouldn't have to approve every time (`git status`, `npm test`, etc.)
+- `permissions.deny` — dangerous patterns (`rm -rf /`, `curl ... | bash`, reads of `.env`)
+- `env.NODE_ENV: development` (override per-project as needed)
 
-**`.claude/rules/code-standards.md`**:
-- TypeScript strict mode, no `any` types
-- Named exports preferred
-- Function/file length limits
-- Conventional commits format
+**`.claude/rules/code-standards.md`** and **`.claude/rules/security-policy.md`** — opinionated but useful starting points; the user owns them after generation.
 
-**`.claude/rules/security-policy.md`**:
-- Never expose secrets in code or logs
-- Parameterized queries only
-- Input validation at boundaries
-- CORS restricted in production
+### Step 5: Run the structure validator
 
-### Step 5: Report and Next Steps
+```bash
+python3 ${plugin_root}/scripts/audit-structure.py <root> --skip-projects --skip-hooks --skip-mcp --skip-agents
+```
 
-After scaffolding, summarize what was created and suggest next steps:
-1. Run `scaffold-project` to add projects within engineering/
-2. Run `generate-agents` to populate agent definitions
-3. Run `configure-hooks` to set up quality gates
+This catches: missing CLAUDE.md files, JSON syntax errors in settings.json, malformed structure. The skip flags are because nothing else exists yet — the validator is just confirming the foundation.
 
-## Additional Resources
+If clean, report what was created. If not, surface the findings before declaring done.
 
-### Reference Files
+### Step 6: Report and next steps
 
-- **`references/claude-md-templates.md`** — Complete CLAUDE.md content templates for company root and all five divisions
+Tell the user:
+
+```
+Workspace scaffolded at <path>.
+
+What's there now:
+- Hierarchical CLAUDE.md at company root + each division
+- Permission allow/deny defaults
+- Folder organization for engineering + (optional) other divisions
+
+What's NOT there yet:
+- No agents (run: generate-agents for the engineering team)
+- No projects (run: scaffold-project to add one)
+- No MCP integrations (run: configure-mcp)
+- No hooks (run: configure-hooks)
+- No business-function agents (run: add-function-agent --function <name>)
+
+The non-engineering divisions are folder organization only. They have no agents or MCP wiring unless you explicitly add them.
+```
+
+## Mode flags
+
+- `--divisions <list>` — Comma-separated. Default: `engineering,product,operations,marketing,finance`.
+- `--skip-divisions` — Skip all non-engineering divisions. Useful if you only want the engineering scaffold.
+- `--root <path>` — Where to create the company directory. Default: user's home directory.
+
+## What this skill does NOT do
+
+- Does not create agents (use `generate-agents` or `add-function-agent`).
+- Does not configure hooks (use `configure-hooks`).
+- Does not configure MCP integrations (use `configure-mcp` or `add-function-agent`).
+- Does not enforce that the user actually uses the structure — Claude Code respects whatever folder organization you have, this skill just creates a starting point.
+- Does not pretend the marketing/ folder is an "AI-driven marketing division." It's a folder. Treat it as filing.
+
+## Reference
+
+- `references/claude-md-templates.md` — Complete CLAUDE.md content templates for company root and each division

@@ -14,7 +14,7 @@ RAD-Claude-Skills/
 │   └── coolify-mcp/                   # @radoriginllc/coolify-mcp — MCP server for Coolify API
 ├── plugins/                           # Claude Code CLI & Desktop plugins (multi-skill bundles)
 │   ├── rad-a11y/                      # WCAG 2.2 AA accessibility toolkit
-│   ├── rad-agentic-company-builder/   # AI-agent-driven company infrastructure
+│   ├── rad-agentic-company-builder/   # Workspace scaffolding + opt-in business-function agents (where MCPs exist)
 │   ├── rad-astro/                     # Astro 5/6 framework standards
 │   ├── rad-brainstormer/              # Ideation methodologies & creative tools
 │   ├── rad-chrome-extension/          # MV3 Chrome extension development
@@ -189,7 +189,7 @@ Each plugin stands alone — the pipeline is a suggestion, not a requirement. Th
 
 | Plugin | Skills | Agents | What It Does | Works with |
 |--------|--------|--------|-------------|-----------|
-| [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 7 | 1 | AI-agent company infrastructure — company scaffolding, agent team generation, hooks, MCP configs, operational patterns | CLI, Desktop |
+| [rad-agentic-company-builder](plugins/rad-agentic-company-builder/) | 8 | 1 | Claude Code workspace scaffolding + opt-in business-function agents for verified write-capable MCPs (Stripe, HubSpot, QuickBooks, Intercom, Vanta, DocuSign, etc.). Ships Python validators (`audit-structure`, `validate-hooks`, `check-mcp-config`) that catch fictional hook events, hardcoded secrets, structural gaps. Honest about what AI agents can/can't do in 2026. | CLI, Desktop |
 
 ---
 

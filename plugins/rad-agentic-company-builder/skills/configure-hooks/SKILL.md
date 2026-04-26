@@ -1,26 +1,60 @@
 ---
 name: configure-hooks
-description: This skill should be used when the user says "configure hooks", "set up quality gates", "add TaskCompleted hook", "configure PostToolUse hook", "set up permission hooks", "create hook configuration", "add typecheck hook", "set up test-on-complete hook", or wants to configure event-driven hooks and quality gates for their agentic company project.
-argument-hint: "[--project path/to/project/repo] [--hooks quality-gates,typecheck-on-edit,format-on-write]"
+description: This skill should be used when the user says "configure hooks", "set up quality gates", "add PostToolUse hook", "set up permission hooks", "create hook configuration", "add typecheck hook", "set up secret-scan hook", or wants to configure event-driven hooks for their Claude Code project. Validates against the documented Claude Code event list — catches fictional event names before they end up in settings.json.
+argument-hint: "[--project path/to/project] [--hooks quality-gates,typecheck-on-edit,format-on-write,secret-scan,compact-restore]"
 user-invocable: true
+allowed-tools: Read Glob Grep Write Edit Bash
 ---
 
-# Configure Hooks and Quality Gates
+# Configure Hooks
 
-Set up deterministic enforcement hooks for an agentic company project. Unlike CLAUDE.md instructions which Claude may interpret loosely, hooks execute external commands that mechanically block or allow agent actions.
+Set up event-driven hooks in `.claude/settings.json`. Hooks execute external commands; their exit codes mechanically affect agent behavior in ways that CLAUDE.md instructions cannot.
 
-## Core Concept
+**This skill is paired with `validate-hooks.py`.** After writing the config, the skill runs the validator to catch any fictional event names — earlier versions of this plugin propagated four hook events that don't actually exist in Claude Code (`PostToolUseFailure`, `SubagentStart`, `Setup`, `InstructionsLoaded`).
 
-Hooks are configured in `.claude/settings.json`. They fire on specific events and their exit codes control behavior:
-- **Exit 0** — Proceed (stdout added to context for some events)
-- **Exit 2** — Block the action (stderr becomes feedback to Claude)
-- **Any other exit** — Logged as error, does not block
+## Source
 
-## Standard Hook Patterns
+- Hook event list and semantics: [Claude Code Hooks Reference](https://docs.claude.com/en/docs/claude-code/hooks) (verified April 2026)
+- Exit code semantics, matcher behavior, parallel execution: same source
 
-### Quality Gate: TaskCompleted
+## Hook event semantics (verified April 2026)
 
-The most critical hook. Runs typecheck and tests when an agent marks a task complete. Blocks completion if either fails:
+```
+Exit 0  →  Proceed (stdout added to context for some events; parsed as JSON if applicable)
+Exit 2  →  Block the action; stderr becomes feedback to Claude
+Other   →  Logged as non-blocking error; stderr shown to Claude
+```
+
+Note: Exit `1` is treated as non-blocking error — **not** as "failure" in the Unix sense. If you want to block, use exit `2`.
+
+## Documented hook events
+
+These are the only events Claude Code fires (April 2026). Use any other name and the hook will silently never fire.
+
+| Event | When | Matcher? | Exit 2 blocks? |
+|---|---|---|---|
+| `PreToolUse` | Before tool executes | Yes | Yes |
+| `PostToolUse` | After tool succeeds | Yes | No (tool already ran) |
+| `UserPromptSubmit` | User submits prompt | No | Yes |
+| `SessionStart` | Session begins or resumes from compact | Yes (`compact`) | No |
+| `SessionEnd` | Session ends | No | No |
+| `Stop` | Agent about to stop | No | Yes (loop risk — needs guard) |
+| `SubagentStop` | Sub-agent completes | No | No |
+| `PreCompact` | Before context compaction | No | No |
+| `Notification` | Permission prompt, idle, auth, elicitation | No | No |
+| `PermissionRequest` | Permission dialog appears | No | No |
+| `ConfigChange` | Settings file modified | No | No |
+| `WorktreeCreate` / `WorktreeRemove` | Git worktree events | No | No |
+| `TeammateIdle` *(Agent Teams, experimental)* | Teammate going idle | No | Yes (keeps teammate working) |
+| `TaskCompleted` *(Agent Teams, experimental)* | Task being marked complete | No | Yes (prevents completion) |
+
+**Matcher behavior** (often misunderstood): the `matcher` field uses **exact string match** when no special characters are present. Regex matching kicks in only when the value contains regex metacharacters like `|`, `^`, `$`, `.*`. So `"Bash"` matches the Bash tool exactly; `"Edit|Write"` matches either; `"^Notebook"` is regex.
+
+## Standard hook patterns
+
+### Quality gate on TaskCompleted (experimental — Agent Teams only)
+
+Runs typecheck + tests when a teammate marks a task complete. Blocks completion if either fails. **Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.**
 
 ```json
 {
@@ -28,7 +62,7 @@ The most critical hook. Runs typecheck and tests when an agent marks a task comp
     "TaskCompleted": [{
       "hooks": [{
         "type": "command",
-        "command": "cd \"$CLAUDE_PROJECT_DIR\" && npm run typecheck 2>&1 | tail -20; TC=$?; npm test 2>&1 | tail -30; TEST=$?; if [ $TC -ne 0 ] || [ $TEST -ne 0 ]; then echo 'BLOCKED: Type check or tests failed. Fix before completing.' >&2; exit 2; fi",
+        "command": "cd \"$CLAUDE_PROJECT_DIR\" && npm run typecheck 2>&1 | tail -20; TC=$?; npm test 2>&1 | tail -30; TEST=$?; if [ $TC -ne 0 ] || [ $TEST -ne 0 ]; then echo 'BLOCKED: typecheck or tests failed' >&2; exit 2; fi",
         "timeout": 120
       }]
     }]
@@ -36,9 +70,9 @@ The most critical hook. Runs typecheck and tests when an agent marks a task comp
 }
 ```
 
-### Typecheck on Edit: PostToolUse
+### Typecheck on edit (PostToolUse)
 
-Warns (but does not block) when a Write or Edit introduces TypeScript errors:
+Warns (does not block — PostToolUse can't block) when an edit introduces TypeScript errors:
 
 ```json
 {
@@ -47,7 +81,7 @@ Warns (but does not block) when a Write or Edit introduces TypeScript errors:
       "matcher": "Write|Edit",
       "hooks": [{
         "type": "command",
-        "command": "cd \"$CLAUDE_PROJECT_DIR\" && npm run typecheck 2>&1 | tail -5; if [ $? -ne 0 ]; then echo 'Warning: TypeScript errors introduced by this edit.' >&2; fi; exit 0",
+        "command": "cd \"$CLAUDE_PROJECT_DIR\" && npm run typecheck 2>&1 | tail -5; if [ $? -ne 0 ]; then echo 'Warning: TypeScript errors after edit' >&2; fi; exit 0",
         "timeout": 30
       }]
     }]
@@ -55,9 +89,7 @@ Warns (but does not block) when a Write or Edit introduces TypeScript errors:
 }
 ```
 
-### Context Restoration After Compaction: SessionStart
-
-Re-injects critical context after automatic compaction:
+### Context restoration after compaction (SessionStart)
 
 ```json
 {
@@ -66,59 +98,101 @@ Re-injects critical context after automatic compaction:
       "matcher": "compact",
       "hooks": [{
         "type": "command",
-        "command": "echo 'Reminder: Current sprint focus is [SPRINT_GOAL]. Use the project agents for implementation.'"
+        "command": "echo 'Reminder: current sprint focus is [SPRINT_GOAL]. Use the project agents for implementation.'"
       }]
     }]
   }
 }
 ```
 
-## Configuration Process
+### Secret scan before write (PreToolUse)
 
-### Step 1: Determine Target
+```json
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Write|Edit",
+      "hooks": [{
+        "type": "command",
+        "command": "echo \"$TOOL_INPUT_CONTENT\" | grep -iE '(api[_-]?key|secret|password|token)\\s*[=:]\\s*[\"'\\'']?[A-Za-z0-9+/]{20,}' && echo 'BLOCKED: possible secret in content' >&2 && exit 2 || exit 0",
+        "timeout": 5
+      }]
+    }]
+  }
+}
+```
 
-Find the project's `.claude/settings.json`. If it exists, read current content and merge. If not, create it.
+### Stop hook with guard (avoid infinite loop)
 
-### Step 2: Select Hook Patterns
+If you want a Stop hook that exits 2 sometimes (preventing the agent from stopping), use a sentinel file or counter to ensure the hook eventually allows the stop:
 
-Present available patterns. If `$ARGUMENTS` specifies hooks, use those. Standard options:
+```json
+{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "COUNT=$(cat /tmp/stop-count 2>/dev/null || echo 0); if [ $COUNT -ge 3 ]; then rm -f /tmp/stop-count; exit 0; fi; echo $((COUNT+1)) > /tmp/stop-count; echo 'Continuing — N more cycles allowed' >&2; exit 2",
+        "timeout": 5
+      }]
+    }]
+  }
+}
+```
+
+Without the guard, an unconditional `exit 2` on Stop creates an infinite loop. The validator script flags this pattern.
+
+## Workflow
+
+### Step 1: Determine target
+
+Find `.claude/settings.json`. Read existing if present (so the merge preserves other config). Create otherwise.
+
+### Step 2: Select hook patterns
+
+Present the menu. If `--hooks` specifies a subset, use those. Standard options:
 
 | Pattern | Event | Behavior |
-|---------|-------|----------|
-| **quality-gates** | TaskCompleted | Block completion if tests/typecheck fail |
-| **typecheck-on-edit** | PostToolUse (Write\|Edit) | Warn on TypeScript errors after edits |
-| **format-on-write** | PostToolUse (Write\|Edit) | Auto-format with Prettier after writes |
-| **secret-scan** | PreToolUse (Write\|Edit) | Scan for secrets in content about to be written |
-| **compact-restore** | SessionStart (compact) | Re-inject context after compaction |
+|---|---|---|
+| `quality-gates` | TaskCompleted (Agent Teams only) | Block completion if tests/typecheck fail |
+| `typecheck-on-edit` | PostToolUse (Write\|Edit) | Warn on TypeScript errors after edits |
+| `format-on-write` | PostToolUse (Write\|Edit) | Auto-format with Prettier |
+| `secret-scan` | PreToolUse (Write\|Edit) | Block writes containing apparent secrets |
+| `compact-restore` | SessionStart (compact) | Re-inject context after compaction |
+| `stop-guard` | Stop | Loop guard pattern (use carefully) |
 
-### Step 3: Customize Commands
+### Step 3: Customize commands per stack
 
-Adjust commands for the project's tech stack:
-- `npm run typecheck` -> `pnpm typecheck` or `mypy app/`
-- `npm test` -> `pytest` or `bun test`
-- Timeout values based on project test suite speed
+- `npm run typecheck` → `pnpm typecheck`, `bun typecheck`, `mypy app/`
+- `npm test` → `pnpm test`, `pytest`, `cargo test`
+- Adjust timeouts based on test-suite duration
 
-### Step 4: Generate Configuration
+### Step 4: Merge into settings.json
 
-Merge hook configuration into `.claude/settings.json`, preserving any existing permissions and settings.
+Read existing `.claude/settings.json` (if any), merge in the new hook entries, preserve other config. Write the result.
 
-### Step 5: Add Agent Teams Support (Optional)
+### Step 5: Run the validator
 
-If Agent Teams is enabled, add:
-- **TeammateIdle** hook to auto-assign follow-up tasks
-- **TaskCompleted** hook for team task validation
-- Enable experimental flag: `"env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" }`
+```bash
+python3 ${plugin_root}/scripts/validate-hooks.py <path-to-settings.json>
+```
 
-### Step 6: Document and Warn
+If the validator finds fictional events, broken handler shapes, or unguarded Stop-exit-2 patterns, surface them before declaring done. The validator is the safety net; do not skip this step.
 
-Inform the user about important hook behaviors:
-- `matcher` is a **case-sensitive regex** against tool names
-- All matching hooks run in **parallel** with configurable timeout
-- Stop hooks with exit 2 can create infinite loops — guard logic is essential
-- Hook exit code 2 means "block and feedback", not "error"
+### Step 6: Report
 
-## Additional Resources
+Tell the user:
+- Which hooks were added
+- What each will do (block / warn / inform)
+- Important caveats (Agent Teams experimental flag if `TaskCompleted` was used; loop risk for unguarded Stop hooks)
 
-### Reference Files
+## What this skill does NOT do
 
-- **`references/hook-patterns.md`** — Advanced hook patterns including secret scanning, auto-formatting, Agent Teams hooks, and common pitfalls
+- Does not invent hook events. Anything not in the documented event list will be rejected by `validate-hooks.py`.
+- Does not test that the hooks fire correctly — restart Claude Code and exercise the relevant tool to verify.
+- Does not configure Agent Teams (experimental — see `agentic-operations` for the env var to enable).
+- Does not handle hook removal — edit `settings.json` directly.
+
+## Reference
+
+- `references/hook-patterns.md` — Additional patterns (auto-format, advanced secret-scan, stop-guard variations)
