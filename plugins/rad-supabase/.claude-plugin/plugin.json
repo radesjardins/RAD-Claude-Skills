@@ -1,7 +1,7 @@
 {
   "name": "rad-supabase",
-  "version": "1.0.0",
-  "description": "End-to-end Supabase development and operations — projects, database, migrations, edge functions, auth, storage, realtime, branching, security, and troubleshooting. Covers both Supabase CLI and Supabase MCP tool usage for Claude Code.",
+  "version": "2.0.0",
+  "description": "Supabase development and operations — projects, database, migrations, edge functions, auth, storage, realtime, branching, security, troubleshooting. Covers Supabase CLI v2.95+ and Supabase MCP server v0.7+ (31 tools). Ships 3 static validators (audit-rls.py, check-secret-leaks.py, audit-edge-functions.py) that mirror Splinter lint codes 0002/0003/0008/0011/0013/0015 and catch secret leaks before they ship.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"

@@ -64,7 +64,9 @@ project-root/
 └── .env.local                   # Local environment variables
 ```
 
-**`.env.local` contents:** Store `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and optionally `SUPABASE_SERVICE_ROLE_KEY` (server-side only). Get these from `supabase status` (local) or the Dashboard (remote).
+**`.env.local` contents:** Store `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (sb_publishable_*), and optionally `SUPABASE_SECRET_KEY` (sb_secret_*, server-side only). Get these from `supabase status` (local) or the Dashboard (remote).
+
+**Legacy projects** still use `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. These continue to work, but projects restored after Nov 1, 2025 no longer get legacy keys — new projects should use the `sb_publishable_*` / `sb_secret_*` format. Both formats are accepted by all Supabase client libraries with no code change.
 
 ## Local Development Workflow
 
@@ -112,8 +114,14 @@ The `supabase/config.toml` file controls the local development stack. Key sectio
 - **`[db]`** — Postgres port, major version, connection pooling
 - **`[auth]`** — Site URL, external providers, JWT expiry
 - **`[storage]`** — File size limits, image transformation
-- **`[edge_runtime]`** — Deno version, execution policy
+- **`[edge_runtime]`** — Edge runtime configuration (Deno 2.1.4 in production)
 - **`[realtime]`** — Realtime service configuration
+- **`[functions]`** / **`[functions.<name>]`** — per-function `verify_jwt`, import map, entrypoint
+- **`[studio]`** — local dashboard config (incl. `openai_api_key` for SQL assistance)
+- **`[inbucket]`** — local SMTP/POP3 mail testing
+- **`[analytics]`** — local Logflare service (port + Postgres backend)
+- **`[experimental]`** — feature flags (e.g., webhook auto-enable on branches, OrioleDB)
+- **`[remotes]`** — env-specific overrides (different config for branches/staging/production)
 
 ## Key Conventions
 

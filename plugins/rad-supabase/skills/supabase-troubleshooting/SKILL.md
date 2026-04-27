@@ -51,13 +51,25 @@ Start with the service most relevant to the issue:
 mcp__supabase__get_advisors(project_id: "<id>", type: "security")
 ```
 
-Returns security advisory notices:
-- Tables without RLS enabled
-- Tables with RLS but no policies
-- Potentially exploitable `security definer` functions
-- Other security vulnerabilities
+The advisor runs Supabase's [Splinter lint catalog](https://supabase.github.io/splinter/) against the live database. Common security lint codes you'll see:
 
-**Include remediation URLs as clickable links** in responses.
+| Code | Name | Catches |
+|------|------|---------|
+| 0002 | `auth_users_exposed` | Views in non-internal schemas selecting from `auth.users` |
+| 0007 | `policy_exists_rls_disabled` | Policies defined on a table where RLS is disabled |
+| 0008 | `rls_enabled_no_policy` | Table with RLS enabled and zero policies |
+| 0010 | `security_definer_view` | Views with SECURITY DEFINER (privilege escalation risk) |
+| 0011 | `function_search_path_mutable` | SECURITY DEFINER functions without `set search_path` |
+| 0013 | `rls_disabled_in_public` | Public-schema tables without RLS |
+| 0015 | `rls_references_user_metadata` | Policies reading `raw_user_meta_data` (user-writable) |
+| 0017 | `foreign_table_in_api` | Foreign tables exposed via the auto-generated API |
+| 0019 | `insecure_queue_exposed_in_api` | pg_mq queues exposed via the API |
+
+The advisor also surfaces performance lints (e.g. `0001 unindexed_foreign_keys`, `0003 auth_rls_initplan`, `0006 multiple_permissive_policies`) when called with `type: "performance"`.
+
+**Include remediation URLs as clickable links** in responses — each lint has a dedicated docs page at `https://supabase.github.io/splinter/<code>_<name>/`.
+
+**Static counterpart:** for the lints that can be detected without a live database (0002, 0003, 0008, 0011, 0013, 0015), run `python scripts/audit-rls.py` against your migration files. Useful in CI before push.
 
 ## Performance Advisors (MCP)
 

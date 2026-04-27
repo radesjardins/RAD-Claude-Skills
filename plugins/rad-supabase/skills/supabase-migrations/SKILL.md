@@ -185,6 +185,18 @@ supabase migration squash --version <target_version>
 
 This combines all migrations up to the target version into a single file. Useful for cleaning up long migration histories before releases.
 
+**Known foot-gun:** `migration squash` has historically dropped storage/bucket migration scripts (issues #1493, #3352, #4574 — open as of April 2026). Always inspect the squashed output before committing, and re-add any storage migrations that disappeared.
+
+## Static audit before pushing
+
+Before `db push` to a shared remote, run:
+
+```bash
+python plugins/rad-supabase/scripts/audit-rls.py
+```
+
+Catches Splinter lints 0002, 0003, 0008, 0011, 0013, 0015 against the migration files themselves — fast, no live database needed. See the security skill for the full lint inventory.
+
 ## CLI vs MCP Decision Matrix
 
 | Task | Use CLI | Use MCP |

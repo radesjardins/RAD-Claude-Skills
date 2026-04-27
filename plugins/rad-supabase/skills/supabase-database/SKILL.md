@@ -45,6 +45,8 @@ For ad-hoc local queries, connect directly to local Postgres:
 psql postgresql://postgres:postgres@localhost:54322/postgres
 ```
 
+**Read-only mode (MCP):** When the MCP server is started with `--read-only`, `execute_sql` runs as a read-only Postgres role and `apply_migration` is disabled entirely. Recommended default for safety; flip off per session if you need to write.
+
 ## Listing Tables
 
 ### Via MCP
