@@ -1,0 +1,13 @@
+{
+  "name": "rad-1password",
+  "version": "1.0.0",
+  "description": "End-to-end 1Password CLI (op) coverage — secret references (op://...), `op inject`/`op run`/`op read` for keeping secrets out of code and shell history, item CRUD with assignment statements and JSON templates, vault and user provisioning with granular permissions, SSH key generation and use, third-party CLI auth via `op plugin run`, and service-account / Connect-server patterns for CI/CD and headless servers. 1 router skill, 6 topical sub-skills, 4 slash commands. Cross-checked against op v2.34.0 --help.",
+  "author": {
+    "name": "RAD",
+    "url": "https://github.com/radesjardins"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-1password",
+  "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
+  "keywords": ["1password", "op", "cli", "secrets", "secret-references", "service-account", "ssh-keys", "provisioning", "shell-plugins", "connect"]
+}
