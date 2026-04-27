@@ -94,10 +94,16 @@ logs/
 *.tar.gz
 *.rar
 *.7z
-.claude/
+
+# ============================================
+# Claude Code state — track session-log.md and HANDOFF.md for cross-machine
+# sync (remote work); keep personal/runtime files local
+# ============================================
+.claude/*.local.*
+.claude/scheduled_tasks.lock
+.claude/cache/
 
 # ============================================
 # Private / Local Only
 # ============================================
 docs/plans/
-HANDOFF.md
