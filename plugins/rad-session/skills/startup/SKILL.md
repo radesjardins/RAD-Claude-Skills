@@ -127,6 +127,16 @@ If HANDOFF.md has a date and no stale-refresh was triggered in Phase 1.4, spot-c
 
 Detect project-specific resources so Claude doesn't need to be reminded every session. All steps are read-only and issued in the parallel batch from "Execution." Skip silently when nothing is found.
 
+### 2.5.0 Preferred path: deterministic script
+
+If Python is available, prefer the deterministic scanner over LLM-based marker scanning:
+
+```bash
+python3 ${plugin_root}/scripts/detect-resources.py "$PWD" --json
+```
+
+The script returns the same data structure as steps 2.5.1–2.5.6 below — MCPs, stack CLIs, documented-resources reconciliation, drift detection. Use the JSON output verbatim. The LLM-based steps below remain as fallback when Python is not available.
+
 ### 2.5.1 MCP Servers
 
 Read `.mcp.json` at the project root if it exists. Parse the JSON and extract the keys under `mcpServers`.

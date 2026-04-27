@@ -1,7 +1,7 @@
 {
   "name": "rad-session",
-  "version": "2.2.0",
-  "description": "Resource-aware session briefings and disciplined wrapup for Claude Code, optimized for Opus 4.7 (Sonnet 4.6 / Haiku 4.5 compatible). /startup runs parallel-batched resource discovery (MCPs, CLIs, scripts, env, CLAUDE.md @imports) with stale-handoff auto-refresh from git log, /wrapup uses an explicit tag-and-synthesize scan to produce comparable output across models and auto-proceeds on low-risk CLAUDE.md prunes, /add-resource registers new tools via targeted edits, and a PreCompact hook enumerates six capture targets to survive thin post-compaction context.",
+  "version": "3.0.0",
+  "description": "Three-phase Claude Code workflow lifecycle: /init bootstraps a project once (deterministic stack detection via Python scripts, CLAUDE.md scaffold, rad-* plugin recommendations), /startup orients each session (parallel-batched resource discovery, stale-handoff auto-refresh from git log, scoped to current state), /wrapup captures each session (structured HANDOFF.md with 'what NOT to do' field, CLAUDE.md prune with diff confirmation and Resources protection, auto-proceed for low-risk prunes), /add-resource registers tools any time. Two Python scripts (detect-stack.py, detect-resources.py) make stack and MCP detection deterministic. PreCompact hook prevents silent context loss. 3.0 absorbs and replaces the retired rad-stack-guide.",
   "author": {
     "name": "RAD",
     "url": "https://github.com/radesjardins"
@@ -9,5 +9,5 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-session",
   "repository": "https://github.com/radesjardins/RAD-Claude-Skills",
-  "keywords": ["session", "handoff", "wrapup", "startup", "context", "claude-md", "resources", "mcp", "add-resource"]
+  "keywords": ["session", "init", "handoff", "wrapup", "startup", "context", "claude-md", "resources", "mcp", "stack-detection", "lifecycle"]
 }
