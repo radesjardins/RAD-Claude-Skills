@@ -156,7 +156,7 @@ Each plugin stands alone — the pipeline is a suggestion, not a requirement. Th
 | Plugin | Skills | Agents | What It Does | Works with |
 |--------|--------|--------|-------------|-----------|
 | [rad-supabase](plugins/rad-supabase/) | 11 | 1 | Full-stack Supabase — local CLI workflows, MCP remote operations, RLS, migrations, auth, storage, edge functions, branching | CLI, Desktop |
-| [rad-coolify-orchestrator](plugins/rad-coolify-orchestrator/) | 8 | 1 | Coolify self-hosted PaaS — deployments (Nixpacks/Dockerfile/Compose), databases, security, CI/CD, troubleshooting, observability, infrastructure. Bundles [`@radoriginllc/coolify-mcp`](packages/coolify-mcp/) | CLI, Desktop |
+| [rad-coolify-orchestrator](plugins/rad-coolify-orchestrator/) | 8 | 1 | Coolify self-hosted PaaS — deployments, databases, security, CI/CD, troubleshooting, observability, infrastructure. **2.0 ships 4 Python validators** (lint-dockerfile, lint-compose, check-coolify-env, audit-cicd) the coolify-reviewer agent runs before LLM judgment. Honest about what's experimental (Sentinel scope, Swarm, Caddy proxy, Railpack-NOT-yet-shipped). Bundles [`@radoriginllc/coolify-mcp`](packages/coolify-mcp/) (27 verified tools). | CLI, Desktop |
 
 ### Google Workspace
 

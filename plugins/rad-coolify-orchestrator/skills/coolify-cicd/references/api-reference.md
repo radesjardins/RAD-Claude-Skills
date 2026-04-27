@@ -1,12 +1,28 @@
 # Coolify REST API v1 Reference
 
+> **Honest framing on API stability.** The API is versioned at `/api/v1` but has no formal stability guarantee — Coolify itself is `v4.0.0-beta.474` (April 2026). The OpenAPI spec and actual API behavior occasionally diverge. Two known active bugs as of April 2026:
+> - **Issue #7702**: `GET /api/v1/projects` is documented to return an `environments` array per project, but the actual response does not include it.
+> - **Issue #8782**: `POST /api/v1/services` rejects the documented `urls` parameter with HTTP 422.
+>
+> **For production automation, pin to a specific Coolify version and test API calls against your instance** before building tooling on top. The `@radoriginllc/coolify-mcp` server (bundled with this plugin) wraps these endpoints — when the underlying API changes, update the MCP package rather than re-implementing the wrapper.
+
 ## Base URL
 
 ```
 https://<COOLIFY_FQDN>/api/v1
 ```
 
-All endpoints require the `Authorization: Bearer <TOKEN>` header.
+## Authorization
+
+All endpoints require the `Authorization: Bearer <TOKEN>` header. Tokens are generated in the Coolify UI under **Settings > Keys & Tokens > API Tokens**, scoped to a team, with permission levels:
+
+- **read-only** (default) — read access to non-sensitive fields
+- **read:sensitive** — includes env vars, secrets, connection strings
+- **view:sensitive** — view-only access to sensitive fields
+- **`*`** (full CRUD) — all operations
+- **deploy** — deploy-only (trigger deployments, no other writes)
+
+**New in beta.474 (April 2026):** Tokens now support optional **expiration dates**. For long-running CI/CD integrations, set an expiration aligned with your secret rotation policy and refresh before it elapses.
 
 ## Applications
 

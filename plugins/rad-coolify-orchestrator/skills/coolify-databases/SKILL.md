@@ -24,7 +24,7 @@ Coolify provides one-click provisioning for these databases:
 
 | Engine | Versions Available | Backup Support | Notes |
 |--------|-------------------|----------------|-------|
-| **PostgreSQL** | 13, 14, 15, 16, 17 | Yes (pg_dump) | Most common choice; full backup/restore |
+| **PostgreSQL** | 13, 14, 15, 16, 17, **18** | Yes (pg_dump) | Most common choice; full backup/restore. **PG18 + pgvector 18 added in beta.463 (Feb 2026).** |
 | **MySQL** | 5.7, 8.0, 8.4 | Yes (mysqldump) | Classic RDBMS |
 | **MariaDB** | 10.x, 11.x | Yes (mariadb-dump) | MySQL-compatible alternative |
 | **MongoDB** | 5.x, 6.x, 7.x | Yes (mongodump) | Document store |
@@ -32,6 +32,8 @@ Coolify provides one-click provisioning for these databases:
 | **KeyDB** | Latest | No built-in | Redis-compatible, multi-threaded |
 | **Dragonfly** | Latest | No built-in | Redis-compatible, high-performance |
 | **ClickHouse** | Latest | No built-in | Column-oriented analytics DB |
+
+> **Version note:** Coolify's docs don't always pin exact major versions on the overview page — verify in your running Coolify UI which versions are currently selectable. The overview above reflects what was current as of beta.474 (April 2026). When new major versions ship in upstream images, Coolify typically adds them within a few releases.
 
 ## Provisioning Decision Tree
 

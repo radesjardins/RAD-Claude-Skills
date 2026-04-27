@@ -8,9 +8,13 @@ description: >
 
 # Coolify Deployments
 
-Covers build pack selection, deployment configuration, zero-downtime strategies, rollbacks, and registry-based deploys for Coolify v4 self-hosted.
+Covers build pack selection, deployment configuration, rolling-update strategies, rollbacks, and registry-based deploys for Coolify v4 self-hosted.
 
-> **Coolify Cloud vs Self-Hosted**: All content assumes self-hosted Coolify v4.x. Coolify Cloud may differ in available options and defaults.
+> **Coolify Cloud vs Self-Hosted.** All content assumes self-hosted Coolify v4.x. Coolify Cloud (launched 2025, $5/month + $3/month per server) is a managed control plane and may differ in available options and defaults.
+
+> **Coolify v4 is a rolling beta.** As of April 2026 the latest release is `v4.0.0-beta.474` (~474 betas over 2 years). The v4.0.0 stable milestone has not been closed. Treat the API and UI as evolving — pin to a specific Coolify version for production automation.
+
+> **Coolify v5 is in early development.** Announced April 2025 with a full PHP rewrite and Vue/Inertia UI. No release date. v4 continues to receive uninterrupted releases.
 
 ## Build Pack Selection Decision Tree
 
@@ -61,13 +65,25 @@ Nixpacks determines the build plan from files at the repo root (or configured ba
 | `.swift` files | Swift | Swift latest |
 | `*.csproj` | .NET | .NET 8+ |
 
-### Railpack (Experimental)
+### Railpack (NOT YET in Coolify as of April 2026)
 
-Railpack is an alternative build system from Railway, available in newer Coolify versions as an experimental option. It aims to produce smaller, faster images than Nixpacks for certain workloads.
+Railpack is Railway's successor to Nixpacks, currently in Beta upstream (railpack.com). It aims to produce smaller, faster images and supports newer runtime versions that Nixpacks (now in maintenance mode) lags on.
 
-**Status**: Experimental — not the default, may require opt-in via settings. Use for testing only; fall back to Nixpacks or Dockerfile for production workloads until Railpack is declared stable.
+**Coolify status:** Railpack is **not yet a build pack option in Coolify** — the official build packs page lists only Nixpacks, Static, Dockerfile, Docker Compose. Active community discussion threads (GitHub Discussion #5282, #5519, Issue #7983) track the request for Coolify to add Railpack support; no merged PR or shipped UI option as of April 2026.
 
-**When to consider**: If Nixpacks builds are slow or produce oversized images, test with Railpack as an alternative.
+**When you need newer runtimes than Nixpacks supports:** Switch to a Dockerfile build pack. You can install Railpack inside the Dockerfile if you want, but it's not surfaced as a Coolify-managed build pack.
+
+### Reverse Proxy: Traefik (default) vs Caddy (experimental alternative)
+
+Coolify ships **Traefik** as the default reverse proxy. **Caddy** was added as an experimental alternative at beta.237 and now has its own docs section.
+
+**Use Traefik (default) unless:**
+- You specifically want Caddy's automatic HTTPS / on-the-fly cert provisioning model
+- You want DNS challenge support that's simpler than Traefik's
+
+**Switching proxies has caveats:** resources created before beta.237 require label migration to switch from Traefik to Caddy. Caddy is still flagged experimental by the Coolify team — Traefik has more battle-tested production usage.
+
+The troubleshooting flows in `coolify-troubleshoot/SKILL.md` are written against Traefik. Caddy users should consult the Caddy section of Coolify docs for proxy-specific debugging.
 
 ## Deployment Configuration
 
@@ -121,7 +137,9 @@ Execute custom scripts before or after the main deployment:
 
 Configure in the application settings under the deployment section. Scripts run in the container context.
 
-## Zero-Downtime Deployment and Rollbacks
+## Rolling Deployments and Rollbacks
+
+> **Honest framing on "zero-downtime."** Coolify's rolling deploy gives effectively-zero-downtime **only when all of these conditions hold**: single-container deployment (NOT docker-compose), no exclusive host port bindings, healthcheck configured and passing reliably, persistent volumes either absent or attachable to multiple containers simultaneously. When any condition fails, Coolify falls back to a recreate strategy (brief downtime) — and there's an open Coolify issue (#8627, late 2025) about rolling updates causing intermittent 502/503s in some configurations. Don't market deploys as "zero-downtime" to stakeholders without verifying the conditions and watching the metric.
 
 ### Rolling Deployment Flow
 
@@ -130,7 +148,7 @@ Configure in the application settings under the deployment section. Scripts run 
 3. If health check passes → Traefik routes traffic to new container, old container is stopped and removed
 4. If health check fails → New container is stopped, old container keeps serving traffic, deployment marked as failed
 
-**Health check configuration**: Set a health check path (e.g., `/healthz` or `/api/health`). Coolify uses HTTP health checks — the endpoint must return a 2xx status.
+**Health check configuration**: Set a health check path (e.g., `/healthz` or `/api/health`). Coolify uses HTTP health checks — the endpoint must return a 2xx status. **The endpoint should check actual dependencies** (DB connection, cache reachability) — a healthcheck that just returns `200 OK` regardless of state defeats the purpose.
 
 ### When Rolling Deploy Does NOT Apply
 
@@ -140,7 +158,7 @@ Coolify falls back to **recreate** strategy (stop old, start new — brief downt
 - Docker Compose deployments (managed by Docker Compose lifecycle, not Coolify's rolling logic)
 - Health checks are not configured (no way to verify new container is ready)
 - The container requires exclusive port binding on the host (not through Traefik)
-- Swarm mode deployments (use Swarm's own rolling update mechanism)
+- Swarm mode deployments (use Swarm's own rolling update mechanism — and watch for Issue #8299, old container accumulation in Swarm rolling updates as of Feb 2026)
 
 ### Rollbacks
 

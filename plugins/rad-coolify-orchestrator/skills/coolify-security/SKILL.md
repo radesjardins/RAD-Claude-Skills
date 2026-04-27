@@ -78,14 +78,29 @@ COPY . .
 RUN npm run build
 ```
 
-### Shared Variables
+### Shared Variables (project, environment, team, server scopes)
 
-Coolify supports shared environment variables at the project level:
-1. Navigate to the **Project** → **Shared Variables**
-2. Add variables that are shared across all resources in the project
-3. Reference them in application settings — they appear automatically
+> **New in beta.471 (April 2026):** Coolify expanded shared variables to four scopes with explicit interpolation syntax. Earlier versions only supported project-level shared variables.
 
-**Rotation**: Update the shared variable and redeploy all affected applications. There is no automatic propagation — redeployment is required.
+**Four scopes available:**
+
+| Scope | Where | Interpolation syntax | Use case |
+|---|---|---|---|
+| **Server** | Server settings | `{{server.VAR}}` | Variables specific to one host (e.g., `BACKUP_S3_BUCKET` per server) |
+| **Team** | Team settings | `{{team.VAR}}` | Org-wide values (e.g., `MONITORING_API_KEY`) |
+| **Project** | Project → Shared Variables | `{{project.VAR}}` | Project-wide config (e.g., `STRIPE_PUBLISHABLE_KEY` shared across services) |
+| **Environment** | Project → Environment | `{{environment.VAR}}` | Per-environment overrides (`{{environment.DATABASE_URL}}` differs between staging and production) |
+
+**Reference example:**
+```
+DATABASE_URL={{environment.DATABASE_URL}}
+STRIPE_KEY={{project.STRIPE_PUBLISHABLE_KEY}}
+SLACK_WEBHOOK={{team.SLACK_DEPLOY_WEBHOOK}}
+```
+
+**Rotation:** Update the shared variable and redeploy affected applications. There is no automatic propagation — redeployment is required. Plan rotation around your deployment cadence.
+
+**Older Coolify versions:** Only project-level shared variables exist; the team/environment/server scopes are unavailable. Verify `coolify_version` MCP tool returns ≥ beta.471 before relying on them.
 
 ## RBAC (Role-Based Access Control)
 

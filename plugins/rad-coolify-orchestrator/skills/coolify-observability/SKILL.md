@@ -44,9 +44,11 @@ Covers Sentinel monitoring, notification channels, log drains, external monitori
 
 ## Coolify Sentinel
 
+> **Honest scope.** Sentinel is a **lightweight metrics side-car**, not a full observability solution. It collects CPU/RAM/disk/network metrics and exposes them in the Coolify UI. It does **not** include log aggregation, distributed tracing, alerting beyond simple threshold notifications, or APM features. Coolify itself flags Sentinel as **experimental** in the docs (the feature page carries a CAUTION banner). Sentinel **does not** support Docker Compose deployments or Service Template deployments — only single-container managed apps. If you need real observability, layer on Grafana+Prometheus or an external APM (Datadog, New Relic) — see the log drains section below.
+
 ### What Sentinel Monitors
 
-Sentinel is Coolify's built-in monitoring agent that runs as a Docker container (`coolify-sentinel`) on each managed server:
+Sentinel runs as a Docker container (`coolify-sentinel`) on each managed server:
 
 | Metric | Description | Collection Interval |
 |--------|-------------|-------------------|
@@ -56,6 +58,8 @@ Sentinel is Coolify's built-in monitoring agent that runs as a Docker container 
 | **Network I/O** | Bytes in/out per container | ~10 seconds |
 | **Container Status** | Running, stopped, restarting | Real-time (Docker events) |
 | **Server Connectivity** | Server reachability from Coolify main | Heartbeat |
+
+**Not covered by Sentinel:** request latency, error rates, distributed tracing, log search, custom application metrics, multi-server aggregated dashboards. For these, use the log drain integrations or external APM described later in this skill.
 
 ### Viewing Metrics
 

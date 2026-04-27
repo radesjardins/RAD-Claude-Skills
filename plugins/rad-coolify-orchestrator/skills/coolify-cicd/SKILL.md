@@ -114,16 +114,30 @@ curl -X PATCH "https://<COOLIFY_FQDN>/api/v1/applications/<APP_UUID>" \
 Each application has a unique webhook URL (found in **Application → Webhooks** tab):
 
 ```
-https://<COOLIFY_FQDN>/api/v1/deploy?uuid=<APP_UUID>&token=<WEBHOOK_TOKEN>
+https://<COOLIFY_FQDN>/api/v1/deploy?uuid=<APP_UUID>
 ```
 
-Trigger with a simple GET (auth via Bearer token or webhook-specific token):
+**Method:** GET is the canonical method in Coolify's own docs and GitHub Actions examples. POST also works (with the uuid/tag in the JSON body).
+
 ```bash
-curl "https://<COOLIFY_FQDN>/api/v1/deploy?uuid=<APP_UUID>" \
+# Canonical (GET)
+curl --fail --show-error \
+  "https://<COOLIFY_FQDN>/api/v1/deploy?uuid=<APP_UUID>" \
   -H "Authorization: Bearer <YOUR_API_TOKEN>"
+
+# Also accepted (POST)
+curl --fail --show-error -X POST \
+  "https://<COOLIFY_FQDN>/api/v1/deploy" \
+  -H "Authorization: Bearer <YOUR_API_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"uuid": "<APP_UUID>"}'
 ```
 
-**Webhook vs API**: The webhook URL is simpler (no auth header), but offers less control. Use the API for updating settings before deploy, checking status, or complex workflows.
+**Always use `--fail`** (or `--fail-with-body` for visibility) — without it, curl returns exit 0 even when the deploy endpoint errors, and CI passes despite a failed trigger. This is exactly what `scripts/audit-cicd.py` checks for.
+
+**HMAC signature verification (new in beta.474, April 2026):** Manual webhook secrets are now encrypted at rest and HMAC signature verification was strengthened. If you generate inbound webhooks pointing AT Coolify (e.g., GitHub→Coolify), the secret stored in Coolify is encrypted; if your CI sends FROM Coolify (e.g., notification webhooks), the outbound HMAC signing was hardened.
+
+**Webhook vs API:** The webhook URL is simpler (single curl call), but offers less control. Use the full API for updating settings before deploy, checking status afterward, or complex multi-step workflows. The bundled `@radoriginllc/coolify-mcp` server wraps the full API and is preferable for any non-trivial CI/CD flow.
 
 ## GitHub Actions Integration
 

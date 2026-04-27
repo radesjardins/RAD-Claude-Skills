@@ -1,5 +1,9 @@
 # Build Packs — Detailed Reference
 
+> **Updated April 2026.** Coolify currently ships four build packs in the UI: Nixpacks (default), Static, Dockerfile, Docker Compose. **Railpack is NOT yet a Coolify build pack option** despite community interest (GitHub Discussion #5282, #5519, Issue #7983) — track those threads for adoption status. **Caddy** is now an experimental alternative reverse proxy alongside Traefik (added at beta.237). See `coolify-deploy/SKILL.md` for current proxy options.
+
+> **Important: Nixpacks is in maintenance mode.** Railway (the Nixpacks maintainer) put it into maintenance mode in 2025 to focus on their newer Railpack project. Practical impact for Coolify users: very recent runtime versions (Node 24+, Python 3.13+) may not be available in Nixpacks. The recommended escape hatch is to switch to a Dockerfile build pack for projects that need bleeding-edge runtimes. Existing pinned-version `NIXPACKS_NODE_VERSION=22` style overrides continue to work for older versions.
+
 ## Nixpacks Deep Dive
 
 ### How Detection Works
