@@ -18,13 +18,13 @@ Specific words, phrases, and constructions to flag during writing and review. Ea
 
 | Word | Why flagged | Use instead |
 |------|------------|-------------|
-| delve | 50% spike post-ChatGPT; the canonical AI tell | explore, examine, dig into, look at, investigate |
+| delve | ~654% increase in PubMed (Shapira / Scientific American) — the canonical 2023-24 AI tell, partially deprecated in 2025 models | explore, examine, dig into, look at, investigate |
 | leverage | Became meaningless through AI overuse | use, apply, build on, take advantage of |
 | utilize | Almost always replaceable by "use" | use |
 | harness | AI default for "use effectively" | use, channel, apply, direct |
 | streamline | Vague efficiency claim | simplify, speed up, cut steps from, automate |
 | underscore | AI's favorite "emphasize" synonym | emphasize, highlight, show, reveal |
-| foster | 10.8x increase post-ChatGPT | encourage, support, build, grow, create |
+| foster | Spiked post-ChatGPT (direction confirmed; "10.8×" multiplier is widely repeated but no peer-reviewed source — treat as folklore) | encourage, support, build, grow, create |
 | navigate | Metaphorical use (navigate challenges) | handle, work through, manage, deal with |
 | elevate | Empty intensifier | improve, raise, strengthen |
 | empower | Performative; rarely specific | enable, give [someone] the ability to, let |
@@ -60,7 +60,7 @@ Specific words, phrases, and constructions to flag during writing and review. Ea
 | seamless | SaaS placeholder for missing detail | smooth, easy, simple, integrated |
 | cutting-edge | Dated cliché | new, latest, advanced, [describe what's actually new] |
 | comprehensive | AI padding | complete, full, thorough, detailed |
-| nuanced | 4.8x increase post-ChatGPT | subtle, complex, layered |
+| nuanced | Spiked post-ChatGPT in academic prose (direction confirmed; "4.8×" multiplier is folklore — no peer-reviewed source) | subtle, complex, layered |
 | multifaceted | Pretentious for "complex" | complex, varied, many-sided |
 | groundbreaking | Almost never true | new, significant, first-of-its-kind |
 | transformative | Grandiose | significant, major, substantial |
@@ -78,7 +78,7 @@ Specific words, phrases, and constructions to flag during writing and review. Ea
 |------|------------|-------------|
 | landscape | Metaphorical: "the marketing landscape" | field, space, market, industry, world |
 | realm | Pretentious | area, field, domain, world |
-| tapestry | 7.2x increase in non-textile contexts | mix, combination, range, variety |
+| tapestry | Spiked in non-textile metaphorical contexts post-ChatGPT (direction confirmed; "7.2×" multiplier is folklore — no peer-reviewed source) | mix, combination, range, variety |
 | synergy | Corporate cliché | collaboration, combined effect, teamwork |
 | testament | "A testament to..." is AI filler | proof, evidence, sign, example |
 | paradigm | "Paradigm shift" is almost never true | model, approach, framework, pattern |

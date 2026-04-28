@@ -22,8 +22,8 @@ Name the pain. Make the reader nod.
 
 The formula: `[Name the pain] + [imply the cost of inaction]`
 
-### The 4U Formula for Headlines
-Every headline should score on four dimensions: **Useful** (does it promise value?), **Urgent** (is there a reason to read now?), **Unique** (is the angle fresh?), **Ultra-specific** (does it name exact outcomes, numbers, or details?). Rate each U from 1-4 and aim for a total score of 12+. A headline that scores 4/4 on useful but 1/4 on unique is still forgettable.
+### The 4U Formula for Headlines (Michael Masterson / AWAI)
+From Michael Masterson, founder of American Writers & Artists Institute (AWAI) — the canonical direct-response copywriting reference. Every headline should score on four dimensions: **Useful** (does it promise value?), **Urgent** (is there a reason to read now?), **Unique** (is the angle fresh?), **Ultra-specific** (does it name exact outcomes, numbers, or details?). Rate each U from 1-4 and aim for a total score of 12+. A headline that scores 4/4 on useful but 1/4 on unique is still forgettable.
 
 ### Specificity Headlines
 Specific numbers and details beat vague claims every time.

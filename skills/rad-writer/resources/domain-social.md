@@ -30,13 +30,13 @@ A cold reader — someone who has never seen your content — should grasp the g
 
 ### Concreteness Techniques
 
-#### The "Zoom-In Ladder"
-Transform abstract claims into concrete, vivid specifics by zooming in through levels of detail.
+#### Hayakawa's Ladder of Abstraction (1949)
+From S. I. Hayakawa's *Language in Thought and Action* (1949) — the canonical reference for moving between general categories and specific instances. Transform abstract claims into concrete, vivid specifics by moving down the ladder.
 
-**Abstract:** "Worn by pretty people."
-**Concrete:** "Worn by supermodels in London and dads in Ohio."
+**Abstract (high on the ladder):** "Worn by pretty people."
+**Concrete (low on the ladder):** "Worn by supermodels in London and dads in Ohio."
 
-The second version creates a vivid mental picture because it names specific, contrasting types of people in specific places. Abstraction is forgettable. Specificity is shareable.
+The second version creates a vivid mental picture because it names specific, contrasting types of people in specific places. Abstraction is forgettable. Specificity is shareable. The discipline: when a sentence feels generic, ask "which specific X?" and answer with named, concrete instances.
 
 #### "Vivid Metonymy"
 Replace measurements and statistics with human-scale stand-ins. "5GB of storage" means nothing to most people. "A thousand songs in your pocket" (Apple's original iPod pitch) means everything. Find the human-scale equivalent of your data point.

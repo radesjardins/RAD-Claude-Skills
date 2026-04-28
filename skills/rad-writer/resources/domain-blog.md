@@ -29,8 +29,10 @@ Start at the moment of highest tension — "the moment you're being eaten by a b
 - "The error message made no sense. 'Cannot read property of undefined' — but the object was right there, logged to the console, clearly defined."
 - Not: "In this blog post, I'm going to walk you through a debugging journey I recently went on."
 
-**The 4-Part Hook Formula**
+**4-Part Hook Synthesis (rad-writer pattern, not a published canonical formula)**
 Bold Statement + Tension + Twist + Credibility. Open with a claim that demands attention, introduce friction that challenges it, pivot to a surprising angle, then earn trust with a proof point. Example: "Every blog post you write is invisible. Google indexes 60 trillion pages. But one structural trick — tested on 200+ posts — makes search engines prioritize yours."
+
+> **Attribution note:** This is rad-writer's own synthesis of well-known hook techniques. There is no canonical "4-Part Hook Formula" with a published author. For canonical alternatives, see Russell Brunson's **Hook–Story–Offer** (DotCom Secrets, 2015) or Brian Dean's **APP** (Agree–Promise–Preview).
 
 ### Openings to Avoid
 

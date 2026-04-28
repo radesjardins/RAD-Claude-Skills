@@ -98,8 +98,8 @@ When time is extremely tight, use this sequence: **Problem/Opportunity** -> **Pr
 ### Action Titles for Data
 Title charts and tables with the insight, not the category. "Q3 revenue missed targets due to pricing, not volume" tells the reader what to conclude. "Q3 Revenue Analysis" forces them to figure it out. Action titles turn every visual into an argument rather than a puzzle.
 
-### The "What-So What-Now What" Framework
-Apply to every data point and every chart: **What** (the fact or number), **So What** (why it matters or what it means), **Now What** (the action it implies). If you can't complete all three for a data point, it doesn't belong in the body of the report — move it to the appendix.
+### The "What-So What-Now What" Framework (Borton, 1970)
+From Terry Borton's *Reach, Touch, and Teach* (1970) — originally a reflective-practice model for educators, now widely used in business and clinical reporting. Apply to every data point and every chart: **What** (the fact or number), **So What** (why it matters or what it means), **Now What** (the action it implies). If you can't complete all three for a data point, it doesn't belong in the body of the report — move it to the appendix.
 
 ### Data Presentation Rules
 - **Label everything**: Axis labels, units, time periods, data sources. If a chart can be misread, it will be.
