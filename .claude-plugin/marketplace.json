@@ -6,18 +6,10 @@
   },
   "metadata": {
     "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more.",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "pluginRoot": "./plugins"
   },
   "plugins": [
-    {
-      "name": "rad-stack-guide",
-      "source": "./plugins/rad-stack-guide",
-      "description": "Auto-detects your tech stack, recommends and configures the right plugins, injects stack-aware guidance into CLAUDE.md, generates team settings, and orchestrates pre-ship reviews with specialist reviewers + rad-code-review as final gate. The entry point for the rad development stack.",
-      "category": "orchestration",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-stack-guide",
-      "license": "Apache-2.0"
-    },
     {
       "name": "rad-code-review",
       "source": "./plugins/rad-code-review",

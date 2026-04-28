@@ -4,7 +4,7 @@ A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en
 
 Install everything at once or cherry-pick individual plugins.
 
-> **April 2026 — Marketplace tightened.** The single-framework reviewer plugins (rad-react, rad-zod, rad-typescript, rad-nextjs, rad-fastify, rad-astro, rad-stripe-fastify-webhooks) have been retired — Opus 4.7 handles those framework-specific reviews well enough on its own. **rad-stack-guide is also retired**, with its stack-detection value absorbed into rad-session 3.0's new `/init` skill. **rad-google-workspace (93 skills) is also archived** — superseded by the focused [`rad-gws-core`](plugins/rad-gws-core/) (14 essential skills). The remaining 15 plugins are the ones that demonstrably add value Opus doesn't already provide.
+> **April 2026 — Marketplace tightened.** The single-framework reviewer plugins (rad-react, rad-zod, rad-typescript, rad-nextjs, rad-fastify, rad-astro, rad-stripe-fastify-webhooks) have been archived — Opus 4.7 handles those framework-specific reviews well enough on its own. **rad-stack-guide is also archived**, with its stack-detection value absorbed into rad-session 3.0's new `/init` skill. **rad-google-workspace (93 skills) is also archived** — superseded by the focused [`rad-gws-core`](plugins/rad-gws-core/) (14 essential skills). All archived plugins are preserved in [`archive/`](archive/) for reference. The remaining 15 plugins are the ones that demonstrably add value Opus doesn't already provide.
 
 ---
 
@@ -134,7 +134,7 @@ Each plugin stands alone — the pipeline is a suggestion, not a requirement. Th
 
 | Plugin | Skills | Agents | What It Does | Works with |
 |--------|--------|--------|-------------|-----------|
-| [rad-session](plugins/rad-session/) | 4 | 0 | Three-phase workflow lifecycle: `/init` (one-time project bootstrap with deterministic stack detection + rad-* plugin recommendations), `/startup` (per-session orientation with parallel-batched resource discovery), `/wrapup` (per-session capture with structured "what NOT to do" field and CLAUDE.md prune-with-diff), `/add-resource`. Two Python scripts (`detect-stack.py`, `detect-resources.py`). PreCompact safety net. **Absorbs the retired rad-stack-guide.** | CLI, Desktop |
+| [rad-session](plugins/rad-session/) | 4 | 0 | Three-phase workflow lifecycle: `/init` (one-time project bootstrap with deterministic stack detection + rad-* plugin recommendations), `/startup` (per-session orientation with parallel-batched resource discovery), `/wrapup` (per-session capture with structured "what NOT to do" field and CLAUDE.md prune-with-diff), `/add-resource`. Two Python scripts (`detect-stack.py`, `detect-resources.py`). PreCompact safety net. **Absorbs the archived rad-stack-guide.** | CLI, Desktop |
 | [rad-code-review](plugins/rad-code-review/) | 1 | 1 | Diff-aware adversarial code review — blame-aware scoping, framework-specific IDOR (6 frameworks), AI slop detection (14 patterns), performance heuristics, 3 review roles | CLI, Desktop |
 | [rad-planner](plugins/rad-planner/) | 6 | 3 | Structured implementation-planning scaffolding — 6-phase workflow with Python validators (DAG cycle detection, field-presence checklist, JSON Schema validation) backing the parts templates can't enforce. Includes `--lite` mode, `/status` skill, executor handoff manifest, real example artifacts. | CLI, Desktop |
 | [rad-a11y](plugins/rad-a11y/) | 6 | 1 | WCAG 2.2 AA accessibility — semantic HTML, ARIA, keyboard, focus, forms, automated testing with axe-core | CLI, Desktop |

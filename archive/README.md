@@ -10,6 +10,8 @@ Two waves of archival:
 
 **Wide-surface productivity wrappers (April 2026).** `rad-google-workspace` exposed 93 skills (44 services + 41 workflow recipes + 10 personas) — too wide a surface for routine use, and the workflow/persona skills duplicated what Opus 4.7 can compose on its own from the underlying service skills. Superseded by [`rad-gws-core`](../plugins/rad-gws-core), the focused 14-skill subset covering everyday productivity (Gmail send/read/reply/triage, Docs write, Sheets read/append, Slides, Drive, Calendar). Both depend on the same `gws` CLI binary, so anyone who needs the broader surface can still install from the archive.
 
+**Lifecycle consolidation (April 2026).** `rad-stack-guide` had two jobs: stack detection (one-time per project) and review orchestration (specialist-reviewer dispatch). Its stack-detection value duplicated rad-session's `/startup` Phase 2.5 Resource Discovery, and its review-orchestration value collapsed when the framework reviewers above were archived — there were no specialists left to orchestrate. Superseded by [`rad-session`](../plugins/rad-session) 3.0, which absorbed the per-project setup phase as `/init` so one plugin owns the whole lifecycle (`/init` → `/startup` → `/wrapup`). Existing CLAUDE.md content from the old `/detect-stack` skill stays valid; running `/rad-session:init` once re-establishes the `## Resources` section in the new format.
+
 ## Archived plugins
 
 | Plugin | Notes |
@@ -19,6 +21,7 @@ Two waves of archival:
 | `rad-google-workspace` | Full Google Workspace — 44 service skills + 41 workflow recipes + 10 role personas. Superseded by [`rad-gws-core`](../plugins/rad-gws-core) (14 essential skills). |
 | `rad-nextjs` | App Router, RSC, security, testing |
 | `rad-react` | React 19 patterns, hooks, security, perf |
+| `rad-stack-guide` | Stack detection + specialist reviewer orchestration. Superseded by [`rad-session`](../plugins/rad-session) 3.0 — stack detection moved into `/init`; review orchestration deprecated when framework reviewers were archived. |
 | `rad-stripe-fastify-webhooks` | Stripe webhook handling, idempotency, Zod contracts |
 | `rad-typescript` | Strict mode, type narrowing, API safety |
 | `rad-zod` | Zod v4 schemas, error handling, integrations |

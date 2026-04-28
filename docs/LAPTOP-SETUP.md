@@ -185,11 +185,13 @@ claude
 
 ### Enable plugins (matches your desktop enabled list)
 
-Inside Claude Code, run `/plugin` and enable each. Or edit `C:\Users\RAD\.claude\settings.json` directly — easier to just copy the `enabledPlugins` block from your desktop. Here are all 30:
+Inside Claude Code, run `/plugin` and enable each. Or edit `C:\Users\RAD\.claude\settings.json` directly — easier to just copy the `enabledPlugins` block from your desktop. Currently 22 plugins (7 official + 15 rad-claude-skills):
 
 **From `claude-plugins-official`:** `frontend-design`, `skill-creator`, `claude-code-setup`, `plugin-dev`, `microsoft-docs`, `remember`, `mcp-server-dev`
 
-**From `rad-claude-skills`:** `rad-a11y`, `rad-agentic-company-builder`, `rad-astro`, `rad-brainstormer`, `rad-chrome-extension`, `rad-code-review`, `rad-context-prompter`, `rad-coolify-orchestrator`, `rad-fastify`, `rad-gws-core`, `rad-nextjs`, `rad-para-second-brain`, `rad-planner`, `rad-react`, `rad-seo-optimizer`, `rad-session`, `rad-stack-guide`, `rad-stripe-fastify-webhooks`, `rad-supabase`, `rad-typescript`, `rad-writer`, `rad-zod`
+**From `rad-claude-skills`:** `rad-a11y`, `rad-agentic-company-builder`, `rad-1password`, `rad-brainstormer`, `rad-chrome-extension`, `rad-code-review`, `rad-context-prompter`, `rad-coolify-orchestrator`, `rad-gws-core`, `rad-para-second-brain`, `rad-planner`, `rad-seo-optimizer`, `rad-session`, `rad-supabase`, `rad-writer`
+
+> Archived plugins (`rad-astro`, `rad-fastify`, `rad-google-workspace`, `rad-nextjs`, `rad-react`, `rad-stack-guide`, `rad-stripe-fastify-webhooks`, `rad-typescript`, `rad-zod`) are preserved under [`archive/`](../archive/) but are no longer in the marketplace. Remove them from your laptop's `enabledPlugins` if they were there from a prior install.
 
 Fastest path — copy `C:\Users\RAD\.claude\settings.json` from desktop to laptop after Claude Code is installed. Also copy `C:\Users\RAD\.gitignore_global` if you have one.
 
