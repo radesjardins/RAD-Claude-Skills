@@ -25,7 +25,7 @@ Orient a new session by reading the handoff state left by `/wrapup`, detecting t
 
 ## Execution: parallel-first
 
-The phases below are written sequentially for readability, but the work inside Phases 1, 2, and 2.5 has **no inter-phase dependencies** — every read and every shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that. The only sequential step is Phase 3 (briefing synthesis), which depends on the results.
+Phase 0 (git pull) **must run first** because it can update files that the rest of the skill reads. After Phase 0 completes, the work inside Phases 1, 2, and 2.5 has **no inter-phase dependencies** — every read and every shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that. The only sequential step is Phase 3 (briefing synthesis), which depends on the results.
 
 **Batch to issue at the start of the skill:**
 
@@ -35,6 +35,60 @@ The phases below are written sequentially for readability, but the work inside P
 - Bash: `git status --short`, `git log --oneline -5`, `git rev-parse --abbrev-ref HEAD`, `git rev-list --left-right --count HEAD...@{upstream}` — run as one combined command so the shell spawn cost is paid once (Phase 2.2)
 
 If a file is missing, the corresponding Read call will error silently — that's fine, skip its content in the briefing. Do not re-attempt serial reads after a parallel batch.
+
+---
+
+## Phase 0: Cross-Machine Sync (git pull)
+
+Runs **before** the parallel read batch so any session files pulled from origin are read in the next phase.
+
+### 0.1 Skip conditions
+
+Skip Phase 0 silently if any of these hold:
+
+- Project is not a git repo (`git rev-parse --git-dir` fails).
+- Current branch has no upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` fails).
+- An in-progress merge / rebase / cherry-pick is detected (`.git/MERGE_HEAD` or `.git/REBASE_HEAD` exists).
+
+### 0.2 Pull
+
+Run a strict fast-forward pull — never merge, never force, never rebase user work:
+
+```bash
+git pull --ff-only 2>&1
+```
+
+Possible outcomes:
+
+- **Already up to date** → continue silently.
+- **Fast-forward succeeded** → capture the count of pulled commits and the hostnames mentioned in their commit messages (see 0.3 below).
+- **Non-fast-forward (diverged)** → do **not** retry with merge or rebase. Surface a one-line warning and continue with local state:
+  ```
+  ⚠ Couldn't auto-pull — local branch has diverged from origin. Resolve manually with: git pull --rebase
+  ```
+- **Dirty working tree blocked the pull** → same: surface a one-line warning, continue:
+  ```
+  ⚠ Couldn't auto-pull — working tree has uncommitted changes. Commit, stash, or wrap up first.
+  ```
+
+### 0.3 Cross-machine handoff signal
+
+If the pull brought in commits, inspect the most recent session commit to detect cross-machine continuation:
+
+```bash
+git log -1 --format='%s' -- HANDOFF.md .claude/session-log.md
+```
+
+Parse for the canonical session-commit format `session: YYYY-MM-DD on <hostname> — <status>` (written by `/wrapup` Phase 6.3).
+
+- If `<hostname>` differs from the current machine's hostname (`$HOSTNAME` / `$COMPUTERNAME` / `hostname`), stash a one-line note for the briefing:
+  ```
+  Continuing from <other-host> — N session commits pulled from origin.
+  ```
+- If hostname matches the current machine, no note needed (this is just a normal pull, not a cross-machine handoff).
+- If the commit doesn't match the canonical format (e.g., user committed HANDOFF.md manually), skip the note silently.
+
+The cross-machine note appears at the top of the Phase 3 briefing, above the Project line.
 
 ---
 

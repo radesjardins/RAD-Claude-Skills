@@ -7,6 +7,9 @@ Canonical output formats for `/startup` Phase 3. The startup skill picks one of 
 ## Full Briefing (HANDOFF.md exists + coding project)
 
 ```
+[If cross-machine handoff detected in Phase 0:]
+Continuing from <other-host> — N session commits pulled from origin.
+
 Project: [name]
 Type: [Coding (stack) | Non-coding]
 Branch: [name] ([N ahead, M behind] or [up to date])

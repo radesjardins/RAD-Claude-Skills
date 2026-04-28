@@ -172,6 +172,31 @@ Newest first. Each entry: `## YYYY-MM-DD — short title`.
 
 Do NOT generate `.claude/settings.json` automatically — that's a separate decision (some users want team-shared settings, some don't). Mention it as an optional next step.
 
+### Step 7.5: Ensure session files are tracked by git
+
+The cross-machine sync in `/wrapup` Phase 6 and `/startup` Phase 0 depends on `HANDOFF.md` and `.claude/session-log.md` being committed. If `.claude/` is gitignored at the project root or a parent, the session log gets stranded on whatever machine wrote it.
+
+Skip this step silently if the project is not a git repo.
+
+Otherwise:
+
+1. Read `.gitignore` at the project root (if it exists). Look for any rule that would match `.claude/` or `.claude/session-log.md` (e.g., `.claude/`, `.claude/*`, `**/.claude/`, `.claude`).
+
+2. If a matching rule exists and there is no exception (`!.claude/session-log.md`), propose appending to `.gitignore`:
+
+   ```
+   # rad-session: keep session continuity files tracked across machines
+   !.claude/session-log.md
+   ```
+
+   Show the diff. Wait for confirmation before writing. If the user declines, note in the final report: `⚠ .claude/session-log.md is gitignored — cross-machine sync will not transfer the log file.`
+
+3. Also check that `HANDOFF.md` is not gitignored (rare, but check). If it is, propose `!HANDOFF.md`.
+
+4. If `.gitignore` doesn't exist, do nothing — session files at their current paths are tracked by default.
+
+In `--non-interactive` mode, auto-append the exceptions when needed and record the change in the trailing JSON output (`gitignore_action: "exception_added" | "unchanged"`).
+
 ### Step 8: Final report and next steps
 
 ```

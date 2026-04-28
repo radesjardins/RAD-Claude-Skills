@@ -4,11 +4,13 @@ Shared rules that both `/wrapup` and `/startup` follow. These conventions ensure
 
 ## File Locations
 
-| File | Location | Created by |
-|------|----------|------------|
-| `CLAUDE.md` | Project root | User or `/wrapup` (scaffold only) |
-| `HANDOFF.md` | Project root | `/wrapup` (overwritten each session) |
-| `.claude/session-log.md` | `.claude/` directory | `/wrapup` (prepend per session) |
+| File | Location | Created by | Tracked by git |
+|------|----------|------------|----------------|
+| `CLAUDE.md` | Project root | User or `/wrapup` (scaffold only) | Yes |
+| `HANDOFF.md` | Project root | `/wrapup` (overwritten each session) | Yes — required for cross-machine sync |
+| `.claude/session-log.md` | `.claude/` directory | `/wrapup` (prepend per session) | Yes — required for cross-machine sync |
+
+**Cross-machine sync depends on these files being committed.** `/init` Step 7.5 detects `.claude/` gitignore rules and proposes a `!.claude/session-log.md` exception. `/wrapup` Phase 6 commits them automatically and prompts for push. `/startup` Phase 0 pulls them before reading.
 
 ## CLAUDE.md Standards
 

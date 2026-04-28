@@ -1,18 +1,26 @@
-# rad-session — Claude Code workflow lifecycle: init, startup, wrapup.
+# rad-session — Claude Code workflow lifecycle: init, startup, wrapup, with cross-machine continuity.
 
-> **v3.0 — Lifecycle expansion.** Adds `/init` for one-time project bootstrap, plus two Python scripts (`detect-stack.py`, `detect-resources.py`) that make stack and resource detection deterministic. **rad-session 3.0 absorbs the retired rad-stack-guide** — its stack-detection value is now in `/init`, in the same lifecycle as `/startup` and `/wrapup`.
+**What it is.** A four-skill plugin that gives Claude Code projects a structured session lifecycle: bootstrap a project once, orient each session at the start, capture each session at the end, register tools as you discover them. Works for a single machine and **transparently keeps PC ↔ GitHub ↔ Laptop in sync** when a git remote exists.
 
-Claude Code has built-in memory (CLAUDE.md + native Auto Memory since v2.1.59). **rad-session doesn't replace it — it owns the workflow lifecycle around it.**
+**What it solves.** The default Claude Code experience loses session state at compaction, can't tell you what tools the project has, lets `CLAUDE.md` grow forever, and forgets everything when you switch machines. rad-session keeps a structured `HANDOFF.md` + capped session log so the next session (same or different machine) starts from a real briefing, prunes `CLAUDE.md` deliberately so it stays useful, and pulls/commits/pushes session files via git so your laptop sees what your PC did.
+
+**What it isn't.** It is **not** a memory replacement. Claude Code has native Auto Memory (v2.1.59+) for that — rad-session surfaces insights so the native system can pick them up, but never writes to the memory path. It is **not** an automation layer over your code: it never runs builds, never touches non-session files in commits, and never force-pushes.
+
+> **v3.2 — Slim wrapup.** Recency-bounded conversation tagging, mechanical session-log derivation from HANDOFF.md, and auto-skipped CLAUDE.md prunes when nothing has changed since the last wrapup. New `--quick` mode for short sessions. Cuts wrapup wall time substantially without losing fidelity.
+>
+> **v3.1 — Cross-machine continuity.** `/wrapup` auto-commits session files and prompts to push; `/startup` runs `git pull --ff-only` and detects cross-machine handoffs via hostname in the commit message. `/init` ensures session files aren't gitignored. `--push` / `--no-push` overrides for autonomous loops.
+>
+> **v3.0 — Lifecycle expansion.** Adds `/init` for one-time project bootstrap, plus two Python scripts (`detect-stack.py`, `detect-resources.py`) that make stack and resource detection deterministic. Absorbs the retired rad-stack-guide.
 
 ## The three-phase lifecycle
 
 | Phase | When | Skill | What it does |
 |---|---|---|---|
-| **Init** | Once, when you start work in a project | `/init` | Detects stack deterministically, finds MCPs and CLIs, scaffolds CLAUDE.md (or proposes additions), recommends which rad-* plugins fit your stack |
-| **Startup** | Every session | `/startup` | Reads HANDOFF.md + session log, runs Phase 2.5 Resource Discovery, presents a concise briefing of where you left off and what's available |
-| **Wrapup** | Every session | `/wrapup` | Writes structured HANDOFF.md with "what NOT to do" field, prunes CLAUDE.md with diff confirmation (Resources section protected), surfaces insights for native Auto Memory |
+| **Init** | Once, when you start work in a project | `/init` | Detects stack deterministically (Python scripts, no LLM guessing), finds MCPs and CLIs in the project, scaffolds CLAUDE.md or proposes additions, ensures session files aren't gitignored so cross-machine sync works, recommends which rad-* plugins fit your stack |
+| **Startup** | Every session | `/startup` | **Pulls session files from origin via `git pull --ff-only`**, reads HANDOFF.md + session log + CLAUDE.md, runs Resource Discovery, presents a concise briefing including a cross-machine note if you just continued from a different host |
+| **Wrapup** | Every session | `/wrapup` | Writes structured HANDOFF.md with "what NOT to do" field, derives a compressed session-log entry from it, prunes CLAUDE.md only if it's actually changed since the last wrapup (with diff confirmation; Resources protected), surfaces insights for native Auto Memory, **auto-commits session files and prompts to push** |
 
-Plus `/add-resource` (any time, registers a new tool) and a PreCompact hook (auto-fires on context compaction).
+Plus `/add-resource` (any time, registers a new tool) and a PreCompact hook (auto-fires on context compaction so state isn't silently lost).
 
 ## What's in the plugin
 
@@ -40,13 +48,29 @@ Both are pure stdlib Python 3.8+. No `pip install` required. Used by `/init` and
 
 ## Files the plugin maintains
 
-| File | Purpose | Who writes it |
-|---|---|---|
-| `CLAUDE.md` | Permanent project rules + **`## Resources` section** (MCPs, CLIs, scripts, notes) | `/init` (scaffold), `/add-resource` (additions); pruned by `/wrapup` (Resources protected) |
-| `HANDOFF.md` | Current session state — status, decisions, what NOT to do, open work, insights | `/wrapup` (overwrites each session) |
-| `.claude/session-log.md` | Session history, newest first, capped at 20 entries | `/init` (creates header), `/wrapup` (prepends one entry per session) |
+| File | Purpose | Who writes it | Tracked by git |
+|---|---|---|---|
+| `CLAUDE.md` | Permanent project rules + **`## Resources` section** (MCPs, CLIs, scripts, notes) | `/init` (scaffold), `/add-resource` (additions); pruned by `/wrapup` (Resources protected) | Yes |
+| `HANDOFF.md` | Current session state — status, decisions, what NOT to do, open work, insights | `/wrapup` (overwrites each session) | Yes — synced cross-machine |
+| `.claude/session-log.md` | Session history, newest first, capped at 20 entries | `/init` (creates header), `/wrapup` (prepends one entry per session) | Yes — synced cross-machine |
 
 Notably **not** managed: `~/.claude/projects/<project>/memory/` — that's owned by Claude Code's native Auto Memory (v2.1.59+). rad-session surfaces insights in the wrapup summary so native auto-memory can pick them up, but never writes to that path.
+
+## Cross-machine continuity (PC ↔ GitHub ↔ Laptop)
+
+If your project has a git remote, rad-session keeps `HANDOFF.md` and `.claude/session-log.md` in sync across machines automatically:
+
+| Phase | What it does |
+|---|---|
+| `/init` Step 7.5 | Detects if `.claude/` is gitignored; proposes `!.claude/session-log.md` exception so the log gets committed. |
+| `/wrapup` Phase 6 | Auto-commits session files (silent, never `git add -A`). Prompts: `Push session files to origin? (y/N)`. Commit message: `session: YYYY-MM-DD on <hostname> — <status>`. |
+| `/startup` Phase 0 | Runs `git pull --ff-only` before reading anything. If pulled commits came from a different hostname, briefing leads with `Continuing from <other-host> — N session commits pulled`. |
+
+**Auto-commit, prompted push.** Local commits are cheap so they always happen. Pushing is a deliberate "I'm about to switch machines" decision. Stack multiple unpushed session commits on the same machine; push when you're ready to hand off.
+
+**Flag overrides:** `/wrapup --push` (skip prompt, push) or `/wrapup --no-push` (skip prompt, commit locally only). Useful for autonomous loops or when you've already decided.
+
+**Safety:** wrapup never force-pushes, never touches non-session files, and bails cleanly on diverged history. Startup never merges, never rebases, never discards local work — it only attempts a fast-forward pull and warns if it can't.
 
 ## What `/init` does (the headline of 3.0)
 
@@ -118,7 +142,11 @@ Ready to continue. What would you like to work on?
 - **Open Work** — state-of-play as descriptions, never as instructions ("EBirdProvider started, API auth not wired" — not "Next, wire up the eBird API auth").
 - **Key Insights** — API quirks, environment gotchas, architectural constraints not in CLAUDE.md.
 
-Then it prunes CLAUDE.md with **diff confirmation** (you see what's about to be removed and can say "undo item X" before anything is saved), **protecting the `## Resources` section** from removal. An auto-proceed threshold lets small low-risk prunes (≤3 removals, no rules/architecture/Resources sections, no "must/never/always" markers) skip the gate — autonomous and loop-mode sessions don't hang.
+Then it derives a compressed session-log entry **mechanically from the HANDOFF.md it just wrote** (no second LLM synthesis pass — Status verbatim, Changes/Decisions/Traps compressed from the corresponding sections), prunes CLAUDE.md with **diff confirmation** (you see what's about to be removed and can say "undo item X" before anything is saved), **protecting the `## Resources` section** from removal, and finally commits the session files locally. The push is prompted, not automatic — local commits are cheap, push is the deliberate "I'm switching machines" decision.
+
+**Slim wrapup mechanics (3.2):** conversation tagging is bounded by recency (window starts at the most recent `/wrapup`, `/checkpoint`, PreCompact systemMessage, or `/startup` briefing; 40-turn fallback cap). Phase 4 prune auto-skips when CLAUDE.md hasn't changed since the last wrapup. `--quick` flag drops the recency cap to 15 turns, skips the prune unconditionally, skips recurring-trap promotion. Long sessions don't make wrapup proportionally slower; short sessions wrap up in seconds.
+
+**CLAUDE.md prune safety (2.x):** the prune always shows a diff, always protects `## Resources` / `## MCP` / `## Tools`, and an auto-proceed threshold (≤3 removals, no rules/architecture sections, no "must/never/always" markers) lets small low-risk prunes skip the gate so autonomous and loop-mode sessions don't hang.
 
 Nothing else in the Claude Code ecosystem actively shrinks CLAUDE.md.
 
@@ -152,19 +180,25 @@ remember we have the coolify MCP available for this project
 
 **End of every session:**
 ```
-/wrapup
+/wrapup            # auto-commits, prompts to push
+/wrapup --push     # commit + push without prompting
+/wrapup --no-push  # commit locally, don't push
+/wrapup --quick    # short-session mode (15-turn tagging window, skip prune)
 ```
 
-Works with coding projects (captures git state + stack resources) and non-coding projects (scans recently modified files; still surfaces documented resources).
+**Switching machines.** Run `/wrapup` on the PC and answer Y to the push prompt. On the laptop, run `/startup` — it pulls automatically and the briefing leads with `Continuing from <PC-hostname>`. No manual git work, no copy-paste, no confusion about which machine has the latest state.
+
+Works with coding projects (captures git state + stack resources) and non-coding projects (scans recently modified files; still surfaces documented resources). Cross-machine sync is git-only — projects without a remote get the local lifecycle and skip the sync phases silently.
 
 ## How this compares to alternatives
 
-| | **rad-session 3.0** | Native CC Auto Memory | claude-plugins-official/remember | claude-mem | thepushkarp/handoff |
+| | **rad-session 3.2** | Native CC Auto Memory | claude-plugins-official/remember | claude-mem | thepushkarp/handoff |
 |---|---|---|---|---|---|
-| Project bootstrap (`/init`) | ✅ **unique** (3.0) | ❌ | ❌ | ❌ | ❌ |
+| Project bootstrap (`/init`) | ✅ **unique** | ❌ | ❌ | ❌ | ❌ |
 | Resource discovery (MCPs/CLIs/stack) | ✅ **unique** | ❌ | ❌ | ❌ | ❌ |
 | Active CLAUDE.md prune w/ diff | ✅ **unique** | ❌ (grows) | compression | ❌ | ❌ |
-| Deterministic stack detection (Python scripts) | ✅ (3.0) | ❌ | ❌ | ❌ | ❌ |
+| Cross-machine sync via git (auto-commit + prompted push) | ✅ **unique** (3.1) | ❌ | ❌ | ❌ | ❌ |
+| Deterministic stack detection (Python scripts) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | "What NOT to do" field | ✅ | ❌ | ❌ | ❌ | partial |
 | PreCompact safety net | ✅ | ✅ (built in) | ✅ | ✅ | ✅ |
 | Zero dependencies for skills (Python optional for scripts) | ✅ | ✅ | ❌ (Haiku) | ❌ (Chroma) | ✅ |
@@ -186,6 +220,18 @@ Works with coding projects (captures git state + stack resources) and non-coding
 - **Does not orchestrate code reviews** — that role belonged to retired rad-stack-guide. Use the specialist reviewers directly (rad-code-review for general, rad-supabase / rad-coolify-orchestrator / rad-a11y / rad-chrome-extension for their domains).
 
 ## Version
+
+**3.2.0** — **Slim wrapup.** Cuts wrapup wall time substantially without losing fidelity.
+- `/wrapup` Phase 1.3 conversation tagging is now bounded by recency: the window starts at the most recent `/wrapup`, `/checkpoint`, PreCompact systemMessage, or `/startup` briefing, with a 40-turn fallback cap. Long sessions no longer scale wrapup cost linearly.
+- `/wrapup` Phase 3 (session log) now derives entries mechanically from the HANDOFF.md just written — no second LLM synthesis pass. ~30–40% time savings on this phase.
+- `/wrapup` Phase 4 (CLAUDE.md prune) auto-skips when CLAUDE.md hasn't been changed since the last wrapup (detected via `git log` + `git diff`). Most wrapups now skip the slowest non-synthesis phase entirely.
+- New `--quick` flag: bounds Phase 1.3 to the last 15 turns, skips Phase 4 unconditionally, skips recurring-trap promotion. For "save state and go" wrapups during active work.
+
+**3.1.0** — **Cross-machine continuity (PC ↔ GitHub ↔ Laptop).**
+- New `/startup` Phase 0: `git pull --ff-only` before reading session files. Detects cross-machine handoff via hostname in the session commit message and surfaces it in the briefing.
+- New `/wrapup` Phase 6: auto-commits `HANDOFF.md`, `.claude/session-log.md`, and `CLAUDE.md` (only if Phase 4 modified it). Prompts for push by default; `--push` and `--no-push` flag overrides for autonomous loops. Stages only session files — never `git add -A`. Bails cleanly on diverged history; never force-pushes.
+- New `/init` Step 7.5: detects `.claude/` gitignore rules and proposes a `!.claude/session-log.md` exception so the log can travel.
+- Commit message format: `session: YYYY-MM-DD on <hostname> — <status>` — load-bearing for Phase 0's cross-machine detection.
 
 **3.0.0** — **Lifecycle expansion + rad-stack-guide consolidation.**
 - New `/init` skill — one-time project bootstrap. Detects stack deterministically, scaffolds CLAUDE.md, recommends rad-* plugins for the detected stack.

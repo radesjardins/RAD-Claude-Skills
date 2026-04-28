@@ -2,6 +2,8 @@
 
 The session log (`.claude/session-log.md`) is an append-only history of session summaries. It builds institutional memory across many sessions.
 
+**Entries are derived mechanically from HANDOFF.md, not re-synthesized.** `/wrapup` Phase 3 compresses the structured HANDOFF.md it just wrote into log format — Status comes through verbatim, Changes/Decisions/Traps are the corresponding HANDOFF sections compressed to one line each. This avoids a second LLM synthesis pass and keeps the log consistent with the handoff that produced it.
+
 ## Entry Format
 
 ```markdown

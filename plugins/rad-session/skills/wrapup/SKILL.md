@@ -23,7 +23,15 @@ Capture the current session's state, decisions, traps, and insights into structu
 
 **Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet should issue Phase 1 reads + git state commands as a single parallel batch; Haiku may execute sequentially. The conversation-synthesis step in Phase 1.3 uses the explicit tag-and-summarize pattern so all three models produce comparable output.
 
-**Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), and surfacing any insights..."
+**Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), surfacing insights, and syncing session files to git..."
+
+## Mode flags
+
+- `--push` — Skip the Phase 6.4 push prompt and push the session commit immediately. For autonomous loops or when the user has already decided.
+- `--no-push` — Skip the push entirely; commit locally only. Useful for "I'm not done with this slice yet, don't share it."
+- Neither push flag → prompt at Phase 6.4 (default).
+
+- `--quick` — Fast wrapup for short sessions. Bounds Phase 1.3 tagging to the last 15 turns, skips Phase 4 (CLAUDE.md prune) unconditionally, skips recurring-trap promotion in Phase 3 maintenance. Use when "I just sat down for an hour, save state and go." For thorough wrapups (end of phase, end of week), run without `--quick`.
 
 ---
 
@@ -69,9 +77,24 @@ Capture: branch name, uncommitted changes, recent commits.
 
 ### 1.3 Synthesize Conversation Context
 
-Walk the conversation already in your context — no tool call needed. To produce reliable, comparable output across models, use this explicit scan pattern instead of freeform reflection:
+Walk the conversation already in your context — no tool call needed. To produce reliable, comparable output across models, use this explicit scan pattern instead of freeform reflection.
 
-**Scan pass.** Starting from the earliest turn still visible and moving forward, tag each meaningful turn with one or more of these labels:
+**Recency window (bounds cost on long sessions).** Do not tag the entire visible conversation by default. Tagging is bounded to the most recent meaningful work. Determine the window like this:
+
+1. Scan backward through the conversation looking for any of these signals (the most recent one wins):
+   - A user message containing `/wrapup`, `/checkpoint`, "wrap up", or "checkpoint"
+   - A PreCompact systemMessage from rad-session (indicates context boundary)
+   - A prior `/startup` briefing (turns before this are last session, already captured)
+
+2. The window is everything from that signal forward to the current turn.
+
+3. If no signal is found, the window is the **last 40 turns** (default cap).
+
+4. In `--quick` mode (see Mode flags), the cap drops to the **last 15 turns** regardless of signals.
+
+Only the turns inside the window are tagged. This bounds wrapup cost regardless of total session length — long sessions don't make wrapup proportionally slower. The PreCompact hook already covers the "context about to be lost" case separately, so safety isn't compromised.
+
+**Scan pass.** Within the window, starting from the earliest turn and moving forward, tag each meaningful turn with one or more of these labels:
 
 | Label | What qualifies |
 |-------|----------------|
@@ -165,10 +188,22 @@ user preferences discovered during this session]
 
 Update `.claude/session-log.md` with a compact entry for this session. Follow `references/session-log-format.md`.
 
+**Derive, don't re-synthesize.** Phase 2 already wrote a structured HANDOFF.md from the conversation tagging in Phase 1.3. The session-log entry is a mechanical compression of that same handoff — do **not** re-walk the conversation or re-tag turns. The fields map directly:
+
+| Log entry field | Sourced from HANDOFF.md |
+|---|---|
+| Title | The HANDOFF.md `**Status:**` line, summarized to ≤8 words |
+| `**Status:**` | The HANDOFF.md `**Status:**` line verbatim |
+| `**Changes:**` | The HANDOFF.md `## Modified Files` section, compressed to a comma-separated list (drop per-file descriptions) |
+| `**Decisions:**` | The HANDOFF.md `## Key Decisions` section, compressed to one-line-per-decision (keep the WHY, drop bullets) |
+| `**Traps:**` | The HANDOFF.md `## What NOT To Do` section, in compact form `TRIED: X — FAILED BECAUSE: Y` (one line per trap, omit CORRECT APPROACH for the log) |
+
+If a HANDOFF.md section is empty or omitted, the corresponding log field is omitted too — never write `N/A` or placeholders.
+
 ### Mechanism
 
 1. Read `.claude/session-log.md` if it exists (may be empty or missing)
-2. Create the new entry (see format below)
+2. Build the new entry by mechanically compressing the HANDOFF.md you just wrote (no LLM synthesis needed)
 3. Prepend the new entry to the existing content (newest first)
 4. Write the full file back
 
@@ -191,10 +226,11 @@ If `.claude/` directory doesn't exist, create it first.
 
 If the log now exceeds 20 entries after prepending:
 
-1. Scan entries being trimmed for "Traps" that appear 3+ times across the full log (match on the FAILED BECAUSE clause, not the TRIED clause — same root cause with different surface attempts should still count)
-2. If recurring traps found, promote them to CLAUDE.md as permanent rules (add under an appropriate existing section, or create a "Known Gotchas" section if none fits)
-3. Remove entries beyond the 20-entry cap (trim from the bottom — oldest entries)
-4. Notify the user:
+1. **Skip in `--quick` mode** — trim oldest entries past the cap and stop. No trap-promotion scan, no CLAUDE.md edits. The next non-quick wrapup will catch up on promotions.
+2. (Non-quick) Scan entries being trimmed for "Traps" that appear 3+ times across the full log (match on the FAILED BECAUSE clause, not the TRIED clause — same root cause with different surface attempts should still count)
+3. If recurring traps found, promote them to CLAUDE.md as permanent rules (add under an appropriate existing section, or create a "Known Gotchas" section if none fits)
+4. Remove entries beyond the 20-entry cap (trim from the bottom — oldest entries)
+5. Notify the user:
    ```
    Session log maintenance: Trimmed [N] oldest entries.
    [If traps promoted]: Promoted recurring trap to CLAUDE.md: "[description]"
@@ -205,6 +241,28 @@ If the log now exceeds 20 entries after prepending:
 ## Phase 4: Prune CLAUDE.md
 
 Read CLAUDE.md and evaluate it for staleness, duplication, and ephemeral state.
+
+### 4.0 Skip when CLAUDE.md is unchanged this session
+
+The prune evaluation is the slowest non-synthesis phase of wrapup. Most sessions don't touch CLAUDE.md at all — re-evaluating an unchanged file every wrapup is wasted work.
+
+**Skip Phase 4 entirely if all of these hold:**
+
+1. CLAUDE.md exists (skipping the prune of a non-existent file is handled below).
+2. Project is a git repo.
+3. CLAUDE.md has no uncommitted changes: `git diff --quiet HEAD -- CLAUDE.md` returns 0.
+4. The last commit that modified CLAUDE.md is older than the last session-log entry's date (i.e., CLAUDE.md hasn't been changed since the last wrapup):
+   ```bash
+   last_claude_commit=$(git log -1 --format=%cI -- CLAUDE.md 2>/dev/null)
+   last_log_date=$(head -20 .claude/session-log.md | grep -m1 '^## ' | sed 's/^## \([0-9-]*\).*/\1/')
+   # Skip Phase 4 if last_claude_commit < last_log_date
+   ```
+
+If skipped, log: `CLAUDE.md unchanged since last wrapup — prune skipped.` Continue to Phase 5.
+
+In `--quick` mode, skip Phase 4 unconditionally (with the same one-line note).
+
+If CLAUDE.md does not exist, run the "If No CLAUDE.md Exists" sub-step below; otherwise proceed to 4.1.
 
 ### If No CLAUDE.md Exists
 
@@ -333,6 +391,98 @@ Note: detected legacy rad-session memory files at ~/.claude/projects/<project>/m
 These are no longer written to by /wrapup. Native Auto Memory manages that path.
 ```
 
+---
+
+## Phase 6: Cross-Machine Sync (auto-commit + prompted push)
+
+This phase keeps `HANDOFF.md` and `.claude/session-log.md` in sync across machines via git. Without it, the laptop never sees what the PC did, and vice versa.
+
+**Behavior:**
+
+- **Commit:** always, silently. Local commits are cheap and recoverable; not committing risks losing session state if the working tree is later discarded.
+- **Push:** prompted by default. Yes → push; No → keep the commit local for next time. Stacking multiple unpushed session commits is fine and expected (e.g., several sessions on the same machine before switching).
+
+### 6.1 Skip conditions
+
+Skip Phase 6 entirely (and say nothing) if any of these hold:
+
+- Project is not a git repo (`git rev-parse --git-dir` fails).
+- All three target files are unchanged (no HANDOFF.md, session-log.md, or CLAUDE.md modifications this wrapup).
+- An in-progress merge, rebase, or cherry-pick is detected (`git status --porcelain=v2 --branch` shows merge/rebase state, or `.git/MERGE_HEAD` / `.git/REBASE_HEAD` exists).
+
+### 6.2 Stage only session files
+
+**Critical: never `git add -A` or `git add .`** The user's other working-tree changes are theirs to manage.
+
+Stage only the files this wrapup may have touched:
+
+```bash
+git add HANDOFF.md .claude/session-log.md
+# Add CLAUDE.md only if Phase 4 modified it (created/pruned)
+[ "$claude_md_modified" = "true" ] && git add CLAUDE.md
+```
+
+If none of the staged files actually has changes after staging (`git diff --cached --quiet`), skip the rest of Phase 6 silently — there is nothing to commit.
+
+### 6.3 Auto-commit
+
+Build the commit message from the HANDOFF.md status line and the current hostname:
+
+```bash
+HOSTNAME="${HOSTNAME:-${COMPUTERNAME:-$(hostname 2>/dev/null || echo unknown)}}"
+DATE=$(date +%Y-%m-%d)
+# STATUS comes from the HANDOFF.md **Status:** line written in Phase 2
+git commit -m "session: ${DATE} on ${HOSTNAME} — ${STATUS}"
+```
+
+Commit must succeed before Phase 6 continues. If a commit hook fails, stop the phase and report the failure — do not retry with `--no-verify`. The local commit is the durable record; pushing is secondary.
+
+### 6.4 Push decision
+
+Determine push behavior in this priority order:
+
+1. **`--push` flag passed to `/wrapup`** → push without prompting.
+2. **`--no-push` flag passed to `/wrapup`** → skip push, end Phase 6.
+3. **Non-interactive context** (autonomous loop, PreCompact-triggered wrapup, headless mode) → skip push silently. The local commit is sufficient; the next interactive wrapup can push.
+4. **Otherwise** → prompt:
+
+   ```
+   Push session files to origin? (y/N)
+   ```
+
+   Default (empty / N / no) → skip push. Y → push.
+
+### 6.5 Push
+
+Only attempt push if the current branch has an upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` succeeds). If no upstream:
+
+```
+⚠ No upstream configured for this branch — session committed locally. Set an upstream with: git push -u origin <branch>
+```
+
+Then end Phase 6.
+
+If upstream exists:
+
+```bash
+git push
+```
+
+On success: continue. On rejection (non-fast-forward, diverged): do not force, do not retry. Report:
+
+```
+⚠ Push rejected (likely diverged from origin). The session commit is safe locally. Resolve with: git pull --rebase  then  git push
+```
+
+### 6.6 Sync summary line
+
+Append one line to the Phase 5 final summary so the user knows what happened:
+
+- Committed + pushed: `Sync: committed + pushed (<short-sha>)`
+- Committed, push declined: `Sync: committed locally (<short-sha>) — N unpushed session commits`
+- Committed, push failed: `Sync: committed locally (<short-sha>) — push rejected, resolve manually`
+- Skipped: omit the line.
+
 ### Session Complete
 
 End with a brief confirmation:
@@ -343,4 +493,5 @@ Session wrapped up:
   - Session log updated ([N] total entries)
   - CLAUDE.md [pruned: N changes (auto-proceeded | confirmed) | unchanged | created]
   [- Worth remembering: N insights surfaced for native Auto Memory]
+  [- Sync: <one of the lines from 6.6>]
 ```
