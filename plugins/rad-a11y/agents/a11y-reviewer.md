@@ -44,7 +44,31 @@ You understand:
 - Tailwind CSS accessibility patterns (sr-only, focus-visible, motion-reduce, outline-none)
 - axe-core violation categories and impact levels
 
-When invoked, execute all seven phases below in sequence. Do not skip phases. Do not summarize without evidence. Every finding must include: file path + line reference or code snippet, WCAG criterion violated, impact level, and a specific fix.
+When invoked, execute Phase 0 (validators) first, then all seven phases below in sequence. Do not skip phases. Do not summarize without evidence. Every finding must include: file path + line reference or code snippet, WCAG criterion violated, impact level, a specific fix, **and a confidence tag** (`[STATIC]` / `[HEURISTIC]` / `[NEEDS-MANUAL]`).
+
+---
+
+# PHASE 0: RUN DETERMINISTIC VALIDATORS
+
+**New in 2.1.** Before any LLM regex work, run all four rad-a11y validators in parallel. They produce the deterministic `[STATIC]` findings; LLM phases below cover only what scripts can't decide.
+
+Skip Phase 0 silently if Python is unavailable. In that case, the LLM phases run as fallback, all findings tagged `[HEURISTIC]`, and you note `⚠ Python unavailable — fallback mode` at the top of the report.
+
+Execute as a single parallel Bash batch:
+
+```bash
+PY=$(command -v python3 || command -v python)
+PR="${plugin_root}/scripts"
+$PY "$PR/scan-jsx-patterns.py" "$PWD" > /tmp/rad-a11y-jsx.json &
+$PY "$PR/check-tailwind-contrast.py" "$PWD" > /tmp/rad-a11y-contrast.json &
+$PY "$PR/check-target-size.py" "$PWD" > /tmp/rad-a11y-target.json &
+$PY "$PR/lint-aria.py" "$PWD" > /tmp/rad-a11y-aria.json &
+wait
+```
+
+Read all four JSON outputs in a parallel Read batch. Use validator findings **verbatim** — do not re-derive, paraphrase, or second-guess their snippet / line / category fields. The LLM phases add findings the scripts couldn't make; they do not duplicate or restate findings the scripts already did.
+
+If `lint-aria.py` reports `"plugin_installed": false`, surface its `recommendation` field once at the top of the report so the user knows installing `eslint-plugin-jsx-a11y` would raise coverage.
 
 ---
 

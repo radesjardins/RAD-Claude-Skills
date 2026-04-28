@@ -6,9 +6,11 @@
 
 **What it isn't.** It is **not** an audit. It does not run axe-core, does not test focus behavior at runtime, does not measure WCAG contrast ratios with sRGB math (planned for 2.1), and does not test with a screen reader. It cannot tell you whether your alt text is meaningful, whether your reading order makes sense, or whether your focus indicator is sufficiently visible — those need a browser, an AT, or a human. It is also **not** a compliance certifier; no static tool can produce a defensible WCAG 2.2 AA pass/fail verdict, and rad-a11y does not pretend to.
 
+> **v2.1 — Mechanical validators.** Four pure-stdlib Python scripts in `scripts/` move deterministic detection out of the LLM and into deterministic code: `scan-jsx-patterns.py` (high-confidence WCAG patterns), `check-tailwind-contrast.py` (real sRGB → WCAG ratio math, no browser), `check-target-size.py` (WCAG 2.5.8 minimum target size), `lint-aria.py` (wraps `eslint-plugin-jsx-a11y` if installed; curated regex fallback if not). The `/a11y-review` skill and `a11y-reviewer` agent run all four in parallel before any LLM work, then layer judgment only on what scripts can't decide. See `scripts/README.md` for full schema and usage.
+>
 > **v2.0 — Honesty pass.** Every finding is tagged `[STATIC]` (deterministic detection), `[HEURISTIC]` (LLM judgment), or `[NEEDS-MANUAL]` (requires browser or assistive-tech verification). The Pass/Fail verdict is replaced with a confidence-tiered summary. Skill descriptions clarify what is reference content versus what is a scanner. Vue/Svelte support claims dropped — the skills cover React, Astro, plain HTML, and Tailwind CSS, and that's all that's actually backed.
 >
-> Validators (Python scripts that replace LLM regex passes with deterministic scans, plus sRGB contrast math and a target-size scanner) and stack-aware phase routing are scoped for v2.1 / v2.2.
+> Stack-aware phase routing is scoped for v2.2.
 
 ## What You Can Do With This
 
@@ -79,6 +81,15 @@ What's the right ARIA pattern for a combobox?
 - **Does not cover Vue or Svelte specifically.** Generic HTML rules apply, but no framework-specific checks for those stacks. React, Astro, and plain HTML/Tailwind are the first-class supported targets.
 
 ## Version
+
+**2.1.0** — **Mechanical validators (four Python scripts).**
+- `scripts/scan-jsx-patterns.py` — high-confidence static scan over JSX/HTML/CSS for `outline-none` w/o focus replacement, `aria-hidden` on focusable, missing/bad `alt`, hardcoded ARIA states, `<div onClick>` without role + handlers, redundant ARIA roles, positive `tabindex`, `<a>` without `href` used as click target. Pure stdlib, JSON output.
+- `scripts/check-tailwind-contrast.py` — **real WCAG sRGB → relative luminance → contrast ratio math** over Tailwind class pairs. Built-in v3 default palette + best-effort regex parse of `tailwind.config.{js,ts,cjs,mjs}` for custom colors. Border-on-bg contrast (3:1 UI threshold) checked separately.
+- `scripts/check-target-size.py` — WCAG 2.5.8 (added in 2.2): scans interactive elements for sizing/padding classes producing sub-24×24px targets. Padding-aware. `<a>` tagged `[HEURISTIC]` (inline-link exception applies).
+- `scripts/lint-aria.py` — wraps `eslint-plugin-jsx-a11y` via `npx eslint` when installed. Curated regex fallback (~10 rules: alt-text, anchor-has-content, no-autofocus, no-distracting-elements, tabindex-no-positive, iframe-has-title, html-has-lang, scope, media-has-caption, no-redundant-roles) when not.
+- `/a11y-review` and `a11y-reviewer` agent now run all four validators in **Phase 0** as a single parallel Bash batch, before any LLM work. LLM phases now cover only what scripts can't decide — alt-text meaningfulness, complex ARIA logic, reading order, cross-element analysis.
+- Validator findings are used **verbatim** by the skill/agent — no paraphrasing, no second-guessing. Determinism preserved end-to-end.
+- Skips Phase 0 silently if Python is unavailable; LLM fallback runs and the report header notes `⚠ fallback mode`.
 
 **2.0.0** — **Honesty pass.**
 - Every `a11y-review` finding tagged `[STATIC]` / `[HEURISTIC]` / `[NEEDS-MANUAL]`. The reader knows the confidence level of each item.

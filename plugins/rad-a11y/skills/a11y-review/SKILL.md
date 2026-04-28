@@ -48,9 +48,60 @@ For runtime verification, use `a11y-testing` to set up real axe via jest-axe and
 
 ## Audit Scope
 
-When invoked with a path, audit that file or directory. When invoked with "all" or no argument, locate the main source directory (src/, app/, components/, pages/) and audit the full codebase.
+When invoked with a path, scan that file or directory. When invoked with "all" or no argument, locate the main source directory (src/, app/, components/, pages/) and scan the full codebase.
 
 Exclude: `node_modules`, `dist`, `build`, `.next`, `coverage`, `.astro`.
+
+---
+
+## Phase 0: Run validators (deterministic Python scripts)
+
+**New in 2.1.** Before any LLM regex work, run all four rad-a11y validators in parallel. They emit JSON; their output populates the `[STATIC]` (and some `[HEURISTIC]`) findings deterministically. The LLM phases below then handle only what scripts can't decide — alt-text meaningfulness, complex ARIA logic, reading order, semantic intent — and tag those findings `[HEURISTIC]` or `[NEEDS-MANUAL]`.
+
+**Skip Phase 0 silently if Python is unavailable** (`python3 --version` and `python --version` both fail). In that case, Phases 2–8 below run as the original LLM regex passes, with all findings tagged `[HEURISTIC]` since the deterministic backstop is missing. Note this in the report header: `⚠ Python unavailable — running in fallback mode; static patterns are heuristic.`
+
+Execute as a single parallel Bash batch (one shell spawn for all four):
+
+```bash
+PY=$(command -v python3 || command -v python)
+PR="${plugin_root}/scripts"
+$PY "$PR/scan-jsx-patterns.py" "$PWD" > /tmp/rad-a11y-jsx.json &
+$PY "$PR/check-tailwind-contrast.py" "$PWD" > /tmp/rad-a11y-contrast.json &
+$PY "$PR/check-target-size.py" "$PWD" > /tmp/rad-a11y-target.json &
+$PY "$PR/lint-aria.py" "$PWD" > /tmp/rad-a11y-aria.json &
+wait
+```
+
+Then read all four JSON outputs in a parallel Read batch. Each emits the schema documented in `scripts/README.md`:
+
+```json
+{
+  "tool": "...",
+  "files_scanned": 42,
+  "findings_count": 7,
+  "findings": [ { "category": "...", "wcag": "...", "severity": "...", "confidence": "STATIC", "file": "...", "line": 12, "snippet": "...", "fix": "..." } ]
+}
+```
+
+**Use the validator findings verbatim** — do not re-derive, paraphrase, or second-guess the snippet/line/category fields. They are deterministic; rewriting them adds drift. The LLM's job in Phases 2–8 is to add findings the scripts couldn't make, not to second-guess the ones they did.
+
+If `lint-aria.py` reports `"plugin_installed": false`, surface its `recommendation` field once at the top of the report so the user knows to install `eslint-plugin-jsx-a11y` for higher-coverage linting.
+
+---
+
+## Phases 2–8: LLM-only patterns (everything scripts can't decide)
+
+The phases below now run **after** Phase 0. They cover only what static scripts cannot determine — patterns requiring contextual judgment, cross-element analysis, or semantic intent. **Do not duplicate work the scripts already did**; if scan-jsx-patterns flagged a missing `alt`, do not re-flag it from the LLM pass. Instead, layer LLM judgment on:
+
+- **Alt-text meaningfulness** — scripts catch missing/bad-pattern alt; LLM judges whether present alt is *informative*. Tag `[HEURISTIC]`.
+- **ARIA logic in complex widgets** — scripts catch hardcoded literals; LLM judges whether ARIA states for tabs/menus/comboboxes follow the APG keyboard contract end-to-end. Tag `[HEURISTIC]`.
+- **Reading order vs. visual order** — DOM-runtime concern; tag `[NEEDS-MANUAL]`.
+- **Live region timing** — runtime concern; tag `[NEEDS-MANUAL]`.
+- **Empty / icon-only buttons** — cross-element analysis (is there visible text in a sibling? a `sr-only` span?); tag `[HEURISTIC]`.
+- **Placeholder-as-label** — cross-element (does a `<label htmlFor>` exist nearby?); tag `[HEURISTIC]`.
+- **Fieldset grouping correctness** — is the group of related inputs actually wrapped? `[HEURISTIC]`.
+
+Phases 1 (file map) and 2–8 below remain as written for the LLM-judgment slices. Phase 0 supersedes the deterministic-pattern slices that used to live inside Phases 2–8.
 
 ---
 
