@@ -99,14 +99,6 @@
       "license": "Apache-2.0"
     },
     {
-      "name": "rad-google-workspace",
-      "source": "./plugins/rad-google-workspace",
-      "description": "Google Workspace integration — 42 service skills (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Meet, Tasks, Forms, Keep, Classroom), 41 workflow recipes, and 10 role-based personas. Requires the gws CLI.",
-      "category": "productivity",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-google-workspace",
-      "license": "Apache-2.0"
-    },
-    {
       "name": "rad-agentic-company-builder",
       "source": "./plugins/rad-agentic-company-builder",
       "description": "Scaffold and configure an AI-agent-driven company infrastructure — folder hierarchies, CLAUDE.md files, agent definitions, skills, hooks, MCP configs, and operational patterns based on The Agentic Bible 2026.",

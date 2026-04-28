@@ -4,7 +4,7 @@ A curated marketplace of plugins for [Claude Code](https://docs.anthropic.com/en
 
 Install everything at once or cherry-pick individual plugins.
 
-> **April 2026 — Marketplace tightened.** The single-framework reviewer plugins (rad-react, rad-zod, rad-typescript, rad-nextjs, rad-fastify, rad-astro, rad-stripe-fastify-webhooks) have been retired — Opus 4.7 handles those framework-specific reviews well enough on its own. **rad-stack-guide is also retired**, with its stack-detection value absorbed into rad-session 3.0's new `/init` skill. The remaining 16 plugins are the ones that demonstrably add value Opus doesn't already provide.
+> **April 2026 — Marketplace tightened.** The single-framework reviewer plugins (rad-react, rad-zod, rad-typescript, rad-nextjs, rad-fastify, rad-astro, rad-stripe-fastify-webhooks) have been retired — Opus 4.7 handles those framework-specific reviews well enough on its own. **rad-stack-guide is also retired**, with its stack-detection value absorbed into rad-session 3.0's new `/init` skill. **rad-google-workspace (93 skills) is also archived** — superseded by the focused [`rad-gws-core`](plugins/rad-gws-core/) (14 essential skills). The remaining 15 plugins are the ones that demonstrably add value Opus doesn't already provide.
 
 ---
 
@@ -22,7 +22,6 @@ RAD-Claude-Skills/
 │   ├── rad-code-review/               # Diff-aware adversarial code review
 │   ├── rad-context-prompter/          # Prompt engineering for 30+ AI platforms
 │   ├── rad-coolify-orchestrator/      # Coolify self-hosted PaaS management (MCP-backed)
-│   ├── rad-google-workspace/          # Google Workspace integration (93 skills)
 │   ├── rad-gws-core/                  # Google Workspace core (14 essential skills)
 │   ├── rad-para-second-brain/         # PARA second brain — organize, review, distill
 │   ├── rad-planner/                   # Structured project planning + Python DAG validators
@@ -162,8 +161,7 @@ Each plugin stands alone — the pipeline is a suggestion, not a requirement. Th
 
 | Plugin | Skills | Agents | What It Does | Works with |
 |--------|--------|--------|-------------|-----------|
-| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace essentials — Gmail send/read/reply/triage, Docs, Sheets, Slides, Drive, Calendar. Lightweight starting point | CLI, Desktop |
-| [rad-google-workspace](plugins/rad-google-workspace/) | 93 | 0 | Full Google Workspace — 44 service skills, 41 workflow recipes, 10 role-based personas. Requires `gws` CLI | CLI, Desktop |
+| [rad-gws-core](plugins/rad-gws-core/) | 14 | 0 | Google Workspace essentials — Gmail send/read/reply/triage, Docs write, Sheets read/append, Slides, Drive, Calendar. Requires `gws` CLI. The wider 93-skill `rad-google-workspace` was archived in April 2026 (see [archive/](archive/)). | CLI, Desktop |
 
 ### Agentic Systems
 

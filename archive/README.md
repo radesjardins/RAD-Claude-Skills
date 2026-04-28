@@ -4,9 +4,11 @@ These plugins are paused — they remain in the repository for reference and pot
 
 ## Why archived
 
-Modern frontier coding models (Opus 4.7+) have strong baseline knowledge of these frameworks and languages. The skills here mostly duplicated that baseline knowledge without adding meaningful uplift, and contributed noise to skill selection. Generic "best practices" and "anti-pattern" skills for popular frameworks were the lowest-leverage portion of the toolkit.
+Two waves of archival:
 
-The reviewer agents in these plugins were partially redundant with [`rad-code-review`](../plugins/rad-code-review) and [`rad-stack-guide`](../plugins/rad-stack-guide), which orchestrate ship-readiness reviews using a stack-aware approach.
+**Single-framework reviewers (April 2026).** Modern frontier coding models (Opus 4.7+) have strong baseline knowledge of these frameworks and languages. The skills here mostly duplicated that baseline knowledge without adding meaningful uplift, and contributed noise to skill selection. Generic "best practices" and "anti-pattern" skills for popular frameworks were the lowest-leverage portion of the toolkit. Reviewer agents in these plugins were partially redundant with [`rad-code-review`](../plugins/rad-code-review), which orchestrates ship-readiness reviews using a stack-aware approach.
+
+**Wide-surface productivity wrappers (April 2026).** `rad-google-workspace` exposed 93 skills (44 services + 41 workflow recipes + 10 personas) — too wide a surface for routine use, and the workflow/persona skills duplicated what Opus 4.7 can compose on its own from the underlying service skills. Superseded by [`rad-gws-core`](../plugins/rad-gws-core), the focused 14-skill subset covering everyday productivity (Gmail send/read/reply/triage, Docs write, Sheets read/append, Slides, Drive, Calendar). Both depend on the same `gws` CLI binary, so anyone who needs the broader surface can still install from the archive.
 
 ## Archived plugins
 
@@ -14,6 +16,7 @@ The reviewer agents in these plugins were partially redundant with [`rad-code-re
 | --- | --- |
 | `rad-astro` | Astro 5/6 standards, a11y, perf, security |
 | `rad-fastify` | Fastify encapsulation, hooks, schemas, testing |
+| `rad-google-workspace` | Full Google Workspace — 44 service skills + 41 workflow recipes + 10 role personas. Superseded by [`rad-gws-core`](../plugins/rad-gws-core) (14 essential skills). |
 | `rad-nextjs` | App Router, RSC, security, testing |
 | `rad-react` | React 19 patterns, hooks, security, perf |
 | `rad-stripe-fastify-webhooks` | Stripe webhook handling, idempotency, Zod contracts |
