@@ -21,11 +21,17 @@ Orient a new session by reading the handoff state left by `/wrapup`, detecting t
 
 **Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet should batch Phase 1 + Phase 2 + Phase 2.5 reads into a single parallel tool-call burst (see "Execution" below). Haiku may follow phase order sequentially if parallel batching misbehaves. Output briefing format is identical regardless of model.
 
+## Mode flags
+
+- `--auto-pull` — Skip the Phase 0 prompt; fast-forward silently when behind. For autonomous loops or when you've already decided to always sync.
+- `--no-pull` — Skip the sync check entirely; read local files as-is. Briefing leads with a stale warning if origin has unpulled commits. For offline work.
+- Neither → prompt at Phase 0 when behind (default).
+
 ---
 
 ## Execution: parallel-first
 
-Phase 0 (git pull) **must run first** because it can update files that the rest of the skill reads. After Phase 0 completes, the work inside Phases 1, 2, and 2.5 has **no inter-phase dependencies** — every read and every shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that. The only sequential step is Phase 3 (briefing synthesis), which depends on the results.
+Phase 0 (sync from origin) **must run first** because it can update the very files that the rest of the skill reads, and may need to wait for a user response to the pull prompt. After Phase 0 resolves (pulled, declined, skipped, or aborted), the work inside Phases 1, 2, and 2.5 has **no inter-phase dependencies** — every read and every shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that. The only sequential step is Phase 3 (briefing synthesis), which depends on the results.
 
 **Batch to issue at the start of the skill:**
 
@@ -38,57 +44,65 @@ If a file is missing, the corresponding Read call will error silently — that's
 
 ---
 
-## Phase 0: Cross-Machine Sync (git pull)
+## Phase 0: Sync from origin
 
-Runs **before** the parallel read batch so any session files pulled from origin are read in the next phase.
+A handoff is only useful if you're reading the latest state. Phase 0 confirms local matches origin **before** any HANDOFF.md / session-log.md / CLAUDE.md read fires. The owner approves push during `/wrapup`; startup verifies freshness on the way in.
 
-### 0.1 Skip conditions
-
-Skip Phase 0 silently if any of these hold:
+### 0.1 Skip silently if any hold
 
 - Project is not a git repo (`git rev-parse --git-dir` fails).
 - Current branch has no upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` fails).
-- An in-progress merge / rebase / cherry-pick is detected (`.git/MERGE_HEAD` or `.git/REBASE_HEAD` exists).
+- An in-progress merge / rebase / cherry-pick (`.git/MERGE_HEAD` or `.git/REBASE_HEAD` exists).
 
-### 0.2 Pull
-
-Run a strict fast-forward pull — never merge, never force, never rebase user work:
+### 0.2 Fetch and compare
 
 ```bash
-git pull --ff-only 2>&1
+git fetch --quiet 2>/dev/null
+git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null
 ```
 
-Possible outcomes:
+Output is `<ahead>\t<behind>`. Also check tree cleanliness with `git status --porcelain` — used to decide whether a fast-forward is even possible.
 
-- **Already up to date** → continue silently.
-- **Fast-forward succeeded** → capture the count of pulled commits and the hostnames mentioned in their commit messages (see 0.3 below).
-- **Non-fast-forward (diverged)** → do **not** retry with merge or rebase. Surface a one-line warning and continue with local state:
-  ```
-  ⚠ Couldn't auto-pull — local branch has diverged from origin. Resolve manually with: git pull --rebase
-  ```
-- **Dirty working tree blocked the pull** → same: surface a one-line warning, continue:
-  ```
-  ⚠ Couldn't auto-pull — working tree has uncommitted changes. Commit, stash, or wrap up first.
-  ```
+### 0.3 Act on the result
 
-### 0.3 Cross-machine handoff signal
+A fast-forward is possible when the tree is clean AND ahead = 0. Otherwise it's blocked (dirty tree or diverged).
 
-If the pull brought in commits, inspect the most recent session commit to detect cross-machine continuation:
+| State | `--auto-pull` | `--no-pull` | Default (no flag) |
+|---|---|---|---|
+| Behind = 0 | continue silently | continue silently | continue silently |
+| Behind > 0, FF possible | `git pull --ff-only` silently | stale-warn + read local | show incoming commits + prompt; on Y → pull, on N → stale-warn + read local |
+| Behind > 0, FF blocked | block-warn + read local | block-warn + read local | block-warn + ask "Read local anyway? (Y/n)" — Y reads local, N aborts the briefing |
+
+**Stale warning** (placed at the top of the Phase 3 briefing, above the Project line):
+```
+⚠ Reading stale local state — origin has N unpulled commits. Re-run /startup without --no-pull to sync.
+```
+
+**Block warning** (placed at the top of the Phase 3 briefing):
+```
+⚠ Couldn't sync — <dirty working tree | local diverged from origin>. Resolve with: <git stash | git pull --rebase>.
+```
+
+When prompting in the default behind-FF-possible case, list the incoming commits first via `git log HEAD..@{u} --oneline -10` so the user sees what's about to land. Default the prompt to Y (sync is the safe choice when FF is possible).
+
+### 0.4 Cross-machine handoff signal
+
+Fires whenever the most recent session commit was made on another machine — independent of whether this turn pulled. This is what surfaces "Continuing from <PC>" on the laptop even if the pull came in earlier.
 
 ```bash
-git log -1 --format='%s' -- HANDOFF.md .claude/session-log.md
+git log -1 --format='%s' -- HANDOFF.md .claude/session-log.md 2>/dev/null
 ```
 
 Parse for the canonical session-commit format `session: YYYY-MM-DD on <hostname> — <status>` (written by `/wrapup` Phase 6.3).
 
-- If `<hostname>` differs from the current machine's hostname (`$HOSTNAME` / `$COMPUTERNAME` / `hostname`), stash a one-line note for the briefing:
+- Hostname differs from `$HOSTNAME` / `$COMPUTERNAME` / `hostname` → stash this Phase 3 note:
   ```
-  Continuing from <other-host> — N session commits pulled from origin.
+  Continuing from <other-host> — last session committed there.
   ```
-- If hostname matches the current machine, no note needed (this is just a normal pull, not a cross-machine handoff).
-- If the commit doesn't match the canonical format (e.g., user committed HANDOFF.md manually), skip the note silently.
+- Hostname matches → no note (continuing on the same machine).
+- Commit doesn't match the canonical session format (manual commit) → skip silently.
 
-The cross-machine note appears at the top of the Phase 3 briefing, above the Project line.
+The cross-machine note appears at the top of the Phase 3 briefing, above the Project line and below any stale/block warning.
 
 ---
 

@@ -6,6 +6,8 @@
 
 **What it isn't.** It is **not** a memory replacement. Claude Code has native Auto Memory (v2.1.59+) for that — rad-session surfaces insights so the native system can pick them up, but never writes to the memory path. It is **not** an automation layer over your code: it never runs builds, never touches non-session files in commits, and never force-pushes.
 
+> **v3.3 — Verify-before-read sync.** `/startup` now fetches origin and prompts to pull when local is behind, *before* reading HANDOFF.md / session-log.md / CLAUDE.md — so you're never silently reading a stale handoff after switching machines. New `--auto-pull` / `--no-pull` flag overrides for autonomous loops and offline work. Phase 0 streamlined into a single decision table; cross-machine handoff detection fires on hostname mismatch regardless of whether this turn brought in the commits.
+>
 > **v3.2 — Slim wrapup.** Recency-bounded conversation tagging, mechanical session-log derivation from HANDOFF.md, and auto-skipped CLAUDE.md prunes when nothing has changed since the last wrapup. New `--quick` mode for short sessions. Cuts wrapup wall time substantially without losing fidelity.
 >
 > **v3.1 — Cross-machine continuity.** `/wrapup` auto-commits session files and prompts to push; `/startup` runs `git pull --ff-only` and detects cross-machine handoffs via hostname in the commit message. `/init` ensures session files aren't gitignored. `--push` / `--no-push` overrides for autonomous loops.
@@ -17,7 +19,7 @@
 | Phase | When | Skill | What it does |
 |---|---|---|---|
 | **Init** | Once, when you start work in a project | `/init` | Detects stack deterministically (Python scripts, no LLM guessing), finds MCPs and CLIs in the project, scaffolds CLAUDE.md or proposes additions, ensures session files aren't gitignored so cross-machine sync works, recommends which rad-* plugins fit your stack |
-| **Startup** | Every session | `/startup` | **Pulls session files from origin via `git pull --ff-only`**, reads HANDOFF.md + session log + CLAUDE.md, runs Resource Discovery, presents a concise briefing including a cross-machine note if you just continued from a different host |
+| **Startup** | Every session | `/startup` | **Fetches origin and prompts to pull when behind** (3.3 — verifies sync before reading any handoff file; lists incoming commits first; `--auto-pull` skips prompt, `--no-pull` skips sync entirely), reads HANDOFF.md + session log + CLAUDE.md, runs Resource Discovery, presents a concise briefing including a cross-machine note if the most recent session commit was made on a different host |
 | **Wrapup** | Every session | `/wrapup` | Writes structured HANDOFF.md with "what NOT to do" field, derives a compressed session-log entry from it, prunes CLAUDE.md only if it's actually changed since the last wrapup (with diff confirmation; Resources protected), surfaces insights for native Auto Memory, **auto-commits session files and prompts to push** |
 
 Plus `/add-resource` (any time, registers a new tool) and a PreCompact hook (auto-fires on context compaction so state isn't silently lost).
@@ -27,9 +29,27 @@ Plus `/add-resource` (any time, registers a new tool) and a PreCompact hook (aut
 | Component | Triggers | What it does |
 |---|---|---|
 | **`/init`** *(new in 3.0)* | start of project work, "set up rad-session here", "bootstrap" | One-time project bootstrap. Runs the two detection scripts, scaffolds CLAUDE.md with detected stack/resources, recommends rad-* plugins for your stack, sets up `.claude/session-log.md`. Safe to re-run (merges, doesn't overwrite). |
-| **`/startup`** | start of session, "/startup", "where did we leave off" | Reads HANDOFF.md + session log, detects git state, **runs Phase 2.5 Resource Discovery** (now uses `detect-resources.py` deterministically when Python is available), presents briefing |
-| **`/wrapup`** | end of session, "/wrapup", "wrap up" | Writes HANDOFF.md with "What NOT to do" field, appends session log (20-entry cap), prunes CLAUDE.md with diff confirmation (**Resources section protected**), surfaces insights for native Auto Memory |
+| **`/startup`** | start of session, "/startup", "where did we leave off" | **Verifies sync with origin first** (3.3 — prompts to pull when behind, before reading any handoff files), then reads HANDOFF.md + session log, detects git state, runs Phase 2.5 Resource Discovery (uses `detect-resources.py` deterministically when Python is available), presents briefing |
+| **`/wrapup`** | end of session, "/wrapup", "wrap up" | Writes HANDOFF.md with "What NOT to do" field, appends session log (20-entry cap), prunes CLAUDE.md with diff confirmation (**Resources section protected**), surfaces insights for native Auto Memory, auto-commits session files and prompts to push |
 | **`/add-resource`** | "add this MCP", "remember the supabase CLI", "register this resource" | Appends an MCP/CLI/script/note to CLAUDE.md's `## Resources` section so `/startup` picks it up next session |
+
+### Slash commands and flags reference
+
+Every flag accepted by every skill, plus all natural-language triggers:
+
+| Skill | Triggers (any of) | Flags |
+|---|---|---|
+| **`/init`** | "/init", "set up rad-session", "bootstrap this project", "initialize rad-session", "start a new project here" | `--non-interactive` skip all prompts and accept proposed scaffold · `--dry-run` preview detection + scaffold without writing anything |
+| **`/startup`** | "/startup", "start session", "orient me", "where did we leave off", "catch me up", "what's the state", "session briefing" | `--auto-pull` skip the Phase 0 prompt and fast-forward silently when behind · `--no-pull` skip the sync check entirely and read local files as-is (briefing leads with stale warning if origin is ahead) |
+| **`/wrapup`** | "/wrapup", "wrap up", "end of session", "session handoff", "save session state", "wrap this up", "close out this session" | `--push` skip the Phase 6 push prompt and push the session commit immediately · `--no-push` skip push entirely, commit locally only · `--quick` 15-turn tagging window, skip CLAUDE.md prune, skip recurring-trap promotion |
+| **`/add-resource`** | "add this MCP", "remember the supabase CLI", "register this resource", "track this tool" | (none) |
+
+Combine flags freely — e.g. `/wrapup --push --quick` (autonomous-loop wrapup), `/startup --no-pull` (offline work), `/startup --auto-pull` (always-sync mode without prompting).
+
+**Default behavior with no flags:**
+- `/startup` prompts to pull when behind, lists incoming commits before asking.
+- `/wrapup` always commits session files locally; prompts before pushing.
+- `/init` walks through detection + scaffold proposal interactively.
 
 Plus one hook:
 
@@ -64,13 +84,17 @@ If your project has a git remote, rad-session keeps `HANDOFF.md` and `.claude/se
 |---|---|
 | `/init` Step 7.5 | Detects if `.claude/` is gitignored; proposes `!.claude/session-log.md` exception so the log gets committed. |
 | `/wrapup` Phase 6 | Auto-commits session files (silent, never `git add -A`). Prompts: `Push session files to origin? (y/N)`. Commit message: `session: YYYY-MM-DD on <hostname> — <status>`. |
-| `/startup` Phase 0 | Runs `git pull --ff-only` before reading anything. If pulled commits came from a different hostname, briefing leads with `Continuing from <other-host> — N session commits pulled`. |
+| `/startup` Phase 0 *(streamlined in 3.3)* | Fetches origin and compares ahead/behind. **If behind, prompts to pull before reading any handoff file** — listing the incoming commits first so you see what's about to land. On approval, fast-forwards. On decline, briefing leads with `⚠ Reading stale local state`. If the most recent session commit was made on a different host, briefing also leads with `Continuing from <other-host> — last session committed there`. |
 
-**Auto-commit, prompted push.** Local commits are cheap so they always happen. Pushing is a deliberate "I'm about to switch machines" decision. Stack multiple unpushed session commits on the same machine; push when you're ready to hand off.
+**Auto-commit, prompted push (wrapup) — fetch + prompted pull (startup).** Local commits are cheap so they always happen on wrapup. Pushing is a deliberate "I'm about to switch machines" decision. Pulling is a deliberate "I want to read the latest state" decision — `/startup` prompts on every behind state so you're never silently reading a stale handoff. Stack multiple unpushed session commits on the same machine; push when you're ready to hand off.
 
-**Flag overrides:** `/wrapup --push` (skip prompt, push) or `/wrapup --no-push` (skip prompt, commit locally only). Useful for autonomous loops or when you've already decided.
+**Flag overrides:**
+- `/startup --auto-pull` — skip the prompt, fast-forward silently when behind. For autonomous loops.
+- `/startup --no-pull` — skip the sync check entirely. For offline work.
+- `/wrapup --push` — skip the prompt, push immediately. For autonomous loops.
+- `/wrapup --no-push` — skip the prompt, commit locally only.
 
-**Safety:** wrapup never force-pushes, never touches non-session files, and bails cleanly on diverged history. Startup never merges, never rebases, never discards local work — it only attempts a fast-forward pull and warns if it can't.
+**Safety:** wrapup never force-pushes, never touches non-session files, and bails cleanly on diverged history. Startup never merges, never rebases, never discards local work — it only attempts a fast-forward pull and warns if it can't (dirty tree or diverged → block warning surfaces in the briefing, never an auto-resolve).
 
 ## What `/init` does (the headline of 3.0)
 
@@ -165,12 +189,16 @@ No config required; the hook ships with the plugin.
 
 **First time in a project:**
 ```
-/init
+/init                   # interactive bootstrap
+/init --non-interactive # accept proposed scaffold without prompting
+/init --dry-run         # preview detection + scaffold without writing
 ```
 
 **Start of every session:**
 ```
-/startup
+/startup                # fetches origin, prompts to pull if behind, then reads handoff
+/startup --auto-pull    # fast-forward silently when behind (no prompt)
+/startup --no-pull      # skip sync entirely, read local (with stale warning)
 ```
 
 **Register resources as you discover them:**
@@ -186,13 +214,13 @@ remember we have the coolify MCP available for this project
 /wrapup --quick    # short-session mode (15-turn tagging window, skip prune)
 ```
 
-**Switching machines.** Run `/wrapup` on the PC and answer Y to the push prompt. On the laptop, run `/startup` — it pulls automatically and the briefing leads with `Continuing from <PC-hostname>`. No manual git work, no copy-paste, no confusion about which machine has the latest state.
+**Switching machines.** Run `/wrapup --push` on the PC. On the laptop, run `/startup` — it fetches origin, shows the incoming session commits, asks once to pull, then leads the briefing with `Continuing from <PC-hostname>`. No manual git work, no copy-paste, no risk of silently reading a stale handoff. Use `/startup --auto-pull` if you don't want to be prompted on every machine switch.
 
 Works with coding projects (captures git state + stack resources) and non-coding projects (scans recently modified files; still surfaces documented resources). Cross-machine sync is git-only — projects without a remote get the local lifecycle and skip the sync phases silently.
 
 ## How this compares to alternatives
 
-| | **rad-session 3.2** | Native CC Auto Memory | claude-plugins-official/remember | claude-mem | thepushkarp/handoff |
+| | **rad-session 3.3** | Native CC Auto Memory | claude-plugins-official/remember | claude-mem | thepushkarp/handoff |
 |---|---|---|---|---|---|
 | Project bootstrap (`/init`) | ✅ **unique** | ❌ | ❌ | ❌ | ❌ |
 | Resource discovery (MCPs/CLIs/stack) | ✅ **unique** | ❌ | ❌ | ❌ | ❌ |
@@ -220,6 +248,14 @@ Works with coding projects (captures git state + stack resources) and non-coding
 - **Does not orchestrate code reviews** — that role belonged to retired rad-stack-guide. Use the specialist reviewers directly (rad-code-review for general, rad-supabase / rad-coolify-orchestrator / rad-a11y / rad-chrome-extension for their domains).
 
 ## Version
+
+**3.3.0** — **Verify-before-read sync on `/startup`.** Closes a contract gap from 3.1: previous behavior pulled silently on success but soft-failed to local state on any obstacle, which meant you could read a stale handoff without realizing it.
+- `/startup` Phase 0 streamlined into a single decision table indexed on `(behind count, FF possible, flag)`. Replaces ~50 lines of conditional prose covering merge/rebase/cherry-pick/dirty/diverged with one scannable matrix.
+- `/startup` now **fetches first, then prompts to pull when behind**, listing the incoming commits via `git log HEAD..@{u} --oneline` so you see what's about to land before approving. The prompt defaults to Y when fast-forward is possible (sync is the safe choice).
+- New flag overrides: `--auto-pull` (skip prompt, fast-forward silently) and `--no-pull` (skip sync entirely, read local with stale warning). Symmetric to wrapup's `--push` / `--no-push`.
+- Cross-machine handoff detection now fires on hostname mismatch in the most recent session commit *regardless* of whether this turn's pull brought it in. Fixes a bug where a previously-pulled cross-machine commit wouldn't surface the "Continuing from <other-host>" note.
+- Stale and block warnings are explicit briefing-top callouts, not silent continues.
+- README adds a comprehensive flags reference table (every skill, every flag, every trigger phrase).
 
 **3.2.0** — **Slim wrapup.** Cuts wrapup wall time substantially without losing fidelity.
 - `/wrapup` Phase 1.3 conversation tagging is now bounded by recency: the window starts at the most recent `/wrapup`, `/checkpoint`, PreCompact systemMessage, or `/startup` briefing, with a 40-turn fallback cap. Long sessions no longer scale wrapup cost linearly.

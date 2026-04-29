@@ -7,8 +7,13 @@ Canonical output formats for `/startup` Phase 3. The startup skill picks one of 
 ## Full Briefing (HANDOFF.md exists + coding project)
 
 ```
+[If sync warnings from Phase 0, place them here above everything else:]
+⚠ Reading stale local state — origin has N unpulled commits. Re-run /startup without --no-pull to sync.
+[or]
+⚠ Couldn't sync — <dirty working tree | local diverged from origin>. Resolve with: <git stash | git pull --rebase>.
+
 [If cross-machine handoff detected in Phase 0:]
-Continuing from <other-host> — N session commits pulled from origin.
+Continuing from <other-host> — last session committed there.
 
 Project: [name]
 Type: [Coding (stack) | Non-coding]

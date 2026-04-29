@@ -10,7 +10,7 @@ Shared rules that both `/wrapup` and `/startup` follow. These conventions ensure
 | `HANDOFF.md` | Project root | `/wrapup` (overwritten each session) | Yes — required for cross-machine sync |
 | `.claude/session-log.md` | `.claude/` directory | `/wrapup` (prepend per session) | Yes — required for cross-machine sync |
 
-**Cross-machine sync depends on these files being committed.** `/init` Step 7.5 detects `.claude/` gitignore rules and proposes a `!.claude/session-log.md` exception. `/wrapup` Phase 6 commits them automatically and prompts for push. `/startup` Phase 0 pulls them before reading.
+**Cross-machine sync depends on these files being committed.** `/init` Step 7.5 detects `.claude/` gitignore rules and proposes a `!.claude/session-log.md` exception. `/wrapup` Phase 6 commits them automatically and prompts for push (`--push` skips the prompt and pushes; `--no-push` commits locally only). `/startup` Phase 0 fetches origin and prompts to pull when behind *before* reading any handoff file (`--auto-pull` skips the prompt and fast-forwards silently; `--no-pull` skips the sync entirely and reads local with a stale warning if origin is ahead).
 
 ## CLAUDE.md Standards
 

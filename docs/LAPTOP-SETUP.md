@@ -314,7 +314,13 @@ When done on that machine and you want to switch, `git push`, then on the other 
 
 ### The `rad-session` plugin helps
 
-You already have it enabled. At session end run `/wrapup` — writes `HANDOFF.md` capturing state. At session start on the other machine run `/startup`. `HANDOFF.md` is not tracked in git though, so either commit it manually to each repo or put it in the private `dev-notes` repo suggested in §4.
+You already have it enabled. At session end run `/wrapup` — writes `HANDOFF.md` + `.claude/session-log.md`, auto-commits both, and prompts to push (`y` to push to origin). At session start on the other machine run `/startup` — it fetches origin, lists incoming session commits, and prompts to pull before reading anything. The briefing leads with `Continuing from <other-host>` so you immediately see you're on a cross-machine handoff.
+
+Flag overrides for this workflow:
+- `/wrapup --push` (no prompt, push immediately) and `/wrapup --no-push` (commit locally only)
+- `/startup --auto-pull` (no prompt, fast-forward silently) and `/startup --no-pull` (skip sync, read local with stale warning)
+
+Cross-machine sync requires the project to have a git remote and `HANDOFF.md` + `.claude/session-log.md` to be tracked — `/init` Step 7.5 handles the gitignore exception automatically. No `dev-notes` repo workaround needed.
 
 ---
 
