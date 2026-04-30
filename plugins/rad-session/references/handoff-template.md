@@ -79,5 +79,6 @@ Every trap entry uses a structured three-part form so `/startup` can reliably ex
 2. **Be specific.** "`src/auth.ts:45-80` — added JWT validation middleware" beats "made auth changes."
 3. **State, not instructions.** "Open Work" describes what IS, not what to DO. "EBirdProvider started, API auth not wired" — not "Wire up the eBird API auth next."
 4. **Keep it scannable.** Bullet points over paragraphs. One idea per bullet.
-5. **Target length:** 30-80 lines depending on session complexity. Lighter sessions get shorter handoffs.
-6. **Traps are gold.** The "What NOT To Do" section is the most valuable part of the handoff — it prevents the next session from re-running dead ends. Always include a `FAILED BECAUSE:` clause with a real root cause.
+5. **Per-bullet length cap: ≤ 3 sentences (~300 chars).** A bullet is one thought, not a mini-essay. If a decision needs more, break it into multiple bullets — each its own thought. If it can't be broken down, the rationale belongs in a code comment, design doc, or git commit message, not in HANDOFF.
+6. **Total length: target 30–80 lines, hard cap 100 lines / 8 KB.** If the handoff exceeds the hard cap, the wrapup synthesis is over-preserving — re-compress before writing. Long sessions don't justify long handoffs; the handoff captures *state*, not *narrative*.
+7. **Traps are gold.** The "What NOT To Do" section is the most valuable part of the handoff — it prevents the next session from re-running dead ends. Always include a `FAILED BECAUSE:` clause with a real root cause. Each trap is 2–4 lines (TRIED + FAILED BECAUSE + optional CORRECT APPROACH), not multiple paragraphs.

@@ -6,6 +6,8 @@
 
 **What it isn't.** It is **not** a memory replacement. Claude Code has native Auto Memory (v2.1.59+) for that — rad-session surfaces insights so the native system can pick them up, but never writes to the memory path. It is **not** an automation layer over your code: it never runs builds, never touches non-session files in commits, and never force-pushes.
 
+> **v3.4 — Maintenance is mandatory + per-bullet caps.** Phase 3 split into 3.A (append, mechanical) and 3.B (maintenance, hard Bash-gated). Maintenance is no longer conditional on LLM judgment — Bash counts entries, and the count alone determines whether trim/promotion runs. Per-bullet length caps now hard-coded: HANDOFF bullets ≤ 3 sentences (~300 chars), session-log bullets ≤ 1 sentence (~150 chars), session-log entries hard-capped at 30 lines / 1.5 KB. Phase 6 final state assertion prints sizes with `⚠` flags so over-cap files are impossible to hide. Closes the silent-skip-of-maintenance defect that allowed one project's session-log to grow to 23 entries / 105 KB across 23 wrapups without a single trim.
+>
 > **v3.3 — Verify-before-read sync.** `/startup` now fetches origin and prompts to pull when local is behind, *before* reading HANDOFF.md / session-log.md / CLAUDE.md — so you're never silently reading a stale handoff after switching machines. New `--auto-pull` / `--no-pull` flag overrides for autonomous loops and offline work. Phase 0 streamlined into a single decision table; cross-machine handoff detection fires on hostname mismatch regardless of whether this turn brought in the commits.
 >
 > **v3.2 — Slim wrapup.** Recency-bounded conversation tagging, mechanical session-log derivation from HANDOFF.md, and auto-skipped CLAUDE.md prunes when nothing has changed since the last wrapup. New `--quick` mode for short sessions. Cuts wrapup wall time substantially without losing fidelity.
@@ -248,6 +250,14 @@ Works with coding projects (captures git state + stack resources) and non-coding
 - **Does not orchestrate code reviews** — that role belonged to retired rad-stack-guide. Use the specialist reviewers directly (rad-code-review for general, rad-supabase / rad-coolify-orchestrator / rad-a11y / rad-chrome-extension for their domains).
 
 ## Version
+
+**3.4.0** — **Maintenance is mandatory + per-bullet caps.** Closes a structural defect: across one project, the session-log grew from 13 → 23 entries over 23 wrapups without a single trim firing, because Phase 3 maintenance was buried as a conditional sub-section that LLMs consistently skipped.
+- `/wrapup` Phase 3 split into **3.A — Append (mechanical)** and **3.B — Maintain (hard gate, MANDATORY)**. 3.B is no longer conditional. It always runs. Bash (`grep -c "^## [0-9]"`) counts entries deterministically; the count alone determines whether trim/promotion fires.
+- Per-bullet length caps now hard-coded in both the skill and the reference docs:
+  - **HANDOFF.md:** bullets ≤ 3 sentences (~300 chars), total ≤ 100 lines / 8 KB.
+  - **session-log:** bullets ≤ 1 sentence (~150 chars), entries hard-capped at 30 lines / 1.5 KB.
+- Phase 6 final state assertion prints HANDOFF + session-log sizes with `⚠` flags when over cap. Silent skip is structurally impossible after 3.4 — every wrapup ends with the size truth visible.
+- Maintenance notification (`Session log: trimmed N` / `no maintenance needed`) is now mandatory output regardless of whether trim ran. Was previously only emitted when trim fired.
 
 **3.3.0** — **Verify-before-read sync on `/startup`.** Closes a contract gap from 3.1: previous behavior pulled silently on success but soft-failed to local state on any obstacle, which meant you could read a stale handoff without realizing it.
 - `/startup` Phase 0 streamlined into a single decision table indexed on `(behind count, FF possible, flag)`. Replaces ~50 lines of conditional prose covering merge/rebase/cherry-pick/dirty/diverged with one scannable matrix.

@@ -128,7 +128,8 @@ Overwrite `HANDOFF.md` at the project root. Follow the template in `references/h
 - **Be specific.** "Modified `src/auth.ts` lines 45-80 — added JWT validation" is useful. "Made changes to auth" is not.
 - **Describe state, not instructions.** "Open Work" says "EBirdProvider started, API auth not wired" — not "Next, wire up the eBird API auth."
 - **Keep it scannable.** Bullet points over paragraphs. One idea per bullet.
-- **Target length:** 30-80 lines depending on session complexity.
+- **Per-bullet length cap: ≤ 3 sentences (~300 chars).** A bullet is one thought, not a mini-essay. If a decision needs more, break it into multiple bullets — each its own thought. If it can't be broken down, the rationale belongs in a code comment, design doc, or commit message — not in HANDOFF. Long sessions don't justify long bullets; the handoff captures *state*, not *narrative*.
+- **Target length: 30–80 lines, hard cap 100 lines / 8 KB.** If the handoff exceeds the hard cap after writing, re-compress before saving. Don't ship oversized handoffs — they pollute every subsequent session-log entry that derives from them.
 
 ### "What NOT To Do" — canonical trap format
 
@@ -184,57 +185,98 @@ user preferences discovered during this session]
 
 ---
 
-## Phase 3: Append Session Log
+## Phase 3: Append + Maintain Session Log
 
-Update `.claude/session-log.md` with a compact entry for this session. Follow `references/session-log-format.md`.
+Update `.claude/session-log.md`. Phase 3 has two **separate, sequential** sub-phases — both must run. Skipping 3.B is the most common defect in this workflow; the structure below makes that defect impossible.
 
 **Derive, don't re-synthesize.** Phase 2 already wrote a structured HANDOFF.md from the conversation tagging in Phase 1.3. The session-log entry is a mechanical compression of that same handoff — do **not** re-walk the conversation or re-tag turns. The fields map directly:
 
-| Log entry field | Sourced from HANDOFF.md |
-|---|---|
-| Title | The HANDOFF.md `**Status:**` line, summarized to ≤8 words |
-| `**Status:**` | The HANDOFF.md `**Status:**` line verbatim |
-| `**Changes:**` | The HANDOFF.md `## Modified Files` section, compressed to a comma-separated list (drop per-file descriptions) |
-| `**Decisions:**` | The HANDOFF.md `## Key Decisions` section, compressed to one-line-per-decision (keep the WHY, drop bullets) |
-| `**Traps:**` | The HANDOFF.md `## What NOT To Do` section, in compact form `TRIED: X — FAILED BECAUSE: Y` (one line per trap, omit CORRECT APPROACH for the log) |
+| Log entry field | Sourced from HANDOFF.md | Per-bullet cap (hard) |
+|---|---|---|
+| Title | HANDOFF.md `**Status:**` line, summarized to ≤8 words | 8 words |
+| `**Status:**` | HANDOFF.md `**Status:**` line verbatim | 1 line |
+| `**Changes:**` | HANDOFF.md `## Modified Files`, compressed to comma-separated path list | drop per-file descriptions |
+| `**Decisions:**` | HANDOFF.md `## Key Decisions`, ONE LINE per decision: name + single-clause WHY | ≤ 1 sentence (~150 chars) per decision |
+| `**Traps:**` | HANDOFF.md `## What NOT To Do`, compact `TRIED: X — FAILED BECAUSE: Y` form | ≤ 1 line per trap; OMIT CORRECT APPROACH (lives in HANDOFF only) |
 
 If a HANDOFF.md section is empty or omitted, the corresponding log field is omitted too — never write `N/A` or placeholders.
 
-### Mechanism
+**Hard cap on entry size: 30 lines / 1.5 KB.** If your generated entry exceeds either, re-compress before writing. The compression table above is the floor — apply it strictly. The log isn't where context lives; it's where the *index* of context lives.
 
-1. Read `.claude/session-log.md` if it exists (may be empty or missing)
-2. Build the new entry by mechanically compressing the HANDOFF.md you just wrote (no LLM synthesis needed)
-3. Prepend the new entry to the existing content (newest first)
-4. Write the full file back
+---
 
-If `.claude/` directory doesn't exist, create it first.
+### Phase 3.A — Append (mechanical)
 
-### Entry Format
+1. Read `.claude/session-log.md` if it exists (may be empty or missing). If `.claude/` directory doesn't exist, create it first.
+2. Build the new entry by mechanically compressing the HANDOFF.md you just wrote, applying the per-bullet caps above. No LLM synthesis needed — the compression is deterministic from the table.
+3. Prepend the new entry to the existing content (newest first).
+4. Write the full file back.
+
+#### Entry Format
 
 ```markdown
 ## YYYY-MM-DD — [Brief title of what was done]
 **Status:** [one-line project state]
-**Changes:** [file list or high-level summary]
-**Decisions:** [key choices made, if any]
-**Traps:** [compact trap form — "TRIED: X — FAILED BECAUSE: Y" — only include if something actually failed]
+**Changes:** [comma-separated path list]
+**Decisions:** [one line per decision — name + single-clause WHY]
+**Traps:** [one line per trap — TRIED: X — FAILED BECAUSE: Y]
 ---
 ```
 
-**Target:** 15-25 lines per entry. Be concise — this is a log, not a narrative.
+**Target: 15–25 lines per entry. Hard cap: 30 lines / 1.5 KB.** Be concise — this is a log, not a narrative.
 
-### Log Maintenance
+---
 
-If the log now exceeds 20 entries after prepending:
+### Phase 3.B — Maintain (hard gate, MANDATORY)
 
-1. **Skip in `--quick` mode** — trim oldest entries past the cap and stop. No trap-promotion scan, no CLAUDE.md edits. The next non-quick wrapup will catch up on promotions.
-2. (Non-quick) Scan entries being trimmed for "Traps" that appear 3+ times across the full log (match on the FAILED BECAUSE clause, not the TRIED clause — same root cause with different surface attempts should still count)
-3. If recurring traps found, promote them to CLAUDE.md as permanent rules (add under an appropriate existing section, or create a "Known Gotchas" section if none fits)
-4. Remove entries beyond the 20-entry cap (trim from the bottom — oldest entries)
-5. Notify the user:
-   ```
-   Session log maintenance: Trimmed [N] oldest entries.
-   [If traps promoted]: Promoted recurring trap to CLAUDE.md: "[description]"
-   ```
+This sub-phase is **mandatory** after every append, **not** conditional. The decision to act is gated programmatically — Claude does not judge "is the log getting big?" Bash counts the entries; the count drives the action.
+
+**Why mandatory.** Prior wrapup versions made maintenance a conditional sub-section of Phase 3 ("if the log exceeds 20 entries..."). In practice, that conditional was consistently skipped — 23 wrapups across one project, zero trims fired. The conditional is now removed: 3.B always runs, the Bash count determines whether trimming/promotion is needed.
+
+#### 3.B.1 — Count entries (Bash, deterministic)
+
+Run this exact command:
+
+```bash
+ENTRY_COUNT=$(grep -c "^## [0-9]" .claude/session-log.md 2>/dev/null || echo 0)
+LOG_SIZE_KB=$(($(wc -c < .claude/session-log.md 2>/dev/null || echo 0) / 1024))
+echo "Session log: ${ENTRY_COUNT} entries, ${LOG_SIZE_KB} KB (cap: 20 entries / ~20 KB)"
+```
+
+The output makes the count visible to both you and the user. **You may not skip the rest of 3.B based on memory or assumption** — the count is the truth.
+
+#### 3.B.2 — Branch on count
+
+| ENTRY_COUNT | Action |
+|---|---|
+| ≤ 20 | Log "no maintenance needed — N entries within cap." Continue to Phase 4. |
+| 21–25 | Run trap promotion scan + trim oldest (ENTRY_COUNT − 20) entries. Mandatory. |
+| 26+ | Same as above plus: warn the user that maintenance was previously skipped — re-evaluate whether older retained entries also need re-compression. |
+
+In `--quick` mode, the only difference is: skip the trap promotion scan (still trim). The trim itself is **never** skipped, regardless of mode.
+
+#### 3.B.3 — Trap promotion (when ENTRY_COUNT > 20 and not --quick)
+
+For each entry that will be trimmed (the oldest ENTRY_COUNT − 20 entries):
+
+1. Read its `**Traps:**` line(s) if any.
+2. Match each trap's `FAILED BECAUSE:` clause against the same clause across the entire current log (not just trimmed entries). Match on root-cause similarity, not exact string match — same root cause with different surface attempts counts as recurrence.
+3. If a `FAILED BECAUSE:` recurs **3+ times** across the full log, it's a permanent gotcha. Promote it to CLAUDE.md:
+   - Add under the existing section that best fits ("Known Gotchas", "Conventions", "Architecture"), or create `## Known Gotchas` if none fits.
+   - Format: one-line rule with the root cause and the corrective pattern. Don't paste the trap form verbatim — translate to a permanent rule.
+
+#### 3.B.4 — Trim
+
+Remove all entries beyond position 20 from the bottom of the file (oldest entries). After trimming, re-run the Bash count to confirm `ENTRY_COUNT == 20`.
+
+#### 3.B.5 — Notify user (always, even when no action needed)
+
+The notification is **mandatory** — silent skip is what caused the original defect. Choose one:
+
+- **Trimmed:** `Session log: trimmed N oldest entries (was ENTRY_COUNT, now 20). [If promoted: Promoted recurring trap to CLAUDE.md: "<one-line description>".]`
+- **No action needed:** `Session log: ENTRY_COUNT entries within cap (20). No maintenance needed.`
+
+This line is captured in the Phase 6 summary so the user always sees the maintenance state, even on successful "no-op" wrapups.
 
 ---
 
@@ -483,15 +525,36 @@ Append one line to the Phase 5 final summary so the user knows what happened:
 - Committed, push failed: `Sync: committed locally (<short-sha>) — push rejected, resolve manually`
 - Skipped: omit the line.
 
-### Session Complete
+### Session Complete — Final State Assertion
 
-End with a brief confirmation:
+End with a state report. This block is **mandatory** and includes size assertions so silent skips (oversized HANDOFF, over-cap log, missed trim) are impossible to hide. Run this Bash to capture the truth:
+
+```bash
+HANDOFF_LINES=$(wc -l < HANDOFF.md 2>/dev/null || echo 0)
+HANDOFF_KB=$(($(wc -c < HANDOFF.md 2>/dev/null || echo 0) / 1024))
+LOG_ENTRIES=$(grep -c "^## [0-9]" .claude/session-log.md 2>/dev/null || echo 0)
+LOG_KB=$(($(wc -c < .claude/session-log.md 2>/dev/null || echo 0) / 1024))
+echo "HANDOFF.md: ${HANDOFF_LINES} lines / ${HANDOFF_KB} KB"
+echo "session-log: ${LOG_ENTRIES} entries / ${LOG_KB} KB"
+```
+
+Then format the final block with explicit cap status — flag any threshold violation with `⚠`:
 
 ```
 Session wrapped up:
-  - HANDOFF.md written ([N] lines)
-  - Session log updated ([N] total entries)
-  - CLAUDE.md [pruned: N changes (auto-proceeded | confirmed) | unchanged | created]
+  - HANDOFF.md: <N> lines / <N> KB  [target: 30–80 lines, cap: 100 lines / 8 KB]  [⚠ if over]
+  - session-log: <N> entries / <N> KB  [cap: 20 entries / ~20 KB]  [⚠ if over]
+  - Maintenance: <line from Phase 3.B.5>
+  - CLAUDE.md: [pruned: N changes (auto-proceeded | confirmed) | unchanged | created]
   [- Worth remembering: N insights surfaced for native Auto Memory]
   [- Sync: <one of the lines from 6.6>]
 ```
+
+**Cap-violation behavior.** If HANDOFF or session-log shows `⚠ over cap`, the wrapup did not converge to spec — surface a one-line action note immediately under the block:
+
+```
+⚠ HANDOFF over cap (<N> lines, hard cap 100). Re-compress before next session: drop secondary bullets, drop multi-clause rationales, move narrative to commit messages.
+⚠ session-log over cap (<N> entries). Phase 3.B trim should have fired — investigate skill execution; this is a defect.
+```
+
+The user never has to ask "did maintenance run?" again — the state is in the wrapup output, every time.

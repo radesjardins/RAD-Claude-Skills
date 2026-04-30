@@ -18,11 +18,16 @@ The session log (`.claude/session-log.md`) is an append-only history of session 
 ## Rules
 
 1. **Newest first.** New entries prepend to the top of the file.
-2. **15-25 lines per entry.** This is a log, not a narrative.
-3. **No file contents.** Reference paths only — never embed code or full file contents.
-4. **Separator required.** Each entry ends with `---` for parseability.
-5. **Traps only when real.** Only include "Traps" if something actually failed or a non-obvious gotcha was discovered. Don't fabricate traps.
-6. **Titles should be meaningful.** "Implemented JWT auth and fixed CORS" beats "Worked on the project."
+2. **15–25 lines per entry, hard cap 30 lines / 1.5 KB.** This is a log, not a narrative. If your entry is over the cap, you're not compressing enough — drop secondary bullets, drop file-by-file descriptions, drop multi-clause rationales.
+3. **One sentence per bullet (~150 chars max).** Each Decision is ONE line: name + single-clause WHY. Each Trap is ONE line in compact form `TRIED: X — FAILED BECAUSE: Y` (drop CORRECT APPROACH for the log — that lives in HANDOFF). Each Change is a comma-separated path list with no per-file descriptions.
+4. **No file contents.** Reference paths only — never embed code or full file contents.
+5. **Separator required.** Each entry ends with `---` for parseability.
+6. **Traps only when real.** Only include "Traps" if something actually failed or a non-obvious gotcha was discovered. Don't fabricate traps.
+7. **Titles should be meaningful.** "Implemented JWT auth and fixed CORS" beats "Worked on the project."
+
+### Why the per-bullet cap is strict
+
+The session-log is read across many sessions for trend detection (recurring traps, ongoing work threads). At 20 entries × 1 KB target, the whole log fits comfortably in a single read. At 20 entries × 5 KB (what happens without the cap), the log balloons to 100 KB and `/startup` can only read the most recent 3–5 entries — losing the cross-session trend signal entirely. The cap is what makes the log useful at scale.
 
 ## Maintenance
 

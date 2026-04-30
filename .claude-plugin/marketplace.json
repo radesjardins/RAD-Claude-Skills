@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more.",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "pluginRoot": "./plugins"
   },
   "plugins": [
