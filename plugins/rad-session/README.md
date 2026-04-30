@@ -247,6 +247,8 @@ Works with coding projects (captures git state + stack resources) and non-coding
 
 ## Version
 
+**3.5.2** — **Anomaly-gated final output for `/wrapup`.** The verbose final-state block is no longer emitted on the success path — `/wrapup` now ends with a single line: `Session wrapped up. Sync: pushed (<sha>).` (or just `Session wrapped up.` when sync is skipped). The full block surfaces only when something needs action: HANDOFF or session-log over hard caps, Phase 3.B fired with trap promotion, Phase 4 actually pruned CLAUDE.md, or the push failed/declined. Silent-skip protection from 3.4 is preserved — Bash size checks still run every wrapup, defects still always surface — but the wrapup stops reading itself back when there's nothing to act on. Driven by direct user feedback: "I don't think we need a report unless we request one."
+
 **3.5.1** — **Phase 5 removed.** The `/wrapup` "surface insights" phase has been deleted along with all references to it. Empirical evidence: across 12+ wrapups in one project, zero memory files were ever persisted from surfaced "Worth remembering" bullets — the surfacing was happening but nothing downstream was picking it up. The phase is gone in 3.5.1. The final state assertion no longer prints a "Worth remembering" line.
 
 **3.5.0** — **Speed: Haiku-pinned skills + cached resource scan + low-activity auto-quick.** Cuts `/startup` and `/wrapup` wall-clock time by roughly 4–5× by routing routine session work to a faster, cheaper model and short-circuiting work that doesn't need to run.

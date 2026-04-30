@@ -486,35 +486,52 @@ Append one line to the final state assertion block (below) so the user knows wha
 - Committed, push failed: `Sync: committed locally (<short-sha>) — push rejected, resolve manually`
 - Skipped: omit the line.
 
-### Session Complete — Final State Assertion
+### Session Complete — Anomaly-Gated Final Output (3.5.2)
 
-End with a state report. This block is **mandatory** and includes size assertions so silent skips (oversized HANDOFF, over-cap log, missed trim) are impossible to hide. Run this Bash to capture the truth:
+Run the size assertion silently — it is internal-only and never echoed unless an anomaly is found. The check still runs every wrapup so silent skips remain impossible, but on the success path the user sees one line, not a readback.
 
 ```bash
 HANDOFF_LINES=$(wc -l < HANDOFF.md 2>/dev/null || echo 0)
-HANDOFF_KB=$(($(wc -c < HANDOFF.md 2>/dev/null || echo 0) / 1024))
+HANDOFF_BYTES=$(wc -c < HANDOFF.md 2>/dev/null || echo 0)
 LOG_ENTRIES=$(grep -c "^## [0-9]" .claude/session-log.md 2>/dev/null || echo 0)
-LOG_KB=$(($(wc -c < .claude/session-log.md 2>/dev/null || echo 0) / 1024))
-echo "HANDOFF.md: ${HANDOFF_LINES} lines / ${HANDOFF_KB} KB"
-echo "session-log: ${LOG_ENTRIES} entries / ${LOG_KB} KB"
+LOG_BYTES=$(wc -c < .claude/session-log.md 2>/dev/null || echo 0)
 ```
 
-Then format the final block with explicit cap status — flag any threshold violation with `⚠`:
+**Decide: success path or anomaly path.**
+
+An anomaly exists if any of these hold:
+
+- `HANDOFF_LINES > 100` OR `HANDOFF_BYTES > 8192` (over hard cap)
+- `LOG_ENTRIES > 20` OR `LOG_BYTES > 20480` (over hard cap — Phase 3.B trim should have fired; this is a defect signal)
+- Phase 3.B fired a trim AND promoted a recurring trap to CLAUDE.md (worth surfacing because CLAUDE.md just changed permanently)
+- Phase 4 actually pruned CLAUDE.md (lines were removed and saved)
+- Phase 6 push was rejected, declined explicitly, or skipped because of a dirty tree / missing upstream
+
+**Success path (no anomalies).** Emit exactly one line:
+
+```
+Session wrapped up. Sync: pushed (<short-sha>).
+```
+
+If sync was skipped (no changes to commit / not a git repo), drop the `Sync:` clause entirely:
+
+```
+Session wrapped up.
+```
+
+That's the entire output. Do not list HANDOFF size, log entry count, maintenance status, prune status, or any "Worth remembering" line. The user reads the diff and the commit if they want detail. The skill does the work; silence on success is the default.
+
+**Anomaly path.** Emit the verbose block — but only the anomalous fields, prefixed with `⚠`:
 
 ```
 Session wrapped up:
-  - HANDOFF.md: <N> lines / <N> KB  [target: 30–80 lines, cap: 100 lines / 8 KB]  [⚠ if over]
-  - session-log: <N> entries / <N> KB  [cap: 20 entries / ~20 KB]  [⚠ if over]
-  - Maintenance: <line from Phase 3.B.5>
-  - CLAUDE.md: [pruned: N changes (auto-proceeded | confirmed) | unchanged | created]
-  [- Sync: <one of the lines from 6.6>]
+  ⚠ HANDOFF.md: <N> lines / <N> KB — over hard cap (100 lines / 8 KB). Re-compress next wrapup: drop secondary bullets, move multi-clause rationales to commit messages.
+  ⚠ session-log: <N> entries / <N> KB — over hard cap (20 entries / 20 KB). Phase 3.B trim should have fired — investigate skill execution; this is a defect.
+  Maintenance: <line from Phase 3.B.5> — only include if 3.B promoted a trap to CLAUDE.md, otherwise omit.
+  CLAUDE.md: pruned <N> changes (auto-proceeded | confirmed) — only include if Phase 4 actually changed the file, otherwise omit.
+  Sync: <one of the lines from 6.6> — only include if push failed or was declined; on success the success-path line above already covers it.
 ```
 
-**Cap-violation behavior.** If HANDOFF or session-log shows `⚠ over cap`, the wrapup did not converge to spec — surface a one-line action note immediately under the block:
+Each line is conditional on its own anomaly — do not include success-path lines mixed in with anomaly lines. The verbose block stays small even when triggered.
 
-```
-⚠ HANDOFF over cap (<N> lines, hard cap 100). Re-compress before next session: drop secondary bullets, drop multi-clause rationales, move narrative to commit messages.
-⚠ session-log over cap (<N> entries). Phase 3.B trim should have fired — investigate skill execution; this is a defect.
-```
-
-The user never has to ask "did maintenance run?" again — the state is in the wrapup output, every time.
+**Why this design.** 3.4 made the verbose block mandatory after a real defect: the session-log grew to 23 entries / 105 KB across 23 wrapups without a single trim because Phase 3.B was buried as a conditional. The size assertion was the fix. 3.5.2 keeps the assertion (Bash always runs, anomalies always surface) but stops echoing the truth-telling on the success path — silent-skip protection is preserved, the wrapup just stops reading itself back to the user when there's nothing to act on.
