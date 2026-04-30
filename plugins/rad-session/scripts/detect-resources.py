@@ -18,6 +18,15 @@ Usage:
   python3 detect-resources.py <project-root> --json
   python3 detect-resources.py <project-root> --check-clis  # verify CLIs in PATH
   python3 detect-resources.py <project-root> --include-env-names
+  python3 detect-resources.py <project-root> --json --cache  # use mtime-keyed cache (3.5)
+
+Cache mode (--cache, added in 3.5):
+  - Cache file: <root>/.claude/cache/resources.json
+  - Hit when every input file's mtime matches the cache's recorded signature.
+  - Inputs covered: .mcp.json, .claude/settings.json, CLAUDE.md, .env.example,
+    every marker file from the CLI_MARKERS table, plus this script itself.
+  - Miss → recompute, overwrite cache, return fresh data.
+  - Skipped when --check-clis is passed (PATH lookups must be live).
 
 Output (JSON):
   {
@@ -29,7 +38,8 @@ Output (JSON):
     "drift": {                         # comparison: documented vs detected
       "documented_but_missing": [...],
       "detected_but_undocumented": [...]
-    }
+    },
+    "cache_status": "hit" | "miss" | "disabled"   # only when --cache is passed
   }
 
 Pure stdlib Python 3.8+. No third-party dependencies.
@@ -229,6 +239,80 @@ def compute_drift(
     }
 
 
+def _input_signature(root: Path, include_env: bool) -> list[tuple[str, int]]:
+    """Compute (relative_path, mtime_ns) tuples for every file whose change
+    would affect detection output. Sorted, deterministic. Missing files contribute
+    nothing — but the *set* of present inputs is encoded in the signature, so a
+    file appearing or disappearing also invalidates the cache.
+
+    Includes this script itself so script edits invalidate stale caches.
+    """
+    candidates: list[Path] = []
+    candidates.append(root / ".mcp.json")
+    candidates.append(root / ".claude" / "settings.json")
+    candidates.append(root / "CLAUDE.md")
+    if include_env:
+        candidates.append(root / ".env.example")
+    # Marker files (paths, not dirs) — for dir markers we just stat the dir mtime
+    for marker, _cli in CLI_MARKERS:
+        candidates.append(root / marker)
+    # Special case: poetry.lock gates the pyproject.toml→poetry mapping
+    candidates.append(root / "poetry.lock")
+    # The script itself
+    try:
+        candidates.append(Path(__file__).resolve())
+    except NameError:
+        pass
+
+    sig: list[tuple[str, int]] = []
+    for path in candidates:
+        try:
+            st = path.stat()
+        except (OSError, FileNotFoundError):
+            continue
+        try:
+            rel = str(path.relative_to(root))
+        except ValueError:
+            rel = str(path)
+        sig.append((rel, st.st_mtime_ns))
+    sig.sort()
+    return sig
+
+
+def _cache_path(root: Path) -> Path:
+    return root / ".claude" / "cache" / "resources.json"
+
+
+def _load_cache(root: Path, expected_sig: list[tuple[str, int]]) -> dict | None:
+    """Return cached report if signature matches, else None."""
+    cache_file = _cache_path(root)
+    if not cache_file.exists():
+        return None
+    try:
+        cached = json.loads(cache_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(cached, dict) or "signature" not in cached or "data" not in cached:
+        return None
+    cached_sig = [tuple(item) for item in cached.get("signature", [])]
+    if cached_sig != expected_sig:
+        return None
+    return cached["data"]
+
+
+def _save_cache(root: Path, data: dict, sig: list[tuple[str, int]]) -> None:
+    cache_file = _cache_path(root)
+    try:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(
+            json.dumps({"signature": sig, "data": data}, indent=2),
+            encoding="utf-8",
+        )
+    except OSError:
+        # Cache write failure is non-fatal — detection still returned a fresh result.
+        pass
+
+
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("root", nargs="?", default=".", help="Project root (default: cwd)")
@@ -236,6 +320,9 @@ def main(argv: list[str]) -> int:
     p.add_argument("--check-clis", action="store_true", help="Run `which`/`where` to verify CLIs in PATH")
     p.add_argument("--include-env-names", action="store_true",
                    help="Also extract variable names from .env.example (names only, never values)")
+    p.add_argument("--cache", action="store_true",
+                   help="Use .claude/cache/resources.json keyed by input mtimes (3.5). "
+                        "Skipped automatically when --check-clis is passed.")
     args = p.parse_args(argv)
 
     root = Path(args.root).resolve()
@@ -243,27 +330,56 @@ def main(argv: list[str]) -> int:
         print(f"error: not a directory: {root}", file=sys.stderr)
         return 2
 
-    mcp_servers = detect_mcp_servers(root)
-    stack_clis = detect_stack_clis(root, args.check_clis)
-    documented = parse_documented_resources(root)
-    env_vars = parse_env_template(root) if args.include_env_names else []
-    drift = compute_drift(documented, mcp_servers, stack_clis)
+    cache_status = "disabled"
+    cached_report: dict | None = None
+    sig: list[tuple[str, int]] = []
 
-    report = {
-        "root": str(root),
-        "mcp_servers": mcp_servers,
-        "stack_clis": stack_clis,
-        "documented_resources": documented,
-        "env_template_vars": env_vars,
-        "drift": drift,
-    }
+    # PATH lookups (--check-clis) must always be live — installed binaries can change
+    # without any tracked input file changing. Disable cache in that mode.
+    cache_enabled = args.cache and not args.check_clis
+    if cache_enabled:
+        sig = _input_signature(root, args.include_env_names)
+        cached_report = _load_cache(root, sig)
+        cache_status = "hit" if cached_report is not None else "miss"
+
+    if cached_report is not None:
+        report = cached_report
+    else:
+        mcp_servers = detect_mcp_servers(root)
+        stack_clis = detect_stack_clis(root, args.check_clis)
+        documented = parse_documented_resources(root)
+        env_vars = parse_env_template(root) if args.include_env_names else []
+        drift = compute_drift(documented, mcp_servers, stack_clis)
+
+        report = {
+            "root": str(root),
+            "mcp_servers": mcp_servers,
+            "stack_clis": stack_clis,
+            "documented_resources": documented,
+            "env_template_vars": env_vars,
+            "drift": drift,
+        }
+
+        if cache_enabled:
+            _save_cache(root, report, sig)
+
+    if args.cache:
+        report = {**report, "cache_status": cache_status}
 
     if args.json:
         print(json.dumps(report, indent=2))
         return 0
 
-    # Text output
+    # Text output — pulled from `report` so cache-hit and cache-miss render identically.
+    mcp_servers = report.get("mcp_servers", [])
+    stack_clis = report.get("stack_clis", [])
+    documented = report.get("documented_resources", [])
+    env_vars = report.get("env_template_vars", [])
+    drift = report.get("drift", {"documented_but_missing": [], "detected_but_undocumented": []})
+
     print(f"detect-resources: {root}")
+    if args.cache:
+        print(f"  cache: {cache_status}")
     if mcp_servers:
         print(f"  MCP servers ({len(mcp_servers)}): {', '.join(mcp_servers)}")
     else:

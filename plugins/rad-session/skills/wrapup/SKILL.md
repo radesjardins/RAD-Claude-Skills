@@ -8,6 +8,7 @@ description: >
   work session for seamless handoffs. Trigger when the user says "/wrapup",
   "wrap up", "end of session", "session handoff", "save session state",
   "wrap this up", "let's wrap up", "close out this session".
+model: haiku
 allowed-tools:
   - Read
   - Write
@@ -21,7 +22,9 @@ allowed-tools:
 
 Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean. The `## Resources` section is protected from deletion. Insights worth remembering are surfaced in the final summary for Claude Code's native Auto Memory to pick up on its own schedule.
 
-**Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet should issue Phase 1 reads + git state commands as a single parallel batch; Haiku may execute sequentially. The conversation-synthesis step in Phase 1.3 uses the explicit tag-and-summarize pattern so all three models produce comparable output.
+**Model selection (3.5).** The frontmatter pins this skill to **Haiku 4.5** for the duration of the wrapup turn. The session model resumes automatically on the next user prompt. Wrapup is mechanical labeling + templated formatting — Haiku handles it as well as Opus at a fraction of the wall-clock and token cost. The phase logic below is calibrated for Haiku; do not assume Opus-level latent reflection.
+
+**Cross-model note.** The same logic produces comparable output on Opus 4.7, Sonnet 4.6, and Haiku 4.5 — the explicit tag-and-summarize pattern in Phase 1.3 was designed for cross-model parity. Override with `/model opus` before `/wrapup` for monthly deep-clean runs if you want extra signal on trap promotion.
 
 **Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), surfacing insights, and syncing session files to git..."
 
@@ -91,6 +94,8 @@ Walk the conversation already in your context — no tool call needed. To produc
 3. If no signal is found, the window is the **last 40 turns** (default cap).
 
 4. In `--quick` mode (see Mode flags), the cap drops to the **last 15 turns** regardless of signals.
+
+5. **Low-activity auto-quick (3.5).** If the window is signal-bounded (rules 1.1–1.3 above) AND contains fewer than **10 substantive turns** (excluding pure tool output, navigation, conversational filler), automatically apply `--quick` semantics for the rest of this wrapup: cap at last 15 turns, skip Phase 4 unconditionally, skip Phase 3.B.3 trap promotion. Emit one line under the wrapup announcement: `low-activity session — auto-quick wrapup applied (N substantive turns since signal).` This bounds wrapup cost on short sessions without requiring the user to remember the flag. Does not fire when no signal is found (default 40-turn cap stays in effect — assume it's a long-running unbounded session that genuinely needs full synthesis).
 
 Only the turns inside the window are tagged. This bounds wrapup cost regardless of total session length — long sessions don't make wrapup proportionally slower. The PreCompact hook already covers the "context about to be lost" case separately, so safety isn't compromised.
 

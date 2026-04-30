@@ -6,6 +6,7 @@ description: >
   modifies files. Trigger when the user says "/startup", "start session",
   "orient me", "what's the state", "session briefing", "where did we leave off",
   "catch me up", "what was I working on".
+model: haiku
 allowed-tools:
   - Read
   - Glob
@@ -19,7 +20,9 @@ Orient a new session by reading the handoff state left by `/wrapup`, detecting t
 
 **This skill is read-only. It never creates, modifies, or deletes files.**
 
-**Cross-model note.** Works identically across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet should batch Phase 1 + Phase 2 + Phase 2.5 reads into a single parallel tool-call burst (see "Execution" below). Haiku may follow phase order sequentially if parallel batching misbehaves. Output briefing format is identical regardless of model.
+**Model selection (3.5).** The frontmatter pins this skill to **Haiku 4.5** for the duration of the startup turn. The session model resumes automatically on the next user prompt. Startup is read-heavy + templated briefing synthesis — Haiku handles it well at a fraction of the wall-clock cost. Resource discovery is delegated to `detect-resources.py` with caching (Phase 2.5.0), so the model rarely does any scanning work itself.
+
+**Cross-model note.** The same logic produces comparable output on Opus 4.7, Sonnet 4.6, and Haiku 4.5. Output briefing format is identical regardless of model. Override with `/model opus` before `/startup` only if you want Opus-level synthesis on a stale-handoff auto-refresh (Phase 1.4).
 
 ## Mode flags
 
@@ -195,13 +198,15 @@ If HANDOFF.md has a date and no stale-refresh was triggered in Phase 1.4, spot-c
 
 Detect project-specific resources so Claude doesn't need to be reminded every session. All steps are read-only and issued in the parallel batch from "Execution." Skip silently when nothing is found.
 
-### 2.5.0 Preferred path: deterministic script
+### 2.5.0 Preferred path: deterministic script (mtime-cached in 3.5)
 
-If Python is available, prefer the deterministic scanner over LLM-based marker scanning:
+If Python is available, prefer the deterministic scanner over LLM-based marker scanning. Always pass `--cache` so cache-hit startups skip re-scanning entirely:
 
 ```bash
-python3 ${plugin_root}/scripts/detect-resources.py "$PWD" --json
+python3 ${plugin_root}/scripts/detect-resources.py "$PWD" --json --cache --include-env-names
 ```
+
+The `--cache` flag (3.5) writes results to `.claude/cache/resources.json`, keyed by the mtimes of every input file (`.mcp.json`, `.claude/settings.json`, `CLAUDE.md`, `.env.example`, all marker files in the CLI table, and the script itself). On cache hit, scanning is skipped and the cached data is returned in milliseconds. Any input file edit invalidates the cache automatically — no manual cache busting required. The output adds a `"cache_status": "hit" | "miss"` field; surface it under the briefing's resources block only if status is `miss` (e.g., `Resources: scanned fresh`); on `hit`, stay silent — that's the common path and silence is correct.
 
 The script returns the same data structure as steps 2.5.1–2.5.6 below — MCPs, stack CLIs, documented-resources reconciliation, drift detection. Use the JSON output verbatim. The LLM-based steps below remain as fallback when Python is not available.
 
