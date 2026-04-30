@@ -118,6 +118,123 @@ The currently-shipping plugins worth recommending by stack signal:
 
 **For each recommendation, surface what's installed vs. not.** Use Bash to check `~/.claude/plugins/` (or wherever Claude Code's plugin install path lives — varies by environment). If you can't determine install state, just present the recommendation and let the user decide.
 
+### Step 5.5: Plugin / MCP bloat audit (3.6)
+
+Claude Code's user-scope plugin set carries a real per-turn token cost — every plugin's skill descriptions land in the model's context every turn, and plugins shipping MCP servers add their tool registry on top. For projects that don't use a given plugin's stack, those tokens are pure noise.
+
+This step proposes a `enabledPlugins` map in `.claude/settings.local.json` (gitignored, personal) that disables irrelevant plugins for **this** project specifically. User-scope plugins stay intact in other projects.
+
+#### 5.5.1 Get the installed plugin list
+
+```bash
+claude plugin list 2>/dev/null | grep -E '^\s*>\s*[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+' > /tmp/rad-installed-plugins.txt || true
+```
+
+If `claude plugin list` is unavailable or returns nothing parseable, ask the user to paste the output. The script accepts loose text — it greps `name@marketplace` patterns.
+
+#### 5.5.2 Run the audit script
+
+```bash
+python3 ${plugin_root}/scripts/audit-plugin-bloat.py "$PWD" --json --installed-plugins-stdin < /tmp/rad-installed-plugins.txt > /tmp/rad-plugin-audit.json
+```
+
+The script:
+- Detects 10 stack signals (supabase, stripe, coolify, chrome_extension, frontend_web, python, anthropic_sdk, 1password_secrets, claude_plugin_repo, content_site)
+- Applies a built-in catalog of plugin-relevance rules
+- Filters to only INSTALLED plugins (passed via stdin)
+- Outputs per-plugin recommendation (`keep` | `disable`) with reason
+
+#### 5.5.3 Present the audit to the user
+
+Group recommendations by recommendation + category:
+
+```
+Plugin / MCP audit ({total} installed):
+
+Will keep ({N}):
+  Core: rad-session, claude-md-management, code-simplifier, ...
+  Stack-matched: pyright-lsp (python), rad-supabase (supabase), ...
+
+Recommend disable for this project ({N}):
+  No matching signal:
+    - chrome-devtools-mcp [MCP] — no frontend_web signal
+    - rad-coolify-orchestrator [MCP] — no coolify signal
+    - rad-supabase — no supabase signal
+    - ...
+  Productivity (re-enable per project where you actively use it):
+    - rad-gws-core, rad-para-second-brain, rad-agentic-company-builder
+
+Estimated savings: ~{N} tool names cut from registry per turn,
+plus ~{N} skill descriptions from skill listing.
+```
+
+Compute the estimate by counting plugins shipping MCPs (×~10-20 tools each) plus the skill-only disables (×~5-10 skill descriptions each). Order of magnitude only — the goal is to give the user a sense of scale, not a precise number.
+
+#### 5.5.4 Get user confirmation
+
+Default behavior: prompt the user.
+
+```
+Apply these disables to .claude/settings.local.json? [Y/n/edit]
+```
+
+- **Y** — write the `enabledPlugins` map merging with any existing settings.
+- **n** — skip; record the proposed disables in the final report so the user can apply manually later.
+- **edit** — let the user override individual disables (e.g., "keep rad-1password even though no op:// signal — I use it broadly").
+
+In `--non-interactive` mode, auto-apply the disables and record them in the trailing JSON output (`plugins_disabled: ["...", ...]`).
+
+#### 5.5.5 Write the settings
+
+Read existing `.claude/settings.local.json` if present. **Merge — do not replace** the existing content; preserve `permissions`, any other fields. Add or update the `enabledPlugins` map:
+
+```json
+{
+  "...existing fields...": "...",
+  "enabledPlugins": {
+    "chrome-devtools-mcp@claude-plugins-official": false,
+    "stripe@claude-plugins-official": false,
+    "...": false
+  }
+}
+```
+
+If the user already had an `enabledPlugins` map, merge: existing `true` values stay (user explicit overrides), audit's `false` values are added/updated.
+
+#### 5.5.6 Write to settings.json (committed) instead?
+
+Ask once if the project is single-author or the user wants the disables shared with collaborators:
+
+```
+Write to .claude/settings.local.json (gitignored, personal) or
+        .claude/settings.json (committed, team-shared)?
+```
+
+Default: `.claude/settings.local.json`. Most projects benefit from per-user override; the disables encode personal preference, not team policy.
+
+#### 5.5.7 Note for activation
+
+Plugin enable/disable changes do NOT take effect mid-session. Tell the user:
+
+```
+⚠ Plugin disables take effect on next session start. The current session continues with the full set already loaded.
+```
+
+#### 5.5.8 Re-running the audit
+
+`/init` is safe to re-run. On subsequent invocations, this step compares current settings against fresh audit recommendations and surfaces a diff:
+
+```
+Audit refresh:
+  - Newly recommend disable: X (signal lost or new plugin installed)
+  - Newly recommend keep: Y (signal added since last audit)
+  - Already disabled and still recommended: Z (no change)
+```
+
+The user can apply the deltas, ignore them, or re-edit settings manually.
+
+---
+
 ### Step 6: Propose CLAUDE.md scaffold (or additions)
 
 **A. Greenfield case** — generate a starter CLAUDE.md:
@@ -205,9 +322,11 @@ Init complete.
 Created/updated:
   - CLAUDE.md   ({new | additions made | already complete})
   - .claude/session-log.md  ({new | already present})
+  - .claude/settings.local.json  ({plugin disables added: N | unchanged})
 
 Resources registered: {N MCPs, N stack CLIs}
 Drift detected:        {N items — see /add-resource if you want to add them}
+Plugin audit:          {N kept, N disabled — saves ~{N} tool names + ~{N} skills/turn}
 
 Recommended rad-* plugins for your stack (not auto-installed):
   - rad-X — what it adds
@@ -215,7 +334,7 @@ Recommended rad-* plugins for your stack (not auto-installed):
   ...
 
 Next:
-  - /startup at the start of each session
+  - /startup at the start of each session (start fresh — plugin disables take effect on restart)
   - /wrapup at the end of each session
   - /add-resource any time to register new tools
 ```
@@ -238,6 +357,7 @@ Next:
 
 - `scripts/detect-stack.py` — the deterministic stack scanner
 - `scripts/detect-resources.py` — the MCP + CLI scanner with drift detection
+- `scripts/audit-plugin-bloat.py` — per-project plugin relevance audit (3.6)
 - `scripts/README.md` — full script documentation
 
 ## Mode flags
@@ -249,10 +369,13 @@ Next:
   "init_complete": true,
   "claude_md_action": "created | additions_merged | unchanged",
   "session_log_action": "created | unchanged",
+  "settings_local_action": "created | merged | unchanged",
   "stack_summary": {...},
   "resources_summary": {...},
   "recommended_plugins": ["rad-supabase", "rad-coolify-orchestrator", ...],
-  "drift_items": N
+  "drift_items": N,
+  "plugins_disabled": ["chrome-devtools-mcp@claude-plugins-official", "..."],
+  "plugin_audit_summary": {"total": N, "keep": N, "disable": N}
 }
 ```
 

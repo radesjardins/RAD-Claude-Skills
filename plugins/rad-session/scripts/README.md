@@ -52,12 +52,34 @@ python3 scripts/detect-resources.py <project-root> --include-env-names    # also
 
 **Exit codes:** `0` always, `2` script error.
 
+## audit-plugin-bloat.py (3.6)
+
+Recommends which Claude Code plugins to disable per-project for token efficiency. Plugins shipping MCP servers add their tool registry to every turn's context; plugins shipping skills add their skill descriptions to the listing. For projects that don't use a given plugin's stack, those tokens are pure noise.
+
+```bash
+python3 scripts/audit-plugin-bloat.py <project-root>
+python3 scripts/audit-plugin-bloat.py <project-root> --json
+python3 scripts/audit-plugin-bloat.py <project-root> --json --installed-plugins-stdin < <plugin-list>
+```
+
+**How it works:**
+- Detects 10 stack signals (supabase, stripe, coolify, chrome_extension, frontend_web, python, anthropic_sdk, 1password_secrets, claude_plugin_repo, content_site)
+- Applies a built-in catalog of plugin-relevance rules (in `PLUGIN_RULES` at top of script — edit there to add/adjust)
+- Categories: `core` (always keep), `stack-conditional` (keep iff signals match), `productivity` (default disable), `meta-authoring` (keep only in plugin-authoring repos)
+- With `--installed-plugins-stdin`: reads `name@marketplace` IDs from stdin (tolerant of `claude plugin list` raw output) and filters audit to only installed plugins
+
+**Output (JSON):** `stack_signals` map, `audit` list (per-plugin recommendation + reason + ships_mcp flag), `summary` counts. See script docstring for the full schema.
+
+**The script is OPINIONATED.** It encodes "this plugin is worth its token cost only when these signals are present." Edit `PLUGIN_RULES` in the script to override or extend.
+
+**Exit codes:** `0` always, `2` script error.
+
 ## When the skills run these
 
 | Skill | Script | When |
 |---|---|---|
-| `/init` | `detect-stack.py --json` + `detect-resources.py --check-clis --json` | Once, on project bootstrap. Drives the CLAUDE.md scaffold and rad-* plugin recommendations. |
-| `/startup` | `detect-resources.py --json` (optionally `detect-stack.py`) | Every session, Phase 2.5. Replaces LLM-based marker-file scanning. |
+| `/init` | `detect-stack.py --json` + `detect-resources.py --check-clis --json` + `audit-plugin-bloat.py --json --installed-plugins-stdin` | Once on project bootstrap. Drives the CLAUDE.md scaffold, rad-* plugin recommendations, and per-project `enabledPlugins` disables in `.claude/settings.local.json`. Safe to re-run for refresh. |
+| `/startup` | `detect-resources.py --json --cache` | Every session, Phase 2.5. Cache-keyed by input mtimes (3.5). |
 
 ## What these scripts deliberately do NOT do
 
