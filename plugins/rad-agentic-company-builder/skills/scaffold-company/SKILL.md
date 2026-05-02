@@ -1,6 +1,6 @@
 ---
 name: scaffold-company
-description: This skill should be used when the user says "scaffold a company", "set up workspace", "create company structure", "build company folder structure", "initialize agentic workspace", "create company hierarchy", "set up divisions", or wants to create a Claude Code workspace with hierarchical CLAUDE.md context files at each directory level. Be honest about what this creates: organized folders with context files, not a self-running company.
+description: "This skill should be used when the user says \"scaffold a company\", \"set up workspace\", \"create company structure\", \"build company folder structure\", \"initialize agentic workspace\", \"create company hierarchy\", \"set up divisions\", or wants to create a Claude Code workspace with hierarchical CLAUDE.md context files at each directory level. Be honest about what this creates: organized folders with context files, not a self-running company."
 argument-hint: "[company-name] [--divisions engineering,product,operations,marketing,finance] [--root path] [--skip-divisions]"
 user-invocable: true
 allowed-tools: Read Glob Grep Write Edit Bash
