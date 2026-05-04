@@ -7,7 +7,6 @@ description: >
   seamless handoffs. Trigger when the user says "/wrapup", "wrap up", "end of
   session", "session handoff", "save session state", "wrap this up",
   "let's wrap up", "close out this session".
-model: haiku
 allowed-tools:
   - Read
   - Write
@@ -21,9 +20,9 @@ allowed-tools:
 
 Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean. The `## Resources` section is protected from deletion.
 
-**Model selection (3.5).** The frontmatter pins this skill to **Haiku 4.5** for the duration of the wrapup turn. The session model resumes automatically on the next user prompt. Wrapup is mechanical labeling + templated formatting — Haiku handles it as well as Opus at a fraction of the wall-clock and token cost. The phase logic below is calibrated for Haiku; do not assume Opus-level latent reflection.
+**Model selection (3.7).** This skill runs in the **session model** — whatever Opus/Sonnet/Haiku tier you're already in. Earlier versions (3.5–3.6) pinned to Haiku 4.5 for speed, but that broke wrapup whenever the conversation grew past Haiku's 200K context window in a 1M-context Opus session ("context used up" error). Pinning is too sharp a tool for a workflow that must succeed regardless of conversation length. If you want extra speed on a short wrapup, run `/model haiku` *before* invoking `/wrapup` — the explicit choice keeps you in control of the context-window trade-off.
 
-**Cross-model note.** The same logic produces comparable output on Opus 4.7, Sonnet 4.6, and Haiku 4.5 — the explicit tag-and-summarize pattern in Phase 1.3 was designed for cross-model parity. Override with `/model opus` before `/wrapup` for monthly deep-clean runs if you want extra signal on trap promotion.
+**Cross-model note.** The phase logic below uses an explicit tag-and-summarize pattern (Phase 1.3) so output is comparable across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Don't assume Opus-level latent reflection — the structure is the contract.
 
 **Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), surfacing insights, and syncing session files to git..."
 

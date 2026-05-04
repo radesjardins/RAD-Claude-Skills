@@ -6,7 +6,6 @@ description: >
   modifies files. Trigger when the user says "/startup", "start session",
   "orient me", "what's the state", "session briefing", "where did we leave off",
   "catch me up", "what was I working on".
-model: haiku
 allowed-tools:
   - Read
   - Glob
@@ -20,9 +19,9 @@ Orient a new session by reading the handoff state left by `/wrapup`, detecting t
 
 **This skill is read-only. It never creates, modifies, or deletes files.**
 
-**Model selection (3.5).** The frontmatter pins this skill to **Haiku 4.5** for the duration of the startup turn. The session model resumes automatically on the next user prompt. Startup is read-heavy + templated briefing synthesis — Haiku handles it well at a fraction of the wall-clock cost. Resource discovery is delegated to `detect-resources.py` with caching (Phase 2.5.0), so the model rarely does any scanning work itself.
+**Model selection (3.7).** This skill runs in the **session model** — whatever Opus/Sonnet/Haiku tier you're already in. Earlier versions (3.5–3.6) pinned to Haiku 4.5 for speed, but that broke startup whenever a long-running session pushed conversation context past Haiku's 200K window in a 1M-context Opus session ("context used up" error). Resource discovery is still delegated to `detect-resources.py` with caching (Phase 2.5.0), so the model rarely does any scanning work itself — the model-pin shortcut wasn't load-bearing for speed in the cache-hit path. If you want extra speed on a routine startup, run `/model haiku` *before* invoking `/startup` — the explicit choice keeps you in control of the context-window trade-off.
 
-**Cross-model note.** The same logic produces comparable output on Opus 4.7, Sonnet 4.6, and Haiku 4.5. Output briefing format is identical regardless of model. Override with `/model opus` before `/startup` only if you want Opus-level synthesis on a stale-handoff auto-refresh (Phase 1.4).
+**Cross-model note.** Output briefing format is identical across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Phase 1.4 stale-handoff auto-refresh benefits from Opus-level synthesis; that path will already be running in your session model.
 
 ## Mode flags
 
