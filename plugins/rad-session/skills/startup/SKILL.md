@@ -38,6 +38,7 @@ Phase 0 (sync from origin) **must run first** because it can update the very fil
 **Batch to issue at the start of the skill:**
 
 - Read `CLAUDE.md`, `HANDOFF.md`, `.claude/session-log.md` (Phase 1.1–1.3)
+- Read `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md` at project root (Phase 1.5 strategic doc gap-check — file-existence detection; content not consumed by the briefing)
 - Read `.mcp.json`, `.claude/settings.json`, `.env.example`, `package.json`, `pyproject.toml` (if any exist — Phase 2.5)
 - Glob for stack marker files (Phase 2.5.2)
 - Bash: `git status --short`, `git log --oneline -5`, `git rev-parse --abbrev-ref HEAD`, `git rev-list --left-right --count HEAD...@{upstream}` — run as one combined command so the shell spawn cost is paid once (Phase 2.2)
@@ -153,6 +154,37 @@ Check the date in HANDOFF.md against today's date:
   3. Synthesize a one-paragraph "Changes since last session" block summarizing commits that weren't authored during a Claude Code session (i.e., commits not referenced in HANDOFF.md's "Modified Files" list).
   4. Include the synthesized block in the briefing under a `Changes since last session (outside Claude Code):` heading, and lead the briefing with a one-line staleness note: `⚠ Handoff is N days old — auto-refreshed from git log.`
 - **No HANDOFF.md:** Note this is either a brand-new project or one that hasn't used `/wrapup` yet — fall through to the Minimal Briefing.
+
+---
+
+## Phase 1.5: Strategic Doc Gap-Check (4.0)
+
+Check whether the **RAD 8-doc standard** strategic and operational tier files exist at project root. This is the soft companion to `/rad-planner:plan --validate` — the validate skill is the deliberate "is my plan ready to execute" gate; Phase 1.5 is the cheap "did we forget to plan this" nudge that fires every session.
+
+The five files checked are owned by rad-planner `/plan`. rad-session does not write them; it only reports their presence.
+
+| File | If missing |
+|---|---|
+| `PRD.md` | Add to the "missing strategic docs" list |
+| `ARCHITECTURE.md` | Add to the "missing strategic docs" list |
+| `ASSUMPTIONS.md` | Add to the "missing strategic docs" list |
+| `DECISIONS.md` | Add to the "missing strategic docs" list |
+| `PLAN.md` | Add to the "missing strategic docs" list |
+
+The reads already happened in the parallel batch at the top of the skill — Phase 1.5 just inspects which Reads returned content vs. which silently errored.
+
+**Output behavior:**
+
+- **All five present** → emit nothing. Strategic docs are in place, no nudge needed.
+- **Some missing** → stash a single briefing line for Phase 3 (placed under any stale/block/cross-machine warning, above the Project line):
+  ```
+  ⚠ Missing strategic docs: <comma-separated list> — run /rad-planner:plan to create. (Soft warning; session continues.)
+  ```
+- **All five missing AND CLAUDE.md exists without strategic-doc `@-import` references** → same warning, but recommend `/rad-planner:plan` (greenfield) rather than `/plan --reboot`. If CLAUDE.md is also missing, the project is fresh — the warning is informational, not corrective.
+
+**Why soft.** Many sessions are pure execution against an existing plan; some are exploratory and haven't planned yet; some projects are too small for the full 8-doc set. The warning informs without blocking — session continues regardless. Users who want a hard gate run `/rad-planner:plan --validate` explicitly.
+
+**`--no-pull` interaction.** Phase 1.5 still fires when `--no-pull` is set (the file-existence check doesn't depend on origin state). If origin had a new PRD.md committed but local hasn't pulled, the warning may fire spuriously — the stale warning from Phase 0.3 covers that case, so the user has the context to interpret.
 
 ---
 
@@ -309,6 +341,7 @@ Present a concise, scannable session briefing. Adapt the format based on what's 
 - Use the **exact wording from HANDOFF.md** for traps and open work — don't paraphrase. The original wording was chosen carefully and paraphrasing often loses the load-bearing detail.
 - End with `Ready to continue. What would you like to work on?` to hand control back.
 - If the handoff is **stale (7+ days)**, lead with the staleness + auto-refresh note before the briefing body.
+- If **Phase 1.5 found missing strategic docs**, include the warning line under any stale/block/cross-machine warning, above the Project line. One line only; do not repeat the full list elsewhere in the briefing.
 - **Omit** the "Resources available" block entirely if every category (MCPs, CLIs, scripts, env) is empty — don't show an empty header.
 - Cap the Resources block at **6 lines**; truncate with `...` if a category has more than 8 items.
 - If imports were resolved in Phase 1.1 and surfaced non-trivial content (e.g., architecture notes not in CLAUDE.md body), add a single `Imports: <file1>, <file2>` line under the Resources block.

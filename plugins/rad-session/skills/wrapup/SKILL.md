@@ -283,6 +283,94 @@ This line is captured in the Phase 6 summary so the user always sees the mainten
 
 ---
 
+## Phase 3.5: Append Decisions to DECISIONS.md (4.0)
+
+Phase 1.3 conversation tagging may have produced `DECISION` labels (architecture choices, tool selections, naming rules, approaches taken — with stated or inferable reasons). When it does, those decisions are durable enough to outlive the session log: they belong in `DECISIONS.md`, where rad-planner `/plan` and any future executor can find them with their sequence numbers and supersession history.
+
+This phase prompts the user to append. **The user's `y` confirms the append** — rad-session does not auto-write to DECISIONS.md without explicit approval, per the convention that decisions are user-authored even when surfaced by a plugin.
+
+### 3.5.0 Skip conditions
+
+Skip Phase 3.5 entirely (and say nothing) if any of these hold:
+
+- **`--quick` mode is active** (explicit flag or auto-quick from Phase 1.3 low-activity short-circuit). Quick wrapups are "save state and go" — DECISIONS curation can wait for a full wrapup.
+- **Non-interactive context** (`--non-interactive` flag, autonomous loop, PreCompact-triggered wrapup). The prompt requires a user response; running silently and auto-appending would push noise into DECISIONS.md without curation. Tagged decisions still landed in HANDOFF.md (Phase 2) and the session-log (Phase 3) — the user can re-surface them next interactive wrapup.
+- **Phase 1.3 produced zero `DECISION` labels.** Nothing to prompt about.
+
+### 3.5.1 Build the prompt list
+
+From the Phase 1.3 tagging window, extract every turn labeled `DECISION`. Compress each into a one-line title + one-line rationale:
+
+```
+- <short title — 8 words max>: <single-clause WHY>
+```
+
+If there are more than 5 decisions, group them so the prompt stays scannable. Decisions that map cleanly to architecture or tooling choices are the durable kind; off-the-cuff "let's go with X for now" remarks usually aren't. Filter out anything that already reads like "we'll decide later" or "let's revisit."
+
+### 3.5.2 Present the prompt
+
+```
+The following decisions surfaced this session — append to DECISIONS.md?
+
+  1. <title>: <WHY>
+  2. <title>: <WHY>
+  ...
+
+Append? (y/N/edit)
+```
+
+- **Y** — append all listed entries to DECISIONS.md with the next available sequence numbers.
+- **N** (default) — skip. Decisions remain in HANDOFF.md / session-log. No write to DECISIONS.md.
+- **edit** — show the entries one by one and let the user accept/reject/rewrite each. Append the kept ones with sequence numbers.
+
+### 3.5.3 Append (when user confirms)
+
+Determine the next sequence number:
+
+```bash
+# Highest NNNN in existing DECISIONS.md, default to 0 if file missing or no entries
+NEXT_SEQ=$(grep -oE '^## [0-9]{4} —' DECISIONS.md 2>/dev/null | grep -oE '[0-9]{4}' | sort -n | tail -1)
+NEXT_SEQ=$((${NEXT_SEQ:-0} + 1))
+```
+
+If `DECISIONS.md` does not exist, create it with a header line first:
+
+```markdown
+# Decisions: [Project Name]
+
+Chronological architecture and tooling decisions. Append new entries; never delete. Sequence numbers (`NNNN`) are the cross-reference for supersession.
+
+```
+
+Then append each confirmed entry in the canonical multi-line format (per `references/file-conventions.md` → `docs/file-conventions.md`):
+
+```markdown
+
+## NNNN — YYYY-MM-DD — <title>
+
+**Status:** Active
+
+**Context:** Surfaced during YYYY-MM-DD work session.
+
+**Decision:** <decision body — what was chosen>
+
+**Consequences:** <consequences body, or "TBD — fill in next session" if not captured during tagging>
+```
+
+Zero-pad the sequence number to four digits (`0001`, `0042`, `0123`). Increment for each appended entry within the same wrapup.
+
+### 3.5.4 Notify
+
+Emit one line, captured in the Phase 6 anomaly block (DECISIONS.md just changed permanently — worth surfacing):
+
+```
+DECISIONS.md: appended N entries (NNNN–NNNN). Edit consequences as needed.
+```
+
+If the user picked `N` or edited and rejected all entries, emit nothing — Phase 3.5 stays silent on the success-decline path. The decision to NOT append is itself a valid outcome; we don't need to announce it.
+
+---
+
 ## Phase 4: Prune CLAUDE.md
 
 Read CLAUDE.md and evaluate it for staleness, duplication, and ephemeral state.
@@ -503,6 +591,7 @@ An anomaly exists if any of these hold:
 - `HANDOFF_LINES > 100` OR `HANDOFF_BYTES > 8192` (over hard cap)
 - `LOG_ENTRIES > 20` OR `LOG_BYTES > 20480` (over hard cap — Phase 3.B trim should have fired; this is a defect signal)
 - Phase 3.B fired a trim AND promoted a recurring trap to CLAUDE.md (worth surfacing because CLAUDE.md just changed permanently)
+- Phase 3.5 appended entries to DECISIONS.md (worth surfacing because DECISIONS.md just changed permanently)
 - Phase 4 actually pruned CLAUDE.md (lines were removed and saved)
 - Phase 6 push was rejected, declined explicitly, or skipped because of a dirty tree / missing upstream
 
@@ -527,6 +616,7 @@ Session wrapped up:
   ⚠ HANDOFF.md: <N> lines / <N> KB — over hard cap (100 lines / 8 KB). Re-compress next wrapup: drop secondary bullets, move multi-clause rationales to commit messages.
   ⚠ session-log: <N> entries / <N> KB — over hard cap (20 entries / 20 KB). Phase 3.B trim should have fired — investigate skill execution; this is a defect.
   Maintenance: <line from Phase 3.B.5> — only include if 3.B promoted a trap to CLAUDE.md, otherwise omit.
+  DECISIONS.md: <line from Phase 3.5.4> — only include if 3.5 appended entries, otherwise omit.
   CLAUDE.md: pruned <N> changes (auto-proceeded | confirmed) — only include if Phase 4 actually changed the file, otherwise omit.
   Sync: <one of the lines from 6.6> — only include if push failed or was declined; on success the success-path line above already covers it.
 ```

@@ -60,19 +60,23 @@ python3 ${plugin_root}/scripts/detect-resources.py "$PWD" --check-clis --include
 
 Both should complete in well under a second. Read both JSON outputs.
 
-### Step 3: Check for existing rad-session state
+### Step 3: Check for existing rad-session and rad-planner state
 
 ```
 - CLAUDE.md present?
 - HANDOFF.md present?
 - .claude/session-log.md present?
 - .claude/settings.json present?
+- CLAUDE-FRAGMENT.md present?            (handoff from rad-planner /plan — consumed and deleted by this step)
+- Strategic docs at project root?        (PRD.md, ARCHITECTURE.md, ASSUMPTIONS.md, DECISIONS.md, PLAN.md)
 ```
 
-Two scenarios:
+Two scenarios for CLAUDE.md:
 
 **A. Greenfield (no existing rad-session files)** → scaffold from scratch.
 **B. Existing project (CLAUDE.md exists)** → merge mode. Don't overwrite; offer additions.
+
+The FRAGMENT and strategic-doc state determines the `@-import` block that gets inserted into the CLAUDE.md scaffold (Step 6).
 
 ### Step 4: Synthesize a stack summary for the user
 
@@ -237,7 +241,45 @@ The user can apply the deltas, ignore them, or re-edit settings manually.
 
 ### Step 6: Propose CLAUDE.md scaffold (or additions)
 
-**A. Greenfield case** — generate a starter CLAUDE.md:
+#### Step 6.0: Compute the Strategic Docs `@-import` block (4.0)
+
+Before generating the scaffold or proposing additions, determine what `@-import` block (if any) lands inside CLAUDE.md. Three cases, evaluated in order:
+
+**Case 1 — `CLAUDE-FRAGMENT.md` exists at project root.** This is the canonical handoff from `/rad-planner:plan`:
+
+1. Read its content. It should contain an `@-import` block listing `@PRD.md`, `@ARCHITECTURE.md`, etc.
+2. Extract the `@-import` lines (ignore comments and the header).
+3. Wrap them in a `## Strategic Docs` section to be inserted in CLAUDE.md (Step 6 branches use this block).
+4. **Delete `CLAUDE-FRAGMENT.md`** after a successful CLAUDE.md write in Step 6. Absence at next `/init` is fine — Cases 2 and 3 below cover regeneration.
+
+**Case 2 — No FRAGMENT, but ≥1 strategic doc exists at project root.** Auto-generate the import block from detected filenames:
+
+```bash
+# Glob the project root for the 5 strategic docs
+for f in PRD.md ARCHITECTURE.md ASSUMPTIONS.md DECISIONS.md PLAN.md; do
+  [ -f "$f" ] && echo "@$f"
+done
+```
+
+Wrap the resulting lines in a `## Strategic Docs` section. This handles projects where the user ran `/plan` and merged the FRAGMENT manually (deleting the FRAGMENT), or projects on a different machine where the FRAGMENT never landed in this clone.
+
+**Case 3 — No FRAGMENT and no strategic docs.** Scaffold with placeholder pointers so the user knows the slots exist and how to fill them:
+
+```markdown
+## Strategic Docs (pending — run /rad-planner:plan to create)
+
+<!-- @PRD.md           — what we're building and why -->
+<!-- @ARCHITECTURE.md  — how it fits together -->
+<!-- @ASSUMPTIONS.md   — non-obvious truths about the project's reality -->
+<!-- @DECISIONS.md     — architecture decisions, sequence-numbered, append-only -->
+<!-- @PLAN.md          — milestones, steps, checkpoints -->
+```
+
+(HTML comments so the imports don't resolve until the user uncomments them or runs `/rad-planner:plan` to generate the actual files. Avoids broken-import warnings during `/startup` Phase 1.1.)
+
+In all three cases, this block becomes the `{strategic_docs_block}` substitution used in Step 6.A and Step 6.B below.
+
+#### Step 6.A: Greenfield case — generate a starter CLAUDE.md
 
 ```markdown
 # {project-name}
@@ -254,6 +296,8 @@ The user can apply the deltas, ignore them, or re-edit settings manually.
 ## Build Commands
 {from package.json scripts}
 
+{strategic_docs_block}
+
 ## Resources
 - {each detected MCP server}: ...
 - {each detected stack CLI}: ...
@@ -264,13 +308,26 @@ The user can apply the deltas, ignore them, or re-edit settings manually.
 
 Show the proposed content. Ask: "Write this as your initial CLAUDE.md?" Wait for confirmation.
 
-**B. Existing CLAUDE.md case** — propose ADDITIONS only:
+#### Step 6.B: Existing CLAUDE.md case — propose ADDITIONS only
 
 - If `## Resources` section is missing → propose adding it with detected items.
 - If `## Resources` exists → reconcile against detected. Show drift report (documented-but-missing, detected-but-undocumented). Offer to add the latter via `/add-resource` style edits.
+- **If `## Strategic Docs` section is missing AND Case 1 or Case 2 from Step 6.0 applies** → propose inserting `{strategic_docs_block}` near the top of CLAUDE.md, after the project header / tech stack / build commands but before the Resources section. If CLAUDE.md already contains any of the `@PRD.md` / `@ARCHITECTURE.md` / etc. lines, treat as "already merged" — skip the insertion silently and (Case 1 only) still delete CLAUDE-FRAGMENT.md.
 - Do NOT touch the rest of the file.
 
 Show the diff. Get confirmation before writing.
+
+#### Step 6.C: After a successful CLAUDE.md write
+
+If Case 1 applied (FRAGMENT was consumed):
+
+```bash
+rm CLAUDE-FRAGMENT.md
+```
+
+Note the deletion in the Step 8 final report (`CLAUDE-FRAGMENT.md: consumed and removed`).
+
+If the user declined the CLAUDE.md write in Step 6.A/6.B, **do not delete the FRAGMENT** — leave it on disk so a later re-run of `/init` can pick it up.
 
 ### Step 7: Set up `.claude/` baseline (if missing)
 
@@ -324,6 +381,12 @@ Created/updated:
   - .claude/session-log.md  ({new | already present})
   - .claude/settings.local.json  ({plugin disables added: N | unchanged})
 
+Strategic docs (rad-planner output):
+  - {emit one line per case}
+    - Case 1 (FRAGMENT merged): "CLAUDE-FRAGMENT.md: consumed and removed; @-imports merged into CLAUDE.md"
+    - Case 2 (auto-generated):  "Strategic docs detected ({N} of 5): @-imports auto-generated into CLAUDE.md"
+    - Case 3 (placeholders):    "No strategic docs yet — placeholder @-import comments inserted. Run /rad-planner:plan when ready."
+
 Resources registered: {N MCPs, N stack CLIs}
 Drift detected:        {N items — see /add-resource if you want to add them}
 Plugin audit:          {N kept, N disabled — saves ~{N} tool names + ~{N} skills/turn}
@@ -337,6 +400,7 @@ Next:
   - /startup at the start of each session (start fresh — plugin disables take effect on restart)
   - /wrapup at the end of each session
   - /add-resource any time to register new tools
+  {Case 3 only:} - /rad-planner:plan to generate the strategic docs (PRD / ARCH / ASSUMPTIONS / DECISIONS / PLAN)
 ```
 
 ### Step 9: Optional follow-ups (only if user asks)
@@ -370,6 +434,8 @@ Next:
   "claude_md_action": "created | additions_merged | unchanged",
   "session_log_action": "created | unchanged",
   "settings_local_action": "created | merged | unchanged",
+  "fragment_action": "consumed | absent_auto_generated | absent_placeholder | absent_unchanged",
+  "strategic_docs_detected": ["PRD.md", "ARCHITECTURE.md"],
   "stack_summary": {...},
   "resources_summary": {...},
   "recommended_plugins": ["rad-supabase", "rad-coolify-orchestrator", ...],
