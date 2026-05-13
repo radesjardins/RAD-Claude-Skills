@@ -203,10 +203,48 @@ When rad-planner `/plan` runs on a project for the first time:
 
 ## Why this standard exists
 
-Three failure modes drove the design:
+### The underlying problem
 
-- **HANDOFF.md collision** (pre-4.0): both `/wrapup` and `/checkpoint` wrote HANDOFF.md with different templates. Single-writer rule eliminates this.
-- **CLAUDE.md double-ownership** (pre-4.0): rad-session's `/init` and rad-planner's `/generate-project-config` produced different structures at the same path. `/generate-project-config` is retired in rad-planner 3.0; `/plan` emits the FRAGMENT instead.
-- **Mega-doc opacity** (pre-3.0 rad-planner): a single `implementation_plan.md` with 7 sections was harder to query selectively than five focused files with clear ownership.
+AI-assisted coding sessions have four recurring failure modes that compound across long projects and multiple agents (Claude Code, Codex, Gemini CLI):
 
-The 8-doc split makes each concern individually addressable — and lets agents load only what they need per task.
+- **Scope creep** — agents do a mile when asked for an inch, often invisible until the diff lands.
+- **Context loss between sessions** — re-explaining "no users yet, no migrations needed" every time you start work.
+- **Drift off mission** — agents revisit settled decisions or invent architecture not in the plan.
+- **CLAUDE.md bloat** — the model reads it but doesn't index it well; nothing gets pruned.
+
+The fix isn't a smarter agent. It's a **richer, more structured starting context per project** — a standardized set of documents that exist *before any code is written*, with clear ownership, size caps, and update triggers. That's the 8-doc standard.
+
+### Three concrete failure modes that drove the 3.0 / 4.0 redesign
+
+1. **HANDOFF.md collision** (pre-4.0). Both `/rad-session:wrapup` and `/rad-planner:checkpoint` wrote `HANDOFF.md` to the project root with different templates. Last writer won. This was a bug. **Fixed:** single-writer rule — `/wrapup` is the sole writer; `/checkpoint` writes only `.planner/state/<run-id>.json`.
+
+2. **CLAUDE.md double-ownership** (pre-4.0). rad-session's `/init` produced a stack-detected scaffold; rad-planner's `/generate-project-config` produced a WHY/WHAT/HOW "Contract of Intent." Two different structures at the same path, and whichever ran last clobbered the other. **Fixed:** `/generate-project-config` is retired in rad-planner 3.0. `/plan` Phase 6 emits `ARCHITECTURE.md` directly *and* a transient `CLAUDE-FRAGMENT.md` (an `@-import` block). rad-session's `/init` reads the FRAGMENT, merges its imports into CLAUDE.md, and deletes the FRAGMENT. One writer per file.
+
+3. **Mega-doc opacity** (pre-3.0 rad-planner). The single `implementation_plan.md` packed 7 sections into one file. Querying selectively was painful: agents had to read the whole thing to find the ARCHITECTURE section. Section boundaries drifted as the file grew. There was no source of truth for "what assumptions are we operating under" — that knowledge lived in chat history that didn't survive context compaction. **Fixed:** the mega-doc splits into 5 focused files, each individually loadable; `ASSUMPTIONS.md` is a new file type that captures the non-obvious project reality (no users yet, single-tenant, sensitive data, team has no Rust experience).
+
+### What changes concretely for users
+
+| Concern | Pre-3.0 / pre-4.0 | 3.0 / 4.0 |
+|---|---|---|
+| Where the plan lives | `implementation_plan.md` (one 500-line mega-doc) | Split across `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md` — each loadable independently |
+| Project assumptions | Scattered through chat history, lost after compaction | Captured in `ASSUMPTIONS.md` during `/plan` Phase 1 interview; invalidations marked with strikethrough rather than deleted |
+| Architecture decisions | Inline table in section 2 of the mega-doc | `DECISIONS.md` — append-only, sequence-numbered (`0001`, `0002`, …), supersession via numeric cross-reference (`Superseded by 0042 (reboot 2026-05-13)`) |
+| Session kickoff prompt | `EXECUTION-PROMPT.md` (separate artifact to copy-paste) | `/rad-session:startup` briefing — same role, integrated with the session lifecycle |
+| `CLAUDE.md` content | Generated independently by two skills with different opinions | rad-session owns CLAUDE.md; `/init` merges strategic `@-imports` from rad-planner's FRAGMENT |
+| `HANDOFF.md` | Sometimes from `/wrapup`, sometimes from `/checkpoint` | Always from `/wrapup`. `/checkpoint` writes `.planner/state/` only |
+| Plan revision after pivot | Hand-edit the mega-doc; lose track of what changed | `/plan --reboot` audits current code, archives prior strategic docs to `*.pre-reboot`, regenerates anchored to reality, marks prior `DECISIONS` superseded |
+| Doc validation | None (or trust the model to follow the template) | `/plan --validate` does a cheap 8-doc gap-check + `plan-lint.py` on `tasks.md`; `/review-plan` does deep agent-driven audit |
+
+### Why split docs beats one mega-doc
+
+The cost of "one file" is mostly invisible until it bites. The 8-doc split costs slightly more authoring overhead but pays back in three places:
+
+- **Selective loading.** A task that touches the API surface doesn't need the milestone schedule loaded. Five focused files let agents `@-import` only what they need.
+- **Cleaner ownership.** Each file has one writer. No collision, no last-writer-wins, no drift between two skills that disagree about format.
+- **Single-axis change.** Updating an assumption doesn't risk damaging the architecture diagram. Append-only `DECISIONS.md` means the audit trail of "what we thought at the time" is preserved without manual archival.
+
+The single-writer rule and the sequence-numbered DECISIONS append are the two non-negotiable load-bearing pieces. Everything else (filenames, target lengths, pruning rules) is configurable — see each file's section above for the specifics.
+
+### Why this lives at the repo root, not inside one plugin
+
+Both rad-session 4.0 and rad-planner 3.0 reference this file. If it lived inside either plugin, the other would have to either fork it or take a hard dependency. Soft coupling beats both: the canonical spec lives at the repo root, each plugin has a thin pointer (`plugins/<plugin>/references/file-conventions.md`), and either plugin works without the other (`/init` falls through to placeholder pointers when no FRAGMENT or strategic docs exist; `/plan` produces all output regardless of whether rad-session is installed).

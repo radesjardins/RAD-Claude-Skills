@@ -22,7 +22,7 @@ Brainstorming alone loops back to the same ideas. rad-brainstormer brings 10 pro
 | `reverse-brainstorm` | Make the problem worse to find what's actually causing it |
 | `five-whys` | Root cause analysis — ask why until you hit the real issue |
 | `how-might-we` | Reframe problems as opportunity statements |
-| `design-sprint` | Structured spec creation and architecture design — hands off to `/rad-planner:plan-project` for implementation planning |
+| `design-sprint` | Structured spec creation and architecture design — hands off to `/rad-planner:plan` for implementation planning |
 
 | Agent | Purpose |
 |-------|---------|
@@ -38,12 +38,12 @@ Brainstorming alone loops back to the same ideas. rad-brainstormer brings 10 pro
 |-------|--------|------|--------|
 | **Ideation** (divergent) | `rad-brainstormer` | Exploring the problem, generating options, stress-testing assumptions, converging on a chosen direction | A decided idea + rough direction |
 | **Design** (post-ideation) | `rad-brainstormer:design-sprint` | Architecture, components, data flow, API design, error handling, testing strategy | A reviewable design spec |
-| **Planning** (pre-code) | `rad-planner:plan-project` | Dependency-aware task graph, complexity scoring, parallel waves, risk audit, failure states | An ordered implementation plan |
+| **Planning** (pre-code) | `rad-planner:plan` | Dependency-aware task graph, complexity scoring, parallel waves, risk audit, failure states | An ordered implementation plan |
 | **Code** | your tools of choice | Implementation | Working software |
 
-**The boundary that matters:** `design-sprint` answers *"what are we building and how is it shaped?"* (spec). `plan-project` answers *"in what order do we build it, what could go wrong, and how do we know each step is done?"* (plan). Use both if the project is non-trivial.
+**The boundary that matters:** `design-sprint` answers *"what are we building and how is it shaped?"* (spec). `plan` answers *"in what order do we build it, what could go wrong, and how do we know each step is done?"* (plan + the [RAD 8-doc set](../../docs/file-conventions.md) — PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN). Use both if the project is non-trivial.
 
-If you come in with a clear idea already and just need a plan, skip `brainstormer` and go straight to `rad-planner:plan-project`. If you come in with a vague problem, start with `brainstorm-session`.
+If you come in with a clear idea already and just need a plan, skip `brainstormer` and go straight to `rad-planner:plan`. If you come in with a vague problem, start with `brainstorm-session`.
 
 ## Quick Start
 

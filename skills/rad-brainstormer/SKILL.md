@@ -251,6 +251,6 @@ This skill is the Claude.ai adaptation of the [rad-brainstormer plugin](../../pl
 - Parallel autonomous subagent dispatch — Claude.ai runs one conversation; the plugin runs domain-researcher / idea-challenger / spec-reviewer in parallel for batch work
 - Persistent filesystem state — no `.brainstorm/state/<run-id>.json`, so long sessions don't survive a context reset
 - `--non-interactive` / `--resume` flags — the plugin supports headless and resumable runs; the skill is conversational only
-- Direct hand-off to `/rad-planner:plan-project` — the design-sprint output here is a downloaded spec; in Claude Code the chain is automatic
+- Direct hand-off to `/rad-planner:plan` — the design-sprint output here is a downloaded spec; in Claude Code the chain is automatic
 
 For heavy multi-stage brainstorm-to-ship work, use the plugin in Claude Code. For one-off ideation, evaluation, or design-sprint sessions, this skill matches the plugin's depth.

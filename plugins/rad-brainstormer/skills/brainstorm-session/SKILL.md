@@ -253,7 +253,7 @@ Adapt the output format to the domain:
 - Write spec to `docs/plans/YYYY-MM-DD-<topic>-design.md` (user preferences override)
 - Run `spec-reviewer` agent (max 5 iterations — see escalation below)
 - User reviews spec
-- Transition: hand off to `/rad-planner:plan-project` for implementation planning. If `rad-planner` is not installed, surface this to the user and suggest installing it.
+- Transition: hand off to `/rad-planner:plan` for implementation planning. If `rad-planner` is not installed, surface this to the user and suggest installing it.
 
 #### Spec Review Loop (Phase 11)
 

@@ -64,7 +64,7 @@ Complete these steps in order:
 7. **Write design doc** — Save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (user preferences override)
 8. **Spec review loop** — Dispatch spec-reviewer agent; fix issues and re-dispatch until approved (max 5 iterations)
 9. **User reviews spec** — "Spec written and committed. Please review and let me know about any changes."
-10. **Transition** — Hand off to `/rad-planner:plan-project` for implementation planning (see "After the Design" below)
+10. **Transition** — Hand off to `/rad-planner:plan` for implementation planning (see "After the Design" below)
 
 ## Design Principles
 
@@ -124,7 +124,7 @@ Markdown fallback is accepted from the agent — parse best-effort if JSON is mi
 Wait for user response. If changes requested, make them and re-run spec review.
 
 ### Transition
-Hand off to `/rad-planner:plan-project` to turn the approved spec into a dependency-aware implementation plan with risk review. If `rad-planner` is not installed, surface this to the user and suggest installing it, or let the user invoke their preferred implementation-planning workflow.
+Hand off to `/rad-planner:plan` to turn the approved spec into a dependency-aware implementation plan with risk review. If `rad-planner` is not installed, surface this to the user and suggest installing it, or let the user invoke their preferred implementation-planning workflow.
 
 Do NOT invoke frontend-design, mcp-builder, or any other implementation skill directly from design-sprint — implementation planning is a separate, reviewable phase.
 
