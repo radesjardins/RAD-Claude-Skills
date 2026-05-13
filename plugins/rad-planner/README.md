@@ -8,6 +8,10 @@ A 6-skill plugin that walks you through Discovery → Stack Eval → Plan → Ri
 
 The skills are mostly structured prompts that ask the model to behave like a planner. The **scripts** in `scripts/` are real validators — they parse the generated tasks file, build the DAG, check for cycles and phantom dependencies, verify required fields are present, flag vague language, and validate subagent JSON against schemas. Where the README says "enforced," the script does the work.
 
+## File conventions
+
+rad-planner produces project-level planning artifacts per the [RAD 8-doc standard](../../docs/file-conventions.md) at the repository root. The standard is the canonical convention shared with rad-session: it defines target lengths, update triggers, pruning rules, and the single-writer rule that prevents collision between plugins.
+
 ## What it does NOT do
 
 - **Does not execute the resulting plan.** It produces planning artifacts. You (or another tool) run the work.

@@ -6,6 +6,10 @@
 
 **What it isn't.** It is **not** an automation layer over your code: it never runs builds, never touches non-session files in commits, and never force-pushes.
 
+## File conventions
+
+rad-session reads and writes session-tier files — CLAUDE.md, HANDOFF.md, `.claude/session-log.md` — per the [RAD 8-doc standard](../../docs/file-conventions.md) at the repository root. The standard is the canonical convention shared with rad-planner: it defines target lengths, update triggers, pruning rules, and the single-writer rule that prevents collision between plugins.
+
 > **v3.7 — Fix: remove Haiku model pin (context-window regression).** v3.5 pinned `/startup` and `/wrapup` to Haiku 4.5 via per-skill `model:` frontmatter to chase wall-clock speed. That broke both skills whenever the session conversation grew past Haiku's 200K context window in a 1M-context Opus session — invoking the skill switched the active model to Haiku, which couldn't fit the conversation, and the run failed with "context used up" errors. The PreCompact hook made it worse: the very mechanism designed to save state before compaction would catastrophically fail at the moment it was needed most. v3.7 removes the pin entirely. `/startup` and `/wrapup` now run in the session model. Wall-clock cost goes back up on Opus, but they always succeed regardless of conversation length. If you want Haiku speed on a specific run, run `/model haiku` *before* invoking the skill so the context-window trade-off is an explicit user choice.
 >
 > **v3.6 — Per-project plugin-bloat audit.** New `/init` Step 5.5 detects 10 stack signals and proposes per-project `enabledPlugins` disables in `.claude/settings.local.json`, cutting per-turn token cost for projects that don't use a given plugin's stack. Saves both MCP-registry tokens and skill-listing tokens. Categories: core (always keep), stack-conditional (signal-gated), productivity (default disable), meta-authoring (plugin-authoring repos only). User-scope plugin enables stay intact in other projects.
