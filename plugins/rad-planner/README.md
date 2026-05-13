@@ -4,7 +4,7 @@ Structured implementation-planning scaffolding for Claude Code, with **mechanica
 
 ## What this actually is
 
-A 6-skill plugin that walks you through Discovery → Stack Eval → Plan → Risk → Review → Export, dispatches subagents for stack and risk work, and runs Python validators on the generated artifacts. The plan output is markdown intended for a fresh AI session to pick up cold.
+A 5-skill plugin that walks you through Discovery → Stack Eval → Plan → Risk → Review → Export, dispatches subagents for stack and risk work, and runs Python validators on the generated artifacts. The plan output is markdown intended for a fresh AI session to pick up cold.
 
 The skills are mostly structured prompts that ask the model to behave like a planner. The **scripts** in `scripts/` are real validators — they parse the generated tasks file, build the DAG, check for cycles and phantom dependencies, verify required fields are present, flag vague language, and validate subagent JSON against schemas. Where the README says "enforced," the script does the work.
 

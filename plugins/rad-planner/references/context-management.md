@@ -5,16 +5,29 @@ AI reasoning quality tends to degrade as context windows fill — observable in 
 ## The Document & Clear Pattern
 
 ### Step 1: Status Checkpoint (Dump)
-Before clearing, instruct the AI to write a handoff document capturing:
-- **Completed milestones** — what's done and verified
-- **Current state** — what files were modified, what's in progress
-- **Open decisions** — unresolved questions that need human input
-- **Traps to avoid** — approaches that were tried and failed (TRIED / FAILED BECAUSE / CORRECT APPROACH format)
-- **Immediate next steps** — exactly what to do when resuming
 
-Save to: `HANDOFF.md`, `activeContext.md`, or `SCRATCHPAD.md`.
+There are two complementary state files in the RAD 8-doc standard (3.0+). Use both for a full handoff:
 
-For active skill runs, also save to `.planner/state/<run-id>.json` per the shared checkpoint schema below. This enables `--resume <run-id>` on `plan`, `review-plan`, and `evaluate-stack`.
+**Planner-side (this plugin's job — `/checkpoint`):** write `.planner/state/<run-id>.json` per the shared checkpoint schema below. This captures:
+- Which skill was in flight (`plan` / `review-plan` / `evaluate-stack`)
+- Current phase, run-id, model, codebase context, stack recommendation, risk-history
+- Whatever the skill needs to resume mid-flight via `--resume <run-id>`
+
+**Session-side (rad-session's job — `/rad-session:wrapup`):** generate `HANDOFF.md` and append to `.claude/session-log.md`. This captures:
+- What was tried and didn't work (TRIED / FAILED BECAUSE / CORRECT APPROACH traps)
+- Where you left off, modified files, open work, key decisions, key insights
+- The "what NOT to retry" record that the next `/rad-session:startup` reads
+
+Per the single-writer rule (see `references/file-conventions.md` → canonical at `docs/file-conventions.md`), **rad-planner does NOT write HANDOFF.md.** Run `/rad-session:wrapup` *before or after* `/rad-planner:checkpoint` if you want both kinds of state captured.
+
+The two-step idiom is:
+```
+/rad-planner:checkpoint --run-id <id>    # saves .planner/state/<id>.json
+/rad-session:wrapup                      # writes HANDOFF.md + session-log
+/clear
+```
+
+For projects that aren't running a planner skill (just executing the plan), only `/rad-session:wrapup` is needed.
 
 ### Step 2: Wipe
 Run `/clear` to completely reset the session. This erases all conversational context.
@@ -119,43 +132,18 @@ This "progressive disclosure" pattern keeps the active context lean while making
 
 ## Handoff Document Template
 
-```markdown
-# Session Handoff — [Date] [Time]
+The canonical HANDOFF.md template is owned by rad-session, not rad-planner. See:
+- `plugins/rad-session/references/handoff-template.md` for the format
+- `docs/file-conventions.md` for the per-section rules (length caps, "What NOT To Do" structure, etc.)
 
-## Status
-**Phase:** [Current phase name]
-**Milestone:** [M1/M2/etc.]
-**Last completed task:** [Task ID and title]
-**Next task:** [Task ID and title]
-**Active run:** [run-id if a planner skill was in flight, else "none"]
-
-## What Changed This Session
-- [File 1]: [What was done]
-- [File 2]: [What was done]
-- Committed as: [commit hash or "uncommitted"]
-
-## Open Decisions
-- [ ] [Decision needed about X — context: Y]
-
-## Traps (Do NOT Retry)
-- **TRIED:** [Approach A]
-  **FAILED BECAUSE:** [Specific reason]
-  **CORRECT APPROACH:** [What to do instead]
-
-## To Resume
-1. Read this file
-2. If active run-id exists: `/rad-planner:<skill> --resume <run-id>`
-3. Otherwise: read PLAN.md, focus on Phase [N]
-4. Start with task [ID]: [title]
-5. Run `[validation command]` to verify current state
-```
+The `.planner/state/<run-id>.json` schema is documented above ("Shared Checkpoint Schema"). That's the only state file rad-planner writes directly.
 
 ## Integration with Plan Checkpoints
 
 The plan template includes checkpoints after every milestone. Each checkpoint should:
 1. Run all validation checks for completed tasks
 2. Commit all verified work to git
-3. Generate/update the handoff document
-4. If a planner skill is in flight, update `.planner/state/<run-id>.json`
+3. Update `.planner/state/<run-id>.json` if a planner skill is in flight (rad-planner's responsibility)
+4. Run `/rad-session:wrapup` if you want a session-level HANDOFF.md (rad-session's responsibility — keeps the single-writer rule intact)
 5. Assess context usage — if approaching capacity, dump state, recommend `/clear`, provide rehydration instructions
 6. If context is low: continue to next phase

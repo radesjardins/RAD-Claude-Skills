@@ -5,8 +5,8 @@
     "email": "rad@radesjardins.com"
   },
   "metadata": {
-    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more.",
-    "version": "1.4.1",
+    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more. v1.5.0 ships rad-planner 3.0 + rad-session 4.0 with the soft-coupled RAD 8-doc standard (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN / tasks.md + transient CLAUDE-FRAGMENT.md handoff).",
+    "version": "1.5.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -117,7 +117,7 @@
     {
       "name": "rad-session",
       "source": "./plugins/rad-session",
-      "description": "Session handoff management — /wrapup captures state, prunes CLAUDE.md, logs history; /startup orients new sessions from handoff files.",
+      "description": "Session lifecycle for Claude Code — /init bootstraps once (stack detection + FRAGMENT merge from rad-planner), /startup orients each session (8-doc gap-check + cross-machine sync), /wrapup captures each session (HANDOFF.md + session-log + optional DECISIONS append) and auto-commits.",
       "category": "productivity",
       "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-session",
       "license": "Apache-2.0"
@@ -133,7 +133,7 @@
     {
       "name": "rad-planner",
       "source": "./plugins/rad-planner",
-      "description": "Structured project planning — dependency-aware implementation plans with DAG task graphs, stack evaluation via Golden Path matrix, risk assessment (14 anti-patterns), failure state mapping, TDD integration, and context management.",
+      "description": "Structured project planning — dependency-aware implementation plans with DAG task graphs, stack evaluation via Golden Path matrix, risk assessment (14 anti-patterns), TDD integration, context management. Emits the RAD 8-doc standard (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN + tasks.md + CLAUDE-FRAGMENT.md). /plan --reboot regenerates after pivots; /plan --validate gap-checks the 8-doc set.",
       "category": "productivity",
       "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-planner",
       "license": "Apache-2.0"

@@ -32,7 +32,9 @@ Capture the current session's state, decisions, traps, and insights into structu
 - `--no-push` — Skip the push entirely; commit locally only. Useful for "I'm not done with this slice yet, don't share it."
 - Neither push flag → prompt at Phase 6.4 (default).
 
-- `--quick` — Fast wrapup for short sessions. Bounds Phase 1.3 tagging to the last 15 turns, skips Phase 4 (CLAUDE.md prune) unconditionally, skips recurring-trap promotion in Phase 3 maintenance. Use when "I just sat down for an hour, save state and go." For thorough wrapups (end of phase, end of week), run without `--quick`.
+- `--quick` — Fast wrapup for short sessions. Bounds Phase 1.3 tagging to the last 15 turns, skips Phase 4 (CLAUDE.md prune) unconditionally, skips recurring-trap promotion in Phase 3 maintenance, skips Phase 3.5 DECISIONS prompt entirely. Use when "I just sat down for an hour, save state and go." For thorough wrapups (end of phase, end of week), run without `--quick`.
+
+- `--non-interactive` — Suppress prompts in Phase 3.5 (DECISIONS append) and Phase 6.4 (push). Implied by autonomous-loop / PreCompact-triggered / headless contexts and detected automatically; the explicit flag is for scripted runs or testing. Tagged decisions still land in HANDOFF.md / session-log either way — only the durable DECISIONS.md append is gated by the user's `y`, so non-interactive defaults to skipping the append.
 
 ---
 
@@ -328,8 +330,11 @@ Append? (y/N/edit)
 Determine the next sequence number:
 
 ```bash
-# Highest NNNN in existing DECISIONS.md, default to 0 if file missing or no entries
-NEXT_SEQ=$(grep -oE '^## [0-9]{4} —' DECISIONS.md 2>/dev/null | grep -oE '[0-9]{4}' | sort -n | tail -1)
+# Highest NNNN in existing DECISIONS.md, default to 0 if file missing or no entries.
+# Accept em-dash (U+2014), en-dash (U+2013), or hyphen-minus as the separator
+# so manually-edited entries that diverge from the canonical em-dash format
+# still count correctly. Plugin-written entries use em-dash; manual edits may differ.
+NEXT_SEQ=$(grep -oE '^## [0-9]{4} [—–-]' DECISIONS.md 2>/dev/null | grep -oE '[0-9]{4}' | sort -n | tail -1)
 NEXT_SEQ=$((${NEXT_SEQ:-0} + 1))
 ```
 
