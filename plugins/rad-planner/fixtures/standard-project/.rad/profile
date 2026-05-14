@@ -1,0 +1,4 @@
+# rad-planner / rad-session project profile
+mode = "mentor"               # or "dev"
+agent_scope = "claude_only"   # or "codex_only", "claude_and_codex"
+multi_branch_status = false   # true when per-branch status is opted in
