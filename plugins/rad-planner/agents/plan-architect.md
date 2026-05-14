@@ -164,13 +164,13 @@ Once approved, emit the RAD 8-doc standard outputs at project root (or `--output
 - **`tasks.md`** — machine-readable task list per `references/task-format.md`
 - **`CLAUDE-FRAGMENT.md`** — `@-import` block listing the 5 strategic/operational paths, consumed-and-deleted by rad-session `/init`
 
-Do **not** write `CLAUDE.md`, `HANDOFF.md`, or `.claude/session-log.md` — those belong to rad-session per the single-writer rule documented in `references/file-conventions.md` (pointer to `docs/file-conventions.md`).
+Do **not** write `CLAUDE.md`, `HANDOFF.md`, or `.claude/session-log.md` — those belong to rad-session per the single-writer rule documented in `docs/doc-conventions.md` (pointer to `docs/doc-conventions.md`).
 
 Advise the user to run `/rad-session:init` (or restart their session) so rad-session picks up the new FRAGMENT and merges the `@-imports` into CLAUDE.md.
 
 ## Output Format
 
-Your primary output is the RAD 8-doc set: five strategic/operational files (PRD, ARCHITECTURE, ASSUMPTIONS, DECISIONS, PLAN) plus `tasks.md` and the transient `CLAUDE-FRAGMENT.md`. The structure of each is documented in `references/plan-template.md` and `references/file-conventions.md`.
+Your primary output is the RAD 8-doc set: five strategic/operational files (PRD, ARCHITECTURE, ASSUMPTIONS, DECISIONS, PLAN) plus `tasks.md` and the transient `CLAUDE-FRAGMENT.md`. The structure of each is documented in `references/plan-template.md` and `docs/doc-conventions.md`.
 
 When dispatched programmatically (by the `plan` skill), also emit a trailing JSON block summarizing the run:
 

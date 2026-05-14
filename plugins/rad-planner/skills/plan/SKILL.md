@@ -25,8 +25,6 @@ You are orchestrating a project planning workflow. The deliverable is **the plan
 
 **CRITICAL: Pre-flight discovery (M0) runs before any writes. Hard gate. No file is created, modified, or moved until M0 confirms project directory, agent scope, existing state, and entry point.**
 
-> **Status:** This SKILL.md represents the rad-planner 4.0 workflow currently under construction. **M0–M7 are implemented; M8–M9 are placeholders** until subsequent Phase 1 milestones land (fixture testing, release prep). The plugin.json remains at 3.0.0; the live marketplace version still runs the prior workflow.
-
 ## What this skill does — honestly
 
 - Runs M0 pre-flight discovery (project directory, agent scope, existing state, entry-point routing) before any writes
@@ -985,16 +983,16 @@ Per `docs/cross-plugin-contracts.md`:
 - `docs/entry-point-routing.md` — four entry points, detection model, per-entry conversation shapes
 - `docs/status-md-schema.md` — eight-section schema, evidence sources, inference policies
 
-**Plugin internals (`plugins/rad-planner/`):**
+**Plugin internals — v4.0 (`plugins/rad-planner/`):**
 
-- `references/plan-template.md` — Master plan structure (will be updated in M1–M5)
-- `references/task-format.md` — Task states, dependency rules, complexity scoring
-- `references/golden-path-matrix.md` — Tech stack evaluation criteria
-- `references/anti-patterns.md` — Documented anti-patterns
-- `references/failure-state-template.md` — Triple-component validation
-- `references/tdd-constraints.md` — Testing requirements per task
-- `references/context-management.md` — Document & Clear protocol + checkpoint schema
-- `references/subagent-prompts/stack-eval.md` — Stack-advisor dispatch template
-- `references/subagent-prompts/risk-assessment.md` — Risk-assessor dispatch template
-- `examples/example-plan.md` + `examples/example-tasks.md` — A real, validator-clean output (will be updated in M1–M5)
-- `scripts/README.md` — Validator script documentation
+- `scripts/README.md` — validator script documentation (plan-lint, status-validator, doc-redundancy, doc-contradiction, validate-json)
+- `fixtures/README.md` — end-to-end test fixtures
+- `fixtures/standard-project/` — reference v4.0 project showing what good output looks like
+
+**Plugin internals — legacy v3.0 (retained for sibling skills not yet updated):**
+
+The v4.0 `/plan` workflow (M0–M6) does not consume the v3.0 reference files below. They remain for the sibling skills (`checkpoint`, `status`, `review-plan`, `evaluate-stack`) and subagents (`plan-architect`, `risk-assessor`, `stack-advisor`) that are pending a future v4.x update:
+
+- `references/plan-template.md`, `references/task-format.md`, `references/golden-path-matrix.md`, `references/anti-patterns.md`, `references/failure-state-template.md`, `references/tdd-constraints.md`, `references/context-management.md`
+- `references/subagent-prompts/stack-eval.md`, `references/subagent-prompts/risk-assessment.md`
+- `examples/example-plan.md` + `examples/example-tasks.md` — v3.0 examples; v4.0 reference output lives in `fixtures/standard-project/`

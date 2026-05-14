@@ -2,7 +2,7 @@
 
 rad-planner 3.0 emits the **RAD 8-doc standard** at project root (or `--output-dir`). This file documents the template structure for the five strategic/operational files produced by `/plan` Phase 6, plus the shared rules that apply across all of them.
 
-For the canonical 8-doc specification (ownership, length targets, update triggers, pruning rules), see `references/file-conventions.md` (pointer to `docs/file-conventions.md`).
+For the canonical 8-doc specification (ownership, length targets, update triggers, pruning rules), see `docs/doc-conventions.md` (pointer to `docs/doc-conventions.md`).
 
 For `tasks.md` (machine-readable, validated by `plan-lint.py`), see `references/task-format.md`.
 

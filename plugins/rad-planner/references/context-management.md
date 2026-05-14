@@ -18,7 +18,7 @@ There are two complementary state files in the RAD 8-doc standard (3.0+). Use bo
 - Where you left off, modified files, open work, key decisions, key insights
 - The "what NOT to retry" record that the next `/rad-session:startup` reads
 
-Per the single-writer rule (see `references/file-conventions.md` → canonical at `docs/file-conventions.md`), **rad-planner does NOT write HANDOFF.md.** Run `/rad-session:wrapup` *before or after* `/rad-planner:checkpoint` if you want both kinds of state captured.
+Per the single-writer rule (see `docs/doc-conventions.md` → canonical at `docs/doc-conventions.md`), **rad-planner does NOT write HANDOFF.md.** Run `/rad-session:wrapup` *before or after* `/rad-planner:checkpoint` if you want both kinds of state captured.
 
 The two-step idiom is:
 ```
@@ -134,7 +134,7 @@ This "progressive disclosure" pattern keeps the active context lean while making
 
 The canonical HANDOFF.md template is owned by rad-session, not rad-planner. See:
 - `plugins/rad-session/references/handoff-template.md` for the format
-- `docs/file-conventions.md` for the per-section rules (length caps, "What NOT To Do" structure, etc.)
+- `docs/doc-conventions.md` for the per-section rules (length caps, "What NOT To Do" structure, etc.)
 
 The `.planner/state/<run-id>.json` schema is documented above ("Shared Checkpoint Schema"). That's the only state file rad-planner writes directly.
 

@@ -5,8 +5,8 @@
     "email": "rad@radesjardins.com"
   },
   "metadata": {
-    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more. v1.5.0 ships rad-planner 3.0 + rad-session 4.0 with the soft-coupled RAD 8-doc standard (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN / tasks.md + transient CLAUDE-FRAGMENT.md handoff).",
-    "version": "1.5.0",
+    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more. v1.6.0 ships rad-planner 4.0 with the research-aligned canonical doc structure (plan-first workflow, four entry points, four mechanical validators). rad-session stays at 4.0 for this release — the rad-session 5.0 rebuild (intent/reality split, status.md owned-by-session, evidence-based handoff) is upcoming.",
+    "version": "1.6.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -133,7 +133,7 @@
     {
       "name": "rad-planner",
       "source": "./plugins/rad-planner",
-      "description": "Plan a project before you write any code — or replan after a pivot. /plan walks you through strategic discovery, stack evaluation, task breakdown with explicit dependency graph, complexity scoring, and risk review — then captures the result as a structured set of documents (PRD, ARCHITECTURE, ASSUMPTIONS, DECISIONS, PLAN, tasks.md) that a fresh AI session can execute cold. Python validators back DAG integrity and field-presence checks. --reboot regenerates after pivots; --validate gap-checks the doc set. Pairs with rad-session for the full lifecycle.",
+      "description": "**4.0** — Plan-first project planning with four entry points (full plan / improvement / drift assessment / pivot) detected from utterance + project state, plus a universal four-direction menu as ambiguity fallback. Five-phase conversation (Constitution & Frame → Goal-Backward Scope → Sequence with Size Discipline → Quality Gates → Doc-Set Recommendation) produces the plan; M6 executes the approved doc set per the canonical structure aligned with published OpenAI/Anthropic project-structure research (operating manual conditional on agent scope, docs/vision.md, docs/architecture.md, docs/planning/current.md, docs/status.md scaffold, docs/decisions/, optional roadmap.md). Four mechanical validators back the workflow: plan-lint (current.md sections + AC format + vague language), status-validator (freshness + 8-section + evidence-based results), doc-redundancy (cross-doc Jaccard duplicates), doc-contradiction (vision non-goals vs current ACs). Always-teaches in /plan; mentor vs dev mode in .rad/profile gates /wrapup teaching depth. Pairs with rad-session for the full lifecycle; works standalone.",
       "category": "productivity",
       "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-planner",
       "license": "Apache-2.0"

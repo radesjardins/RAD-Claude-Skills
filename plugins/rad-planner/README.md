@@ -10,7 +10,7 @@ The skills are mostly structured prompts that ask the model to behave like a pla
 
 ## File conventions
 
-rad-planner produces project-level planning artifacts per the [RAD 8-doc standard](../../docs/file-conventions.md) at the repository root. The standard is the canonical convention shared with rad-session: it defines target lengths, update triggers, pruning rules, and the single-writer rule that prevents collision between plugins.
+rad-planner produces project-level planning artifacts per the [RAD 8-doc standard](../../docs/doc-conventions.md) at the repository root. The standard is the canonical convention shared with rad-session: it defines target lengths, update triggers, pruning rules, and the single-writer rule that prevents collision between plugins.
 
 ## What it does NOT do
 
@@ -101,9 +101,8 @@ The `references/` directory contains the knowledge base agents and skills load o
 |---|---|
 | `golden-path-matrix.md` | AI-native proficiency tiers + project-type stack recommendations (date-stamped, opinionated) |
 | `anti-patterns.md` | 14 documented "Do Not Do" constraints (some are opinions with thresholds — clearly marked) |
-| `plan-template.md` | Template structure for the 5-file split (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN) with shared rules and a "what enforces what" table |
-| `file-conventions.md` | Pointer to canonical `docs/file-conventions.md` (RAD 8-doc standard, single-writer rule) |
-| `task-format.md` | DAG-based task syntax, states, dependency rules, complexity scoring |
+| `plan-template.md` | v3.0 template structure for the 5-file split (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN). For the v4.0 canonical structure, see [`docs/doc-conventions.md`](../../docs/doc-conventions.md). |
+| `task-format.md` | v3.0 DAG-based task syntax, states, dependency rules, complexity scoring. v4.0 retires `tasks.md`; planning lives in `docs/planning/current.md`. |
 | `failure-state-template.md` | Triple-component validation (Action → Validation → Rollback) |
 | `tdd-constraints.md` | Red-Green-Refactor + mutation testing requirements |
 | `context-management.md` | Document & Clear triggers, handoff protocol, shared checkpoint schema |
@@ -156,7 +155,7 @@ python3 scripts/plan-lint.py --mode all tasks.md   # mechanical task-graph lint
 
 ## What's New in 3.0
 
-- **Document standardization — the RAD 8-doc standard.** `/plan` now emits five strategic/operational files (PRD.md, ARCHITECTURE.md, ASSUMPTIONS.md, DECISIONS.md, PLAN.md) at project root instead of a single 7-section `implementation_plan.md`. Each file has a single canonical purpose and one plugin owner. Canonical spec at `docs/file-conventions.md` (shared with rad-session 4.0).
+- **Document standardization — the RAD 8-doc standard.** `/plan` now emits five strategic/operational files (PRD.md, ARCHITECTURE.md, ASSUMPTIONS.md, DECISIONS.md, PLAN.md) at project root instead of a single 7-section `implementation_plan.md`. Each file has a single canonical purpose and one plugin owner. Canonical spec at `docs/doc-conventions.md` (shared with rad-session 4.0).
 - **`plan-project` renamed to `plan`.** Same skill, shorter name. Legacy trigger phrases (`plan-project`, "plan my project") still work.
 - **`CLAUDE-FRAGMENT.md` handoff to rad-session.** `/plan` Phase 6 emits a transient `@-import` block listing the 5 strategic paths. rad-session `/init` merges it into CLAUDE.md and deletes the FRAGMENT. Single-writer rule: `/plan` never touches CLAUDE.md directly.
 - **`/plan --reboot` mode.** For projects past their original plan: audits existing code (Phase 0.5), archives prior strategic docs to `*.pre-reboot`, regenerates anchored to current reality, marks superseded DECISIONS entries with sequence-number references (`Superseded by 0042 (reboot YYYY-MM-DD)`). ADR-layout conversion at the ~500-line threshold is prompted independently, not automatic.
@@ -246,7 +245,7 @@ After the planning workflow completes, at project root (or `--output-dir`):
 - `HANDOFF.md` — owned by rad-session `/wrapup`
 - `.claude/session-log.md` — owned by rad-session `/wrapup`
 
-See `docs/file-conventions.md` (canonical) for the full ownership matrix and update/pruning rules.
+See `docs/doc-conventions.md` (canonical) for the full ownership matrix and update/pruning rules.
 
 ## Requirements
 

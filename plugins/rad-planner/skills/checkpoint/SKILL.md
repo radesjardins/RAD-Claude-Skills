@@ -18,7 +18,7 @@ allowed-tools: Read Glob Grep Write Bash
 
 Preserve the current session state so work can be resumed in a fresh session without loss. This implements the "Document & Clear" pattern, which mitigates context rot — the observed degradation of AI reasoning quality as context windows fill. The skill updates plan task states and writes planner run state; the user runs `/clear` and starts the new session themselves. Nothing here is automatic.
 
-**HANDOFF.md is owned by rad-session `/wrapup`** per the single-writer rule (see `references/file-conventions.md` → canonical at `docs/file-conventions.md`). `/checkpoint` does **not** write HANDOFF.md in 3.0 and later. If you want a session-level handoff document, run `/rad-session:wrapup` either before or after `/checkpoint`. The two are complementary:
+**HANDOFF.md is owned by rad-session `/wrapup`** per the single-writer rule (see `docs/doc-conventions.md` → canonical at `docs/doc-conventions.md`). `/checkpoint` does **not** write HANDOFF.md in 3.0 and later. If you want a session-level handoff document, run `/rad-session:wrapup` either before or after `/checkpoint`. The two are complementary:
 
 - `/checkpoint` saves **planner-skill run state** — the bookkeeping for resuming `/plan`, `/review-plan`, or `/evaluate-stack` mid-flight.
 - `/rad-session:wrapup` saves **session state** — HANDOFF.md, session-log entry, optional DECISIONS.md prompt, optional CLAUDE.md prune.
