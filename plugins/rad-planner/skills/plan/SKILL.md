@@ -1,380 +1,999 @@
 ---
 name: plan
 description: >
-  This skill should be used when the user says "plan my project", "create an implementation
-  plan", "plan-project" (legacy 2.x trigger), "plan this app", "I need a plan before coding",
-  "help me architect this", "let's plan before we build", "create a project plan",
-  "implementation plan", "plan this feature", "map out the work", "break this down into
-  tasks", "create a roadmap", "project breakdown", "reboot my plan", "regenerate the plan
-  after a pivot", "validate my plan files", "gap-check my plan docs", or wants to create
-  a structured, dependency-aware implementation plan before writing any code. Also trigger
-  proactively when a user describes a non-trivial project idea and appears ready to start
+  This skill should be used when the user says "plan my project", "create an
+  implementation plan", "help me architect this", "I need a plan before coding",
+  "let's plan before we build", "improve my plan", "deepen the current
+  milestone", "what's drifted from the plan", "are we sticking to the plan",
+  "we're pivoting", "rescope this project", "scope creep check", "validate my
+  plan", "audit the plan", or wants to create / refine / re-check a project
+  plan. Triggers four entry points: full plan (greenfield), improvement
+  (deepen or continue), drift assessment (compare reality to plan), pivot
+  (substantial re-plan with disposition manifest). Also trigger proactively
+  when a user describes a non-trivial project idea and appears ready to start
   coding without a plan.
-argument-hint: "[project description or existing codebase path] [--lite] [--reboot] [--validate] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
+argument-hint: "[project description or path] [--full|--improve|--drift|--pivot|--validate] [--agents <scope>] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
 user-invocable: true
 allowed-tools: Read Glob Grep WebSearch WebFetch Agent Write Bash
 ---
 
-# Plan — Structured Implementation Planning
+# Plan — Plan-first project planning
 
-You are orchestrating a project planning workflow. The goal is a set of planning artifacts a fresh AI session can pick up and execute without the original conversation context. Whether the plan actually achieves that depends on the quality of the planning session — this skill provides scaffolding and mechanical checks, not guarantees.
+You are orchestrating a project planning workflow. The deliverable is **the plan itself** — milestones, scope, quality gates, sequencing — with the supporting doc structure recommended *based on the plan*, not generated as a side effect.
 
 **CRITICAL: You are in PLANNING MODE. Do NOT write implementation code. Do NOT create source files. Produce planning artifacts ONLY.**
 
+**CRITICAL: Pre-flight discovery (M0) runs before any writes. Hard gate. No file is created, modified, or moved until M0 confirms project directory, agent scope, existing state, and entry point.**
+
+> **Status:** This SKILL.md represents the rad-planner 4.0 workflow currently under construction. **M0–M6 are implemented; M7–M9 are placeholders** until subsequent Phase 1 milestones land (validators, fixture testing, release prep). The plugin.json remains at 3.0.0; the live marketplace version still runs the prior workflow.
+
 ## What this skill does — honestly
 
-- Walks you through a 6-phase workflow (Discovery → Stack → Plan → Risk → Review → Export). `--reboot` adds a Phase 0.5 repo audit; `--validate` runs a cheap gap-check without the full workflow.
-- Dispatches subagents for stack evaluation and risk assessment with JSON output contracts.
-- Runs `scripts/plan-lint.py` to mechanically check the generated `tasks.md` for cycles, phantom dependencies, missing required fields, vague validation language, and complexity-7+ tasks without subtasks. **This is real validation, not a model self-check.**
-- Runs `scripts/validate-json.py` against the subagent JSON contracts before consuming them; re-prompts the agent once on schema failure.
-- Saves run state to `.planner/state/<run-id>.json` so a long planning session can be resumed.
-- Emits the **RAD 8-doc standard** (see `references/file-conventions.md` → canonical at `docs/file-conventions.md`): PRD, ARCHITECTURE, ASSUMPTIONS, DECISIONS, PLAN, plus `tasks.md` and `CLAUDE-FRAGMENT.md` (the `@-import` block consumed by rad-session `/init`).
+- Runs M0 pre-flight discovery (project directory, agent scope, existing state, entry-point routing) before any writes
+- Walks through a five-phase conversation (M1–M5: Constitution & Frame → Goal-Backward Scope → Sequence with Size Discipline → Quality Gates → Doc-Set Recommendation)
+- Recommends a doc set *based on the plan* with project-specific rationale, then writes the approved docs as M6 (the plan's own first executed milestone)
+- Always teaches in /plan — every phase explains why it asks what it asks; every doc recommendation includes its project-specific rationale
+- Supports four entry points (full plan / improvement / drift assessment / pivot) with explicit flags or detection from utterance + state
+- Falls back to a four-direction menu whenever detection is anything less than high-confidence
 
 ## What this skill does NOT do
 
-- Does not execute the resulting plan.
-- Does not write CLAUDE.md, HANDOFF.md, or `.claude/session-log.md` — those belong to rad-session per the single-writer rule.
-- Does not test that the plan is actually "zero-context ready" — that label is the goal of the templates, not a verified property.
-- Does not detect every anti-pattern; the mechanical checks cover field presence, DAG integrity, and vague language. The risk-assessor agent handles judgment-required anti-patterns and architectural concerns.
-- Does not stop you skipping phases. The phase order is enforced by instructions to the model, not by code.
+- Does not execute the resulting plan
+- Does not write `docs/status.md` content beyond a scaffold — rad-session populates from evidence at /wrapup
+- Does not touch code — flags code paths for human cleanup during pivot disposition
+- Does not write files outside the M0-determined project directory — never writes to cwd without confirmation
+- Does not detect every anti-pattern; mechanical validators (`plan-lint.py`, `doc-redundancy.py`, `doc-contradiction.py`) catch field presence, DAG integrity, vague language, cross-doc duplication, and cross-doc disagreements. The risk-assessor agent handles judgment-required anti-patterns and architectural concerns.
 
 ## Cross-model note
 
 This skill works across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet handle parallel batching reliably; Haiku may follow phase order sequentially. The plan output, JSON contracts, and validator scripts are identical regardless of model.
 
-## Execution: parallel-first
+## Mode flags
 
-- **Phase 0.5 repo audit (`--reboot` only)** issues parallel Reads for existing strategic docs (`PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md`, `tasks.md`) and any v2.x legacy file (`implementation_plan.md`, `docs/ARCHITECTURE.md`). No inter-file dependencies — one parallel burst.
-- **Phase 1 codebase exploration** has no inter-file dependencies when the project exists. Issue parallel Reads for `CLAUDE.md`, `README.md`, `package.json`, `tsconfig.json` (or language-equivalent config), plus a Glob of the top-level directory structure.
-- **Phase 3 reference loading** (`plan-template.md`, `task-format.md`, `anti-patterns.md`, `failure-state-template.md`, `tdd-constraints.md`, `context-management.md`) has no inter-file dependencies — single parallel batch.
-- **Phase 2 and Phase 4 subagent dispatches** are independent of each other only when Phase 2 is complete before Phase 3 begins.
-- **Always serialize:** user-approval gates and the discovery → stack → plan → risk → review phase order.
+- `--full` — Greenfield entry; start from scratch
+- `--improve` — Improvement entry; deepen or continue existing plan (sub-branch always-asked: continue vs deepen)
+- `--drift` — Drift assessment entry; compare current state against plan, produce report
+- `--pivot` — Pivot entry; substantial re-plan with disposition manifest
+- `--validate` — Utility; run validators on existing plan artifacts, no conversation
+- `--agents <scope>` — Set agent scope without prompting (`claude_only` | `codex_only` | `claude_and_codex`)
+- `--non-interactive` — Best-effort run without approval gates; emits trailing JSON with `awaiting_user_review` items
+- `--resume <run-id>` — Continue a saved planning session from `.planner/state/<run-id>.json`
+- `--output-dir <path>` — Set project directory explicitly; overrides M0 directory prompt
 
-## Mode Flags
+Flags act as strong hints. When invoked alone (no utterance), they still surface the four-direction menu to confirm intent before proceeding.
 
-- `--lite` — Skip Phase 2 (stack eval) and the iterative risk-assessor loop. For small, single-milestone work (bug fixes, single-feature additions touching ≤3 files). Produces a 5-10 task plan with the same per-task fields, but no architecture diagram or full risk audit. Auto-detected if the project description is short and clearly bounded; explicit flag overrides.
-- `--reboot` — Project has existed before (with or without rad-planner 3.x docs); regenerate the strategic docs anchored to current code reality. Adds Phase 0.5 (repo audit + archive originals to `*.pre-reboot`). DECISIONS.md is appended-to, not overwritten, with prior entries marked superseded. See **Reboot Mode Workflow** below.
-- `--validate` — Cheap gap-check: does the 8-doc set exist? Does `tasks.md` lint clean? No agents dispatched, no writes. See **Validate Mode Workflow** below. For a deeper quality audit, use `/rad-planner:review-plan` instead.
-- `--non-interactive` — Skip all user-approval gates. Best-effort plan, commit artifacts, emit a trailing JSON block listing `awaiting_user_review` items. Auto-proceed thresholds: stack-advisor `verification_verified: true` with `confidence: high|medium` → proceed; risk-assessor `verdict: APPROVE` → proceed; any `RETHINK` verdict → halt regardless of mode and escalate.
-- `--resume <run-id>` — Load checkpoint state from `.planner/state/<run-id>.json` and continue from the last saved phase.
-- `--output-dir <path>` — Write the five strategic/operational docs plus `tasks.md` and `CLAUDE-FRAGMENT.md` under `<path>` instead of project root. FRAGMENT `@-import` paths are adjusted accordingly. Default is project root, matching the RAD 8-doc convention.
+## M0: Pre-flight Discovery
 
-## Checkpoint & Resume
+M0 establishes four things before any writes:
 
-Long planning runs are compaction-prone. Save state to `.planner/state/<run-id>.json` at these transitions:
+1. Project directory
+2. Agent scope
+3. Existing state
+4. Entry point
 
-0.5. After Phase 0.5 (`--reboot` only — audit complete, originals archived)
-1. After Phase 1 (discovery complete, codebase explored if applicable)
-2. After Phase 2 (stack recommendation received and accepted)
-3. End of Phase 3 (plan DAG drafted)
-4. After each Phase 4 risk-assessor iteration
-5. After Phase 5 (user approval)
-6. After Phase 6 (artifacts written)
+**No file is created, modified, or moved until M0 completes.** Hard gate.
 
-Checkpoint schema (shared with `review-plan` and `evaluate-stack`):
+### Sub-step 0a: Project directory
+
+Determine where the project lives. Three answer paths:
+
+- **here** — cwd is the project root
+- **named path** — user provides an explicit path that exists
+- **doesn't exist** — user wants to plan a project at a path that doesn't exist yet; planner offers to create
+
+**Detection order:**
+
+1. If `/plan` was invoked with `--output-dir <path>` → use that as project directory; validate
+2. If user's invocation text references a path like "plan my project at /foo" → infer, confirm with user
+3. Otherwise → ASK explicitly:
+
+> "Where does this project live?
+> 1. Here (cwd: `<resolved absolute path>`)
+> 2. A specific path I'll provide
+> 3. The project doesn't exist yet — create it at a path I'll provide"
+
+**Validation rules:**
+
+- Resolve to absolute path
+- If user picked option 3 (doesn't exist) → confirm `"Create directory at <path>?"` before any `mkdir`
+- If path exists but isn't writable → surface error and ask again
+- Save `discovery_state.project_dir` as the absolute path
+- **Never write outside this path.** Hard rule for all downstream phases.
+
+### Sub-step 0b: Agent scope
+
+Determine which coding agents will use this project.
+
+**Detection order:**
+
+1. If `.rad/profile` exists at project dir with `agent_scope` set → use that, skip prompt
+2. If user invoked with `--agents <scope>` → use that
+3. Otherwise → ASK:
+
+> "Which coding agents will use this project?
+> 1. Claude only (CLAUDE.md canonical)
+> 2. Codex only (AGENTS.md canonical)
+> 3. Both Claude and Codex (AGENTS.md canonical with CLAUDE.md as `@AGENTS.md` shim)
+> 4. Not sure yet — defaults to Claude only (this is a Claude plugin); can change later"
+
+Save `discovery_state.agent_scope`. Defaults to `claude_only` if user is unsure — rad-planner is a Claude plugin, Claude-native is the right default. Later runs can change scope.
+
+### Sub-step 0c: Existing state detection
+
+Mechanical read-only inspection of the project directory. No writes. Computes a feature vector that downstream phases consume:
+
+| Field | Type | Source |
+|---|---|---|
+| `has_git` | bool | `.git/` exists with at least 1 commit |
+| `commit_count` | int | `git rev-list --count HEAD` |
+| `source_file_count` | int | code files, excluding `node_modules/`, `.venv/`, `dist/`, `build/`, `target/`, `.pytest_cache/`, `__pycache__/`, similar |
+| `has_operating_manual` | bool | `CLAUDE.md` or `AGENTS.md` exists with >500 bytes |
+| `claude_init_residue` | bool | `CLAUDE.md` exists AND <500 bytes AND no `@AGENTS.md` line AND no `## Compact Instructions` section |
+| `codex_init_residue` | bool | `AGENTS.md` exists AND <500 bytes AND matches Codex `/init` scaffold pattern |
+| `has_strategic_docs` | bool | `docs/vision.md` OR `docs/architecture.md` exists |
+| `has_planning_current` | bool | `docs/planning/current.md` exists with substantive content (>500 bytes) |
+| `has_status` | bool | `docs/status.md` exists with populated fields (>500 bytes) |
+| `planning_current_progress` | enum | none / partial / complete (acceptance-criteria checkbox state in current.md) |
+| `recent_activity_spread` | enum | focused / mixed / diffuse (overlap of recent commits with current.md planned changes) |
+| `status_freshness` | enum | fresh / moderate / stale |
+
+**Heuristic specifics:**
+
+- `recent_activity_spread`: take last `min(20, commits_since_status_mtime)` commits → set of changed files → overlap against current.md's "Planned changes" file list. `overlap >= 0.6` → focused; `< 0.3` → diffuse; in between → mixed. If "Planned changes" doesn't list specific files, fall back to directory-level match against milestone-referenced areas.
+- `status_freshness`: `(head_date − status_mtime < 2 days) AND (commits_since_status < 5)` → fresh; `(> 7 days) OR (commits > 20)` → stale; in between → moderate.
+- `claude_init_residue` and `codex_init_residue` are protective signals — when true, M6 enriches existing content rather than overwriting.
+
+Issue parallel reads where possible: operating manual, key strategic docs, package manifest. Save full feature vector to `discovery_state.existing_state`.
+
+### Sub-step 0d: Entry-point routing
+
+Determine which of the four entry points applies. Follow the routing model in `docs/entry-point-routing.md`.
+
+**Tier 1: Explicit flag**
+
+If `/plan` was invoked with `--full`, `--improve`, `--drift`, `--pivot`, or `--validate`:
+
+- Use the flag as the entry point
+- If utterance has substance that confirms → proceed with one-line confirmation: `"Running --improve against the existing plan at milestone 2 of 4. Proceeding."`
+- If invocation is bare flag with no utterance → fall through to the four-direction menu to confirm intent with full state context
+
+**Tier 2: Utterance + state detection**
+
+Parse utterance for entry-point keywords (full lists in `docs/entry-point-routing.md`). Compute state prior from the feature vector.
+
+State priors:
+
+- **Greenfield prior:** `has_git == false` OR (`commit_count < 3` AND `source_file_count < 10` AND `has_strategic_docs == false`)
+- **Improvement prior:** `has_git == true` AND `has_planning_current == true` AND `planning_current_progress != complete` AND `status_freshness == fresh`
+- **Drift / Pivot prior (weak):** existing strategic docs + planning/current.md — primarily utterance-driven
+- **Ambiguous-existing prior:** `has_git == true` AND `has_planning_current == false`
+
+State alone reliably distinguishes greenfield from "something exists" but cannot distinguish improvement vs drift vs pivot without utterance.
+
+**Confidence reconciliation:**
+
+- **High confidence** (state + utterance agree) → one-line confirmation: `"Greenfield project — empty directory, planning from scratch. Sound right?"`
+- **Moderate confidence** (one strong signal, other absent) → confirmation with rationale: `"I see existing code and an active plan at docs/planning/current.md (milestone 2 of 4, last status update 3 days ago). Treating as improvement — confirming you want to deepen or continue, not pivot or drift-check?"`
+- **Low confidence** (signals disagree or absent) → four-direction menu (Tier 3 below)
+- **Hard contradiction** (state vs. utterance conflict) → surface explicitly: `"You said 'new project' but I see existing code and docs. Possibilities: starting fresh in a different directory, pivoting on existing work, or treating this code as scaffolding. Which?"`
+
+**Tier 3: Four-direction menu (universal ambiguity fallback)**
+
+When detection is anything less than high-confidence, render the menu verbatim:
+
+```text
+Discovery summary:
+- Working directory: <project_dir>
+- Git: <N commits / no git>
+- Code: <N source files>
+- Strategic docs: <list found / none>
+- Current plan: <milestone X of Y, last updated N days ago / none>
+- Status: <fresh / stale / none>
+- Operating manual: <content / /init residue / none>
+
+I'm not 100% clear which plan direction you want to take. Which matches?
+
+1. Full plan — Start from scratch. Walk through goal, scope, milestones, quality
+   gates; recommend a doc set; produce complete planning artifacts. Use for new
+   projects or when existing docs need a full rewrite.
+
+2. Drift assessment — Compare what's been built against what was planned.
+   Output is a report, not a new plan. Use when you're not sure if the project
+   has gone off course.
+
+3. Improvement — Deepen the existing plan, fill in missing detail, or pick up
+   where it left off. Existing docs stay; we add or refine. Use when the plan
+   exists but needs more or you're stuck on next steps.
+
+4. Pivot — Substantial re-plan because direction has changed. Existing context
+   preserved (archived, not deleted); strategic docs may be revised; current
+   plan replaced. Use when the project is shifting meaningfully.
+
+(Run /plan --full, --drift, --improve, or --pivot to skip this question.)
+```
+
+User picks → `discovery_state.entry_point` is locked.
+
+**Improvement sub-branch** (only fires when `entry_point == improvement`): always-ask, no detection:
+
+> "Quick check — are we picking up the next thing in the plan (continue from where you left off), or adding detail to what we're already working on (deepen the current milestone)?"
+
+Save `discovery_state.entry_point_sub_branch` (`continue` | `deepen`).
+
+### Sub-step 0e: Save discovery state
+
+Save discovery state to `.planner/state/<run-id>.json` for resume support. Schema:
+
 ```json
 {
   "run_id": "string",
-  "skill": "plan | review-plan | evaluate-stack",
-  "phase": "0.5 | 1 | 2 | 3 | 4-iter-N | 5 | 6",
-  "mode": "full | lite | reboot | validate",
+  "skill": "plan",
+  "phase": "0.M0",
+  "mode": "full | improve | drift | pivot | validate",
   "started_at": "ISO-8601",
   "last_saved": "ISO-8601",
   "model": "opus | sonnet | haiku",
-  "project_summary": "string",
-  "codebase_context": {
-    "root": "string",
-    "claude_md_present": false,
-    "stack_detected": ["string"],
-    "existing_strategic_docs": ["PRD.md", "ARCHITECTURE.md"]
+  "discovery_state": {
+    "project_dir": "/absolute/path",
+    "agent_scope": "claude_only | codex_only | claude_and_codex | not_sure_yet",
+    "existing_state": {
+      "has_git": true,
+      "commit_count": 42,
+      "source_file_count": 87,
+      "has_operating_manual": true,
+      "claude_init_residue": false,
+      "codex_init_residue": false,
+      "has_strategic_docs": true,
+      "has_planning_current": true,
+      "has_status": true,
+      "planning_current_progress": "partial",
+      "recent_activity_spread": "focused",
+      "status_freshness": "fresh"
+    },
+    "entry_point": "improvement",
+    "entry_point_sub_branch": "deepen",
+    "user_utterance": "I want more detail on M2"
   },
-  "stack_recommendation": "JSON from stack-advisor or null",
-  "plan_path": "string or null",
-  "tasks_path": "string or null",
-  "risk_history": [{"iteration": 1, "verdict": "REVISE", "issue_count": 0}],
   "escalation": {"required": false, "reason": "", "route_to": ""},
-  "awaiting_user_review": ["string"]
+  "awaiting_user_review": []
 }
 ```
+
+M0 ends with discovery confirmed and state saved. Downstream phases consume this state and never re-prompt for project directory, agent scope, or entry point unless the user explicitly re-routes.
+
+## M1: Constitution & Frame
+
+Capture what doesn't change across this project — the agent's operating principles for every session and every milestone. Output is a draft of the Constitution sections that will be written to the operating manual (CLAUDE.md and/or AGENTS.md) at M6.
+
+**Always-teaches:** Each question is paired with a brief explanation of why it matters. The user sees the reason, not just the question.
+
+### Entry-point routing
+
+The M1 conversation varies by entry point:
+
+- **Full plan (greenfield)** — full Constitution conversation (sub-steps 1a–1f below)
+- **Improvement** — read existing operating manual; ask only "anything about hard boundaries or engineering rules that needs updating given what we're improving?" If yes, capture changes. If no, skip to M2.
+- **Drift assessment** — read existing operating manual; no writes, no Constitution prompting. The Constitution is referenced during drift findings (e.g., a finding may cite "violates Hard boundary: no new dependencies").
+- **Pivot** — read existing operating manual; after the pivot's seven-question opening conversation, ask "are any project principles or hard boundaries changing with this pivot?" Capture changes for M6 disposition.
+
+### Sub-steps (full plan greenfield)
+
+#### 1a — Project one-sentence purpose
+
+Ask: "In one sentence, what is this project?"
+
+*Why this matters:* The one-sentence statement lives at the top of the operating manual. Every fresh session reads it first. If it's clear and specific, agents stay on-track; if it's vague, drift starts on day one.
+
+#### 1b — Goal & why now
+
+Ask: "What's the goal of this project, and why is it worth doing now?"
+
+*Why this matters:* The "why now" answer separates a real project from a "someday maybe." If the user can't answer "why now," the project may not be ready for planning — recommend `/rad-brainstormer:brainstorm-session` and exit M1.
+
+#### 1c — Project-wide principles
+
+Ask: "What principles should always be true in this project? Things like style, naming, code conventions — things that should never change regardless of milestone."
+
+Example prompts to surface common patterns: "TypeScript-strict everywhere", "tests colocated with the code they test", "conventional-commits", "documentation updates ship with the code they describe", "no implicit any".
+
+*Why this matters:* Project-wide principles let the agent enforce conventions without you having to remember them every PR. Captured as "Engineering rules" in the operating manual.
+
+#### 1d — Hard boundaries
+
+Ask: "What should the agent never do unprompted?"
+
+Example prompts: "don't change the database schema without explicit ask", "don't add new dependencies without approval", "don't refactor outside planned changes", "don't touch auth or billing code without explicit confirmation".
+
+*Why this matters:* Hard boundaries keep agents from quietly drifting outside scope or changing things with downstream effects you didn't intend. The strictest rule is the one you trust the agent to remember when it's deep in a context.
+
+#### 1e — Escalation triggers
+
+Ask: "When should the agent stop and ask for approval rather than guessing?"
+
+Example prompts: "missing requirement or conflicting requirement", "change affects security/auth/billing/data model", "existing code patterns conflict with the plan", "validation fails and fix needs scope expansion".
+
+*Why this matters:* Escalation triggers are the inverse of hard boundaries — instead of "never do X," they're "ask before doing X." Especially load-bearing for security, billing, auth, and data-model decisions.
+
+#### 1f — Save Constitution draft
+
+Save to `discovery_state.constitution_draft`:
+
+```json
+{
+  "constitution_draft": {
+    "project_purpose": "<one sentence>",
+    "goal": "<what>",
+    "why_now": "<rationale>",
+    "principles": ["...", "..."],
+    "hard_boundaries": ["...", "..."],
+    "escalation_triggers": ["...", "..."]
+  }
+}
+```
+
+Save M1 checkpoint to `.planner/state/<run-id>.json`.
+
+`read_order` is derived in M5 once the doc set is recommended. `definition_of_done` is derived in M4 from quality-gate specs. Both are populated into the operating manual at M6.
+
+### Exit criteria
+
+- All 5 questions answered (or explicitly skipped per entry-point logic)
+- Constitution draft saved to run state
+- User confirms the captured Constitution before M2 begins
+
+### Iteration
+
+User can revise prior answers at any time. If user re-enters M1 mid-conversation (e.g., during M3), restore the prior draft and re-prompt only the changed fields.
+
+## M2: Goal-Backward Scope
+
+Working backward from the goal, capture what must be true, what must exist, what's critical vs. nice-to-have, the hardest unknown, and what's explicitly deferred. Borrows GSD's goal-backward question scaffold. Risk surfaces here — no separate Risk phase.
+
+**Output:** drafts of vision.md and planning/current.md scope/objective/risks sections. Saved to `discovery_state.scope_draft`. Written to disk in M6.
+
+**Always-teaches:** Each question is paired with a brief "why this matters" explanation.
+
+### Entry-point routing
+
+- **Full plan (greenfield)** — full goal-backward conversation (sub-steps 2a–2f below)
+- **Improvement** — skip most sub-steps. Ask focused: "What's the scope of this improvement? Adding what / changing what? Anything new in critical/nice-to-have given this?" Capture changes into existing scope.
+- **Drift assessment** — read existing vision.md + planning/current.md scope; no prompting. The scope is referenced when reporting drift findings.
+- **Pivot** — the seven-question opening from pivot already establishes most of this. M2 reads pivot conversation outputs into the scope_draft format and asks at most one verification question if anything's still unclear.
+
+### Sub-steps (full plan greenfield)
+
+#### 2a — Goal statement (2–3 sentences)
+
+Ask: "Walk me through what success looks like for this project. What does done look like? Who's it for? What's the vision in 2–3 sentences?"
+
+*Why this matters:* The goal statement is what every milestone is in service of. Without it, scope creep starts because the "why" of each task isn't clear. This becomes the body of vision.md.
+
+#### 2b — Must be TRUE / must EXIST
+
+Ask: "What must be TRUE for this project to be a success — hard requirements, qualities the system must have? And what must EXIST when this is done — tangible artifacts, features, integrations?"
+
+Examples for "must be true": "users can complete the core flow without external help", "data persists across sessions", "load times under 2 seconds", "compliant with [standard]".
+
+Examples for "must exist": "user authentication system", "admin dashboard", "API documentation", "deployment to production".
+
+*Why this matters:* "Must be true" surfaces non-negotiable qualities; "must exist" surfaces non-negotiable tangibles. Together they make scope concrete. These become the acceptance criteria for planning/current.md milestones.
+
+#### 2c — Critical vs. nice-to-have
+
+Ask: "Of everything we've identified, what's CRITICAL and what's nice-to-have? Critical = the project doesn't ship without it. Nice-to-have = improvement we can defer if scope tightens."
+
+*Why this matters:* The critical/nice-to-have split is how the planner protects against scope creep. Nice-to-haves go to roadmap.md's "Next" or "Later" sections; critical items become the focus of current.md.
+
+#### 2d — Hardest unknown + derailment risks
+
+Ask: "What's the hardest unknown going into this work? And what could derail this project beyond the technical unknowns — external dependencies, team constraints, business changes?"
+
+Examples for hardest unknown: "we don't know if [library X] supports our use case at scale", "auth flow with provider Y is documented but no one's done it before", "data migration approach for legacy users".
+
+Examples for derailment risks: "vendor X changing pricing model", "dependency on team Y who has competing priorities", "infrastructure migration mid-project".
+
+*Why this matters:* The hardest unknown becomes the early-risk milestone — solve it first, before committing time to dependent work. Derailment risks go into current.md's Risks section with mitigations. Separating them (technical unknowns vs. external/contextual) keeps the risk model legible.
+
+#### 2e — Non-goals (what's explicitly NOT in scope)
+
+Ask: "What's explicitly NOT in scope for this project? Non-goals that are deliberate, not just unattended."
+
+Examples: "not building a mobile app for v1", "no support for languages other than English", "no real-time collaboration features", "not optimizing for users beyond X concurrent".
+
+*Why this matters:* Non-goals are as load-bearing as goals. Without them, scope expands silently. Land in vision.md's "Non-goals" section AND inform hard boundaries in the operating manual.
+
+#### 2f — Save scope draft
+
+Save to `discovery_state.scope_draft`:
+
+```json
+{
+  "scope_draft": {
+    "goal_statement": "<paragraph>",
+    "must_be_true": ["..."],
+    "must_exist": ["..."],
+    "critical": ["..."],
+    "nice_to_have": ["..."],
+    "hardest_unknown": "<text>",
+    "derailment_risks": [{"risk": "...", "mitigation": "..."}],
+    "non_goals": ["..."]
+  }
+}
+```
+
+Save M2 checkpoint to `.planner/state/<run-id>.json`.
+
+### Exit criteria
+
+- Goal statement captured (or read from existing vision.md for non-greenfield)
+- Critical vs. nice-to-have split is explicit (every item categorized)
+- Non-goals are explicit (minimum 1 entry; aim for 3–5)
+- Hardest unknown identified (or explicitly "no unknowns")
+- Scope draft saved to run state
+- User confirms before M3 begins
+
+### Iteration
+
+User can revise prior answers. If a hardest unknown gets resolved during M3 sequencing, M2 can be re-entered to update the unknown and surface the next-hardest.
+
+## M3: Sequence with Size Discipline
+
+Sequence the CRITICAL items from M2 into milestones following GSD's plan-size discipline: 2–3 tasks per milestone, milestones target ~50% context budget for planning and execution. Risk-first ordering — solve the hardest unknown before committing to dependent work.
+
+**Output:** planning/current.md milestone structure, optional roadmap.md draft if >1 milestone. Saved to `discovery_state.milestone_draft`. Written to disk in M6.
+
+**Always-teaches:** Each question is paired with a brief "why this matters" explanation.
+
+### Entry-point routing
+
+- **Full plan (greenfield)** — full sequencing conversation (sub-steps 3a–3e below)
+- **Improvement** — focused. Usually a milestone is already in flight; M3 asks about deepening that milestone's task list (deepen sub-branch) or sequencing what comes next (continue sub-branch). Usually 1 milestone of new work; no roadmap change.
+- **Drift assessment** — read existing milestones from planning/current.md; no prompting. The sequencing is referenced when drift findings cite "milestone ordering changed."
+- **Pivot** — the seven-question opening already establishes new direction. M3 sequences the new plan's milestones, archiving the prior current.md per the disposition manifest.
+
+### Sub-steps (full plan greenfield)
+
+#### 3a — Risk-first sequencing
+
+Ask: "From M2 we identified the hardest unknown. Should that be M1 — solve it first before committing to dependent work? Or does something else need to come first (e.g., scaffolding basic architecture, addressing a derailment risk)?"
+
+Example: "Hardest unknown was 'will auth flow with provider Y work at scale.' M1 should be a spike to validate auth; M2 onwards depends on that decision."
+
+*Why this matters:* Risk-first sequencing prevents wasted effort on dependent work that gets invalidated when the unknown resolves badly. GSD's "what must be TRUE for the goal" — start with the hardest TRUE.
+
+#### 3b — Dependencies for CRITICAL items
+
+Ask: "Of the remaining CRITICAL items, what depends on what? Can anything run in parallel?"
+
+Example: "Need user accounts before user dashboard. Need data persistence before any user-facing reads. Auth and admin tooling can run in parallel since they don't share code."
+
+*Why this matters:* Dependencies determine ordering. Items that parallelize can go into different milestones (or the same milestone if small) for speed. Items that depend on each other must serialize.
+
+#### 3c — Group into milestones (with size discipline)
+
+Ask: "Based on the sequencing and dependencies, propose 2–5 milestones. Each milestone should have a coherent theme — what it ships when done. Aim for **2–3 tasks per milestone**; if a milestone has >5 tasks, consider splitting it."
+
+Example:
+- M1: Auth spike + decision (2 tasks)
+- M2: User accounts + basic CRUD (3 tasks)
+- M3: Admin dashboard (3 tasks)
+- M4: Polish + launch readiness (2 tasks)
+
+*Why this matters:* The 2–3-task / ~50%-context bar protects against unimplementable plans. GSD found that bigger plans don't ship; they sit. Smaller, sharper milestones ship. If a milestone proposal has >5 tasks, surface a warning — but respect user agency. The user may have a real reason; don't auto-split.
+
+#### 3d — Roadmap decision
+
+If sequencing produced >1 milestone, recommend `roadmap.md`:
+
+- **Now:** current milestone (M1)
+- **Next:** next 1–2 milestones in sequence
+- **Later:** parked/deferred items from M2's nice-to-have list
+- **Parked:** items that may never ship
+
+If only 1 milestone, skip roadmap.md — everything fits in planning/current.md.
+
+*Why this matters:* roadmap.md keeps the multi-milestone horizon visible without bloating planning/current.md. current.md stays focused on "now"; roadmap.md captures "next / later / parked".
+
+#### 3e — Save milestone draft
+
+Save to `discovery_state.milestone_draft`:
+
+```json
+{
+  "milestone_draft": {
+    "milestones": [
+      {
+        "id": "M1",
+        "theme": "Auth spike + decision",
+        "exit_criteria_summary": "auth approach decided + working spike",
+        "tasks_outline": ["validate provider Y", "implement basic flow", "test at expected scale"],
+        "estimated_complexity": "low | moderate | high"
+      }
+    ],
+    "current_milestone": "M1",
+    "needs_roadmap": true,
+    "parallel_opportunities": []
+  }
+}
+```
+
+`estimated_complexity` is a coarse enum. M7's plan-lint may surface finer-grained complexity scoring later.
+
+Save M3 checkpoint to `.planner/state/<run-id>.json`.
+
+### Exit criteria
+
+- All CRITICAL items from M2 are sequenced into milestones
+- Each milestone has ≤5 tasks (preferably 2–3; warning surfaced if >5, not blocked)
+- Dependencies between milestones documented
+- Roadmap decision made (yes/no)
+- current_milestone identified
+- Milestone draft saved to run state
+- User confirms before M4 begins
+
+### Iteration
+
+User can revise sequencing. If during M4 the per-milestone quality gates surface that a milestone is too big to finish, M3 can be re-entered to split it.
+
+## M4: Quality Gates
+
+Take M3's milestone draft and add quality-gate detail per milestone: acceptance criteria, validation commands, stop conditions, and notes-for-next-session. Plus a project-wide Definition of Done for the operating manual (derived here, written at M6).
+
+**Output:** drafts for planning/current.md's Acceptance criteria / Validation commands / Stop conditions / Notes for next session sections per milestone, plus the operating manual's "Definition of done" section. Saved to `discovery_state.quality_gates_draft`. Written to disk in M6.
+
+**Always-teaches:** Each question is paired with a brief "why this matters" explanation.
+
+### Entry-point routing
+
+- **Full plan (greenfield)** — full quality-gates conversation (sub-steps 4a–4f below)
+- **Improvement** — focused. Deepen sub-branch: refine quality gates for the in-flight milestone (often expanding acceptance criteria or adding validation). Continue sub-branch: define quality gates for the next milestone.
+- **Drift assessment** — read existing quality gates from planning/current.md; no prompting. Used by drift findings to detect when acceptance criteria are being skipped or reinterpreted.
+- **Pivot** — new milestone set from M3 needs fresh quality gates. The project-wide Definition of Done often survives the pivot unchanged; surface it for user confirmation rather than re-asking from scratch.
+
+### Sub-steps (full plan greenfield)
+
+#### 4a — Per-milestone acceptance criteria
+
+For each milestone in `milestone_draft.milestones`, ask: "What are the concrete acceptance criteria for [milestone_id: theme]? Things specific enough that 'done' isn't subjective."
+
+Examples:
+
+- "Auth flow works end-to-end against provider Y at 100 concurrent users"
+- "All M2.must_be_true items relevant to this milestone are satisfied"
+- "All tests pass; lint and typecheck clean"
+- "Documentation updated for the new endpoint"
+
+*Why this matters:* Acceptance criteria are what makes a milestone "shippable" vs. "still in progress." Without them, "done" gets ambiguous and scope creep starts at milestone boundaries.
+
+#### 4b — Validation commands
+
+For each milestone, ask: "What commands do you run to verify the acceptance criteria? Concrete shell commands that produce pass/fail."
+
+Examples:
+
+- `npm test`
+- `npm run lint && npm run typecheck`
+- `python -m pytest tests/auth/ -v`
+- `curl -s https://staging.example.com/health | grep "ok"`
+
+*Why this matters:* Validation commands are how the agent verifies "done" vs. assuming. Mechanical checks beat self-assessment. These land in planning/current.md's "Validation commands" section and feed status.md's "Latest validation results" at /wrapup.
+
+#### 4c — Stop conditions (per milestone)
+
+For each milestone, ask: "When should the agent stop and ask for approval rather than proceeding?"
+
+Default stop conditions (research-canonical, surface as starting set):
+
+- Scope must expand to satisfy a criterion
+- A new dependency must be added
+- A schema or contract must change
+- Validation exposes a requirement conflict
+
+User can add milestone-specific stops on top of the defaults.
+
+*Why this matters:* Stop conditions are the milestone-level version of M1's escalation triggers. They tell the agent when to break out of execution mode and surface a decision rather than proceed unilaterally.
+
+#### 4d — Project-wide Definition of Done
+
+Ask: "Beyond per-milestone acceptance criteria, what's the project-wide 'done' bar? What must always be true before a change is considered complete?"
+
+Default project DoD (research-canonical, surface as starting set):
+
+- The acceptance criteria in `docs/planning/current.md` are satisfied
+- Relevant validation commands have been run and results are recorded in `docs/status.md`
+- The diff stays within the stated scope and non-goals
+- New durable lessons are promoted into the operating manual, a path rule, or a skill when appropriate
+
+User adds project-specific DoD items on top.
+
+*Why this matters:* The project-wide DoD lives in the operating manual and applies to every change, regardless of milestone. This is the bar the agent uses to decide "ready to commit?" vs. "still working."
+
+#### 4e — Notes for next session (per milestone)
+
+For each milestone, ask: "What should the next session know about this milestone? Most likely next step, files likely to change, what must remain true."
+
+Example:
+
+> "Next step: implement the auth callback handler in `lib/auth/callback.ts`. Files likely to change: `lib/auth/*`, `routes/auth.ts`. What must remain true: existing session-based auth in `lib/auth/session.ts` continues to work — this is additive, not a replacement."
+
+*Why this matters:* "Notes for next session" is how planning/current.md communicates across context boundaries. Without it, the next session starts cold even with the plan in place. This field is load-bearing for rad-session's /startup.
+
+#### 4f — Save quality gates draft
+
+Save to `discovery_state.quality_gates_draft`:
+
+```json
+{
+  "quality_gates_draft": {
+    "per_milestone": [
+      {
+        "milestone_id": "M1",
+        "acceptance_criteria": ["..."],
+        "validation_commands": ["..."],
+        "stop_conditions": ["..."],
+        "notes_for_next_session": "..."
+      }
+    ],
+    "project_definition_of_done": ["..."]
+  }
+}
+```
+
+Save M4 checkpoint to `.planner/state/<run-id>.json`.
+
+### Exit criteria
+
+- Every milestone has ≥3 acceptance criteria (concrete, not subjective)
+- Every milestone has ≥1 validation command
+- Every milestone has stop conditions (defaults + project-specific)
+- Project-wide Definition of Done captured (≥3 entries; defaults + project-specific)
+- Notes for next session captured (at least for the current milestone)
+- Quality gates draft saved to run state
+- User confirms before M5 begins
+
+### Iteration
+
+User can revise. If during M5 doc-set recommendation a milestone needs different validation (e.g., user opts for a `--standard` doc set that doesn't include test files), M4 can be re-entered to update validation commands.
+
+## M5: Doc-Set Recommendation
+
+Take all prior drafts (M1 constitution, M2 scope, M3 milestones, M4 quality gates) and recommend the doc set that best supports *this* plan. The doc set is recommended *based on the plan* — every doc gets project-specific rationale, not a generic justification. Complexity routing chooses scale: `lite` (minimal), `standard` (most projects), `full` (substantial).
+
+**Output:** approved doc set list with rationale, complexity routing decision, optional skills/hooks recommendations. Saved to `discovery_state.doc_set_draft`. **User approval is the hard gate for M6** — M5 is the last conversation phase before any writes.
+
+**Always-teaches:** Each question is paired with a brief "why this matters" explanation. The per-doc rationale is itself a teaching moment — the user learns why each doc earns its place.
+
+### Entry-point routing
+
+- **Full plan (greenfield)** — full doc-set recommendation conversation (sub-steps 5a–5f below)
+- **Improvement** — most docs already exist; M5 surfaces *additions or modifications* (e.g., "you have vision.md but no roadmap.md, and you've identified 4 milestones now — consider adding roadmap"). Existing docs not touched unless the guard rail prompts the user.
+- **Drift assessment** — read existing doc set; M5 surfaces any *gaps* (docs that should exist but don't) as findings in the drift report, not as recommendations to add unilaterally.
+- **Pivot** — the disposition manifest from pivot's seven-question opening already governed existing docs. M5 confirms the new doc set per the pivot's direction and surfaces any additions needed.
+
+### Sub-steps (full plan greenfield)
+
+#### 5a — Complexity assessment
+
+Planner classifies the project complexity based on signals from M0–M4:
+
+- **lite:** minimal scope (≤2 critical items from M2), 1 milestone from M3, solo work, no substantive architecture. Single combined operating manual carrying vision-level intent.
+- **standard:** moderate scope, 2–4 milestones, recognizable architecture, ≥1 stack decision. Core set.
+- **full:** substantial scope, ≥5 milestones, complex architecture, multiple integrations or unknowns. Core + roadmap + ADRs + hooks/skills recommendations.
+
+Surface the assessment with rationale: "Looks like a **standard** project — you have 3 milestones, you raised auth-with-provider-Y as a hardest unknown, and your stack involves TypeScript + Next.js + Postgres. Sound right, or do you want to override?"
+
+*Why this matters:* Complexity routing prevents two failure modes: a lite project drowning in 9 docs no one will maintain, or a substantial project sitting on 2 docs that don't capture the real complexity. Right-sized doc structure ships; wrong-sized doc structure rots.
+
+#### 5b — Doc-set recommendation per complexity
+
+Based on the complexity bucket, propose specific docs.
+
+**Lite (minimal):**
+
+- Operating manual (CLAUDE.md / AGENTS.md per agent scope) — folds in vision-level intent
+- `docs/planning/current.md`
+- `docs/status.md` scaffold
+- `.rad/profile`
+
+No separate `docs/vision.md` or `docs/architecture.md` — at this scale, the operating manual carries those concerns inline.
+
+**Standard (most projects):**
+
+- Operating manual
+- `docs/vision.md`
+- `docs/architecture.md`
+- `docs/planning/current.md`
+- `docs/status.md` scaffold
+- `docs/decisions/README.md` (with NNNN-*.md entries for any decisions surfaced during M2 risks / M4 quality gates)
+- `docs/roadmap.md` *if* >1 milestone from M3
+- `.rad/profile`
+
+**Full (substantial):**
+
+All standard items, plus:
+
+- `docs/roadmap.md` (always — substantial projects have horizon beyond current cycle)
+- `.claude/settings.json` (if Claude in scope) with permissions + hook scaffolding
+- `.codex/config.toml` (if Codex in scope)
+- Recommended skills (see 5e)
+- Recommended hooks (see 5e)
+
+#### 5c — Project-specific rationale per doc
+
+For each recommended doc, generate a one-line rationale tied to *this* project — not a generic justification.
+
+Example for a standard project:
+
+- "**vision.md** — your goal and non-goals (no real-time collab, no mobile v1) crystallized during M2; recording them now keeps future milestones aligned"
+- "**architecture.md** — your stack (TypeScript + Next.js + Postgres) plus the auth-with-provider-Y unknown warrant a canonical home for invariants and the eventual decision"
+- "**planning/current.md** — your M1 spike has 3 acceptance criteria and 2 validation commands; current.md captures the executable plan"
+- "**status.md scaffold** — rad-session populates this from evidence at /wrapup; we just create the placeholder"
+- "**decisions/README.md + 0001-drizzle-vs-prisma.md** — you raised ORM choice as a decision during M2 risks; ADR 0001 captures the rationale and supersession path"
+- "**roadmap.md** — you have 4 milestones; roadmap.md keeps the multi-milestone horizon visible without bloating current.md"
+- "**.rad/profile** — captures mode preference (mentor) and agent scope (claude_only)"
+
+*Why this matters:* "Every artifact has a reason" is the senior-engineer move. Generic doc-set lists feel imposed; project-specific lists feel justified. If a doc can't earn a project-specific rationale, it probably shouldn't be in the recommendation.
+
+#### 5d — User approval (and override)
+
+Present the recommended doc set with rationale. Ask:
+
+> "Approve this doc set? You can also:
+> - Drop any recommendation that doesn't fit
+> - Add a doc not on the list (e.g., for regulatory needs)
+> - Switch complexity routing (lite / standard / full) — that re-runs steps 5a–5c"
+
+User approves or modifies → final doc set locked.
+
+*Why this matters:* The user owns the doc set, not the planner. Recommendation with rationale is the planner doing its job; final approval is the user doing theirs. If user drops a recommendation, capture the reason in `user_overrides` in case it matters later.
+
+#### 5e — Skills and hooks (standard / full only)
+
+For `standard` and `full` complexity, optionally recommend skills and hooks. Skip for `lite`.
+
+**Skills** (placed in `.claude/skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md`):
+
+- `review-diff` — review changes before commit; common starting skill
+- `release-checklist` — pre-release validation
+- Project-specific skills surfaced during M4 (e.g., "deploy-to-staging" if deployment is multi-step)
+
+**Hooks** (placed in `.claude/settings.json` or `.codex/config.toml`):
+
+- PreToolUse re-read plan before major edits (planning-with-files pattern; cheap)
+- Secret-blocking on `.env` / credentials files
+- Format-on-save for the project's lint/format tooling
+
+For each recommended skill/hook, surface project-specific rationale per the 5c pattern.
+
+*Why this matters:* Per the research: "Prose instructions are for judgment. Permissions and hooks are for guarantees." Skills and hooks are how you enforce things in code rather than prose. Skipping in `lite` respects the principle that small projects shouldn't be over-instrumented.
+
+#### 5f — Save doc-set draft
+
+Save to `discovery_state.doc_set_draft`:
+
+```json
+{
+  "doc_set_draft": {
+    "complexity": "lite | standard | full",
+    "approved_docs": [
+      {
+        "path": "CLAUDE.md",
+        "rationale": "operating manual; agent scope claude_only",
+        "writer": "rad-planner (Constitution sections) + rad-session (Operational sections)",
+        "guard_rail_check": "no pre-existing CLAUDE.md beyond /init residue"
+      }
+    ],
+    "approved_skills": [],
+    "approved_hooks": [],
+    "user_overrides": [
+      {"action": "drop", "doc": "docs/roadmap.md", "reason": "only 1 milestone"}
+    ],
+    "user_approval": true
+  }
+}
+```
+
+`user_approval: true` is the hard gate for M6. Without it, M6 cannot fire.
+
+Save M5 checkpoint to `.planner/state/<run-id>.json`.
+
+### Exit criteria
+
+- Complexity assessment recorded (with user confirmation or override)
+- Doc set proposed with project-specific rationale for every doc
+- User approval captured (`user_approval: true`)
+- Any user overrides recorded with reason
+- Final doc set locked
+- M5 checkpoint saved
+
+### Iteration
+
+User can revise complexity routing or doc set at any time. If they switch from `standard` to `full` mid-conversation, re-run 5a–5c with the new bucket. If they drop a doc, record the reason in `user_overrides`. M6 will not fire without `user_approval: true`.
+
+## M6: Doc Creation (executes plan's M0)
+
+M6 is execution, not conversation. The user already approved the doc set at M5 (`user_approval: true` is the hard gate). M6 reads the drafts from M1–M5 and writes the approved files to `project_dir`, honoring guard rails for any pre-existing content.
+
+**Output:** files on disk per the approved doc set. Saved path list in `discovery_state.m6_writes`. Terminal M6 checkpoint marks completion of /plan.
+
+**No new user-elicit questions.** M6 may prompt for guard-rail decisions when pre-existing content collides with a planned write.
+
+### Entry-point routing
+
+- **Full plan (greenfield)** — execute all sub-steps below; write all approved docs
+- **Improvement** — targeted writes only (usually `docs/planning/current.md` updates plus any new ADRs). Vision/architecture untouched unless user explicitly approved updates in M5.
+- **Drift assessment** — M6 is largely a no-op. The drift report is conversation output, not a written file. The exception: if the user picked "incorporate findings into the plan" at the drift output menu, M6 updates `docs/planning/current.md` to reflect the incorporated findings.
+- **Pivot** — execute the disposition manifest from pivot's seven-question opening (archive old per disposition, write new per the rebuilt drafts, supersede ADRs with cross-references, save the manifest as `docs/planning/archive/YYYY-MM-DD-pivot-manifest.md`).
+
+### Sub-steps
+
+#### 6a — Pre-flight write check
+
+Verify before any writes:
+
+- `discovery_state.doc_set_draft.user_approval == true` (hard gate — refuse to proceed if false)
+- `project_dir` exists and is writable; if it doesn't exist (M0 option 3 case), `mkdir -p`
+- For each doc to be written, check whether the file already exists
+
+If any pre-existing doc collides with a planned write, surface the guard rail:
+
+- **Strategic docs** (vision.md, architecture.md, roadmap.md): three-option menu — overwrite / append / skip
+- **planning/current.md:** special handling — "this archives the current `current.md` to `docs/planning/archive/YYYY-MM-DD-pre-replace.md` and writes the new one. Proceed?"
+- **decisions/*.md:** never overwrite. If filename collision, increment ADR number.
+- **Operating manual:** if init residue detected (per M0 `claude_init_residue` or `codex_init_residue`), enrich rather than overwrite — insert Constitution sections in their proper place; preserve any existing Operational sections and user-added sections; surface "Preserved user sections: \<list\>". If substantial content, three-option menu.
+
+Save guard-rail decisions to `discovery_state.m6_guard_rails`.
+
+#### 6b — Create directory structure
+
+`mkdir -p` for missing subdirectories under `project_dir`:
+
+- `docs/`
+- `docs/planning/`
+- `docs/planning/archive/`
+- `docs/decisions/` (if any ADRs in the approved set)
+- `.rad/`
+- `.claude/` (if Claude in scope)
+- `.codex/` (if Codex in scope)
+- `.agents/skills/` (if Codex in scope and skills approved)
+- `.claude/skills/` (if Claude in scope and skills approved)
+- `.claude/rules/` (if Claude in scope and path-scoped rules approved)
+
+#### 6c — Write operating manual
+
+Per `discovery_state.agent_scope`:
+
+- **claude_only:** write `CLAUDE.md` with Constitution sections from M1
+- **codex_only:** write `AGENTS.md` with Constitution sections from M1
+- **claude_and_codex:** write `AGENTS.md` canonical with Constitution sections + `CLAUDE.md` shim (`@AGENTS.md` import + placeholders for Claude-specific Operational sections that rad-session fills at /init)
+
+Sections written by rad-planner (per `docs/cross-plugin-contracts.md` sectioned-writer exception):
+
+- **Project** — from `constitution_draft.project_purpose`
+- **Read order** — computed from `doc_set_draft.approved_docs` (which docs to read before what kinds of work)
+- **Hard boundaries** — from `constitution_draft.hard_boundaries`
+- **Engineering rules** — from `constitution_draft.principles`
+- **Definition of done** — from `quality_gates_draft.project_definition_of_done`
+- **Escalate triggers** — from `constitution_draft.escalation_triggers`
+
+Sections NOT written by rad-planner (rad-session populates at /init):
+
+- Commands (install / test / lint / build)
+- Compact Instructions (CLAUDE.md only)
+- Claude-specific behavior (CLAUDE.md only)
+
+#### 6d — Write strategic docs
+
+For each entry in `doc_set_draft.approved_docs`, write per the canonical template from `docs/doc-conventions.md`:
+
+- **`docs/vision.md`** — from M2 (`goal_statement` → Product statement; `must_be_true` and `must_exist` → success signals; product principles synthesized from M1 principles where relevant; `non_goals` → Non-goals)
+- **`docs/architecture.md`** — **SCAFFOLD only.** The planner emits the template structure (Current stack / Repository map / System boundaries / Core invariants / Canonical patterns / Commands agents should know / Secrets and environment / Known sharp edges / Change notes) with placeholders. **Surface to user explicitly: "architecture.md is a scaffold — fill in the per-section content as you go; M4 quality gates and rad-session /wrapup surface when sections drift from reality."**
+- **`docs/roadmap.md`** (if approved) — from M3 (multi-milestone view → Now / Next / Later / Parked + Rules for proposing roadmap changes)
+- **`docs/planning/current.md`** — from M3 + M4 (`current_milestone` + per-milestone `acceptance_criteria` + `validation_commands` + `stop_conditions` + `notes_for_next_session` + `risks` from M2 `derailment_risks`)
+- **`docs/status.md` scaffold** — empty 8-section template (see `docs/status-md-schema.md`) with explicit "No data yet — populated by rad-session /wrapup from evidence" markers per section
+- **`docs/decisions/README.md`** — ADR index header per `docs/doc-conventions.md`
+- **`docs/decisions/NNNN-*.md`** — per any decisions surfaced during M2 risks / M4 quality gates. Sequence-numbered starting from `0001`.
+
+#### 6e — Write config files
+
+- **`.rad/profile`** (TOML, always written): `mode = "mentor"` (default), `agent_scope = "<from M0>"`, `multi_branch_status = false`
+- **`.claude/settings.json`** (if Claude in scope and approved in M5): permissions + hooks per `doc_set_draft.approved_hooks`
+- **`.codex/config.toml`** (if Codex in scope): approvals + sandbox + hooks per approved hooks
+
+#### 6f — Write skills (if approved)
+
+For each entry in `doc_set_draft.approved_skills`, create `.claude/skills/<name>/SKILL.md` (Claude scope) or `.agents/skills/<name>/SKILL.md` (Codex scope) with a scaffold. The scaffold contains the SKILL.md frontmatter and a brief description block; the user fills in the procedure body.
+
+#### 6g — Post-write validation
+
+Run validators (per M7's eventual implementation; emit warnings rather than errors if validators aren't yet built):
+
+- `plan-lint.py` on `docs/planning/current.md` — DAG sanity, missing fields, vague language
+- `doc-redundancy.py` cross-doc duplicate detection
+- `doc-contradiction.py` cross-doc disagreement detection
+- `status-validator.py` freshness check (scaffold should be marked "no data yet")
+
+Surface any issues to the user. Plan-lint CRITICAL/HIGH issues require user attention before considering /plan complete.
+
+#### 6h — Final summary
+
+Surface to the user:
+
+- **Files created** — list with absolute paths
+- **Guard rail decisions** — what was preserved, overwritten, or skipped
+- **Validation results** — pass / warn / fail per validator
+- **Recommended next step** — "Run `/rad-session:init` to populate operating-manual Commands section, then `/rad-session:startup` begins your work"
+- **Operating-manual handoff note** — "Commands, Compact Instructions, and Claude-specific sections are owned by rad-session — they'll be populated at /init"
+
+Save terminal M6 checkpoint to `.planner/state/<run-id>.json`:
+
+```json
+{
+  "phase": "6.M6",
+  "m6_writes": [
+    {"path": "<abs path>", "action": "created | enriched | overwritten | skipped", "guard_rail": "<reason>"}
+  ],
+  "validator_results": {
+    "plan_lint": "pass | warn | fail | not_run",
+    "doc_redundancy": "pass | warn | fail | not_run",
+    "doc_contradiction": "pass | warn | fail | not_run"
+  },
+  "completed_at": "ISO-8601"
+}
+```
+
+### Exit criteria
+
+- All approved docs exist in `project_dir` (or explicitly skipped via guard rail with user confirmation)
+- No user content lost (guard rails honored; backups preserved in archive paths for any overwrite)
+- Validator results surfaced (pass / warn / fail per validator)
+- Final summary delivered to the user
+- Terminal M6 checkpoint saved
+- `discovery_state.m6_complete: true`
+
+### Iteration
+
+M6 is terminal for the /plan run. If the user wants changes after M6 ships, they re-invoke /plan with the appropriate entry-point flag (`--improve` for refinement, `--pivot` for direction change, `--drift` for an assessment check).
+
+## Checkpoint & resume
+
+Long planning runs are compaction-prone. Save state to `.planner/state/<run-id>.json` at these transitions:
+
+0. After M0 (discovery complete)
+1. After each M1–M5 phase
+6. After M6 (artifacts written)
 
 The model has to remember to write the checkpoint at each transition — there is no hook that does it automatically. On `--resume <run-id>`, load the file, announce the phase you're resuming from, and continue.
 
-## Workflow
+## Single-writer rule
 
-### Phase 0.5: Repo Audit (`--reboot` only)
+Per `docs/cross-plugin-contracts.md`:
 
-When `--reboot` is passed, the project has already lived. The goal of Phase 0.5 is to anchor the regenerated plan to **current code reality**, not the original PRD's aspirations.
+- **rad-planner writes:** vision.md, architecture.md, roadmap.md, planning/current.md, decisions/README.md, initial ADRs during /plan
+- **rad-planner scaffolds:** status.md (rad-session populates from evidence at /wrapup)
+- **rad-planner contributes:** operating manual Constitution sections (Project, Read order, Hard boundaries, Engineering rules, Definition of done, Escalate triggers)
+- **rad-session owns:** operating manual Operational sections (Commands, Compact Instructions, Claude-specific behavior), status.md updates from evidence
+- **User owns:** individual ADRs (docs/decisions/NNNN-*.md), edits to all strategic docs after creation
 
-1. **Parallel-Read existing strategic docs.** Look for `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md`, `tasks.md` at project root. Also look for v2.x legacy paths: `implementation_plan.md`, `docs/ARCHITECTURE.md`. Report which exist.
-2. **Audit the codebase against the prior PRD.** Glob the source tree. Identify:
-   - Major divergences between prior PRD scope and what's been built
-   - Components that exist in code but aren't in ARCHITECTURE.md
-   - Components in ARCHITECTURE.md that were never built
-   - Stack drift (package.json deps vs. what was originally chosen)
-3. **Archive originals.** For each existing strategic doc, rename `<name>.md` → `<name>.md.pre-reboot`. Append a header line on each archive: `> Archived YYYY-MM-DD by /plan --reboot. Superseded by regenerated <name>.md.`
-4. **Read DECISIONS.md** (now `.pre-reboot`). Parse the sequence-numbered entries. The reboot will append new entries; prior entries will be marked superseded individually based on Phase 1–5 outcomes.
-5. **Surface the audit findings to the user** (skip detailed report in `--non-interactive`):
-   - What we found in code vs. docs
-   - What's about to be archived
-   - What the planning session should focus on
-6. Save Phase 0.5 checkpoint with `mode: reboot` and the `existing_strategic_docs` array.
+## Key references
 
-Phase 1 then proceeds anchored to **detected current state** rather than greenfield assumptions.
+**Canonical spec docs (top-level `docs/`):**
 
-### Phase 1: Strategic Discovery
+- `docs/doc-conventions.md` — canonical file structure, templates, ownership matrix
+- `docs/cross-plugin-contracts.md` — single-writer rule, guard rails, .rad/profile protocol
+- `docs/entry-point-routing.md` — four entry points, detection model, per-entry conversation shapes
+- `docs/status-md-schema.md` — eight-section schema, evidence sources, inference policies
 
-**Pre-discovery scope check.** If the user's project idea is clearly fuzzy (still debating what to build, which approach, or whether the problem is the right one), recommend `/rad-brainstormer:brainstorm-session` or `/rad-brainstormer:design-sprint` and return here once the direction is locked. `plan` plans the *how/order*; it assumes the *what* is decided.
+**Plugin internals (`plugins/rad-planner/`):**
 
-**Lite-mode auto-detect.** If the project description fits all of:
-- Single feature or bug fix, ≤3 files affected
-- No new dependencies / framework choices
-- One milestone of work, estimated <1 day
-
-…suggest `--lite` mode unless the user explicitly wants the full workflow.
-
-**If the user provided a project description (or `--reboot` Phase 0.5 produced an audit):**
-1. Summarize your understanding. In `--reboot`, summarize against the audit findings, not the prior PRD.
-2. Ask 3-5 high-information strategic questions (NOT implementation details):
-   - "What's the most important thing this system must get right?"
-   - "What's the biggest technical risk you see?"
-   - "Who are the target users and what's their primary workflow?"
-   - "What existing systems does this need to integrate with?"
-   - "What are the hard constraints? (timeline, team, infrastructure)"
-3. **Assumption capture (new in 3.0, feeds ASSUMPTIONS.md):** Ask explicitly: *"What's true about this project's reality that wouldn't be obvious from the code? Examples: 'no users yet so we can break compat freely', 'single-tenant only', 'we can rebuild the DB anytime in the next 30 days', 'sensitive data — no real values ever live in the repo', 'team has no Rust experience'."* Capture at least 3 entries. In `--reboot`, also ask which prior assumptions have flipped.
-4. Wait for answers (skip in `--non-interactive` — record unanswered questions in `awaiting_user_review`).
-
-**If in an existing codebase (and not already done in Phase 0.5):**
-1. Issue parallel Reads for `CLAUDE.md`, `README.md`, `package.json`, `tsconfig.json` (or language equivalents), plus a Glob of the top-level structure.
-2. Identify patterns, conventions, integration points.
-3. Present findings and ask clarifying questions (skip in `--non-interactive`).
-
-Save Phase 1 checkpoint.
-
-### Phase 2: Stack Evaluation (skip in `--lite`)
-
-Use the Agent tool to delegate to the `stack-advisor` agent using the substituted template from `references/subagent-prompts/stack-eval.md`. Pass `mode` (`new_project` | `evaluate_existing` | `compare_frameworks`) and `project_context`.
-
-**After receiving the agent's output, validate the JSON contract:**
-
-```bash
-# Pipe the agent's output through the schema validator
-echo "$AGENT_OUTPUT" | python3 ${plugin_root}/scripts/validate-json.py \
-  ${plugin_root}/references/subagent-prompts/stack-eval.schema.json - --extract-from-markdown
-```
-
-If validation fails, re-prompt the agent once with: "Your last output failed JSON Schema validation: [errors]. Re-emit the JSON block matching `references/subagent-prompts/stack-eval.schema.json`." If the second attempt also fails, fall back to markdown parsing per the legacy structure in `agents/stack-advisor.md`.
-
-Parse the validated JSON per the schema:
-- `evaluation_complete: true` + `confidence: high|medium` → present recommendation to user (or auto-proceed in `--non-interactive`)
-- `confidence: low` → surface risks to user before proceeding
-- `escalation_required: true` → stop. Surface `escalation_reason` and recommend rethinking scope via brainstormer
-
-Save Phase 2 checkpoint. The stack rationale will become one of the initial DECISIONS.md entries in Phase 6.
-
-### Phase 3: Build the Plan
-
-Load references in a single parallel batch: `plan-template.md`, `task-format.md`, `anti-patterns.md`, `failure-state-template.md`, `tdd-constraints.md`, `context-management.md`.
-
-1. **Define milestones** — logical phases of work (3-6 milestones typical; 1-2 in `--lite`).
-2. **Break into tasks** — each milestone becomes 3-8 specific tasks (lite: 5-10 tasks total, no milestone hierarchy required).
-3. **Map dependencies** — explicit `Dependencies: [S1, S2]` for every task.
-4. **Score complexity** — 1-10 per task; expand any task > 7 into subtasks.
-5. **Define validation** — every task gets a runnable validation check.
-6. **Define rollbacks** — every task gets a revert procedure.
-7. **Set test strategy** — per `references/tdd-constraints.md`.
-8. **Insert checkpoints** — after every milestone, per `references/failure-state-template.md`.
-9. **Plan context management** — identify where to checkpoint/clear sessions per `references/context-management.md`.
-
-**Mechanical validation (this is the part that's actually enforced):**
-
-```bash
-python3 ${plugin_root}/scripts/plan-lint.py --mode all <path-to-tasks.md> --json
-```
-
-The script returns issues for: cycles, phantom dependencies, complexity > 7 without subtasks, missing required fields (Validation, Rollback, Dependencies, Complexity), and vague validation language ("verify it works", "looks right", "tbd", etc.).
-
-**If `plan-lint` reports CRITICAL or HIGH issues, fix them before proceeding to Phase 4.** Re-run until clean. The risk-assessor agent should not have to re-do work the script already covered.
-
-Save Phase 3 checkpoint.
-
-### Phase 4: Risk Assessment (skip in `--lite`)
-
-Use the Agent tool to delegate to the `risk-assessor` agent using the substituted template from `references/subagent-prompts/risk-assessment.md`. The agent will also run `plan-lint.py` itself but should focus its judgment on the passes scripts can't cover (anti-patterns 1, 11, 13; architectural concerns; TDD strategy quality).
-
-Pass the draft plan, current `iteration_number`, and `max_iterations` (default 3).
-
-**Validate the agent's JSON output before consuming:**
-
-```bash
-echo "$AGENT_OUTPUT" | python3 ${plugin_root}/scripts/validate-json.py \
-  ${plugin_root}/references/subagent-prompts/risk-assessment.schema.json - --extract-from-markdown
-```
-
-Re-prompt once on validation failure, then fall back to markdown parsing.
-
-Parse the validated JSON per the schema:
-- `verdict: APPROVE` → proceed to Phase 5. Record verdict in the risk history (will become a DECISIONS.md entry in Phase 6).
-- `verdict: REVISE` and `iteration < max_iterations` → fix `blocking_issues`, increment iteration, re-dispatch. Save per-iteration checkpoint.
-- `verdict: REVISE` and `iteration >= max_iterations` with issues remaining → stop looping. Surface `unresolved_issues` to user: "Risk assessment hit iteration cap. Decide: (a) accept these as known gaps, (b) drop back to Phase 3 and restructure the affected tasks yourself, or (c) re-enter via `/rad-brainstormer:design-sprint` if the architecture itself is the problem." In `--non-interactive`, add unresolved issues to `awaiting_user_review`.
-- `verdict: RETHINK` → stop immediately regardless of iteration. Surface to user: "Risk assessment returned RETHINK. The architecture has fundamental issues that task-level patches won't fix. Re-enter via `/rad-brainstormer:design-sprint`." Set `escalation.required: true` and `escalation.route_to: "/rad-brainstormer:design-sprint"` in the checkpoint.
-
-### Phase 5: Plan Review & Approval
-
-Present to the user:
-1. **Executive summary** — milestones, task count, complexity distribution, plan-lint result, estimated risk level.
-2. **Architecture overview** — component diagram, key decisions (omitted in `--lite`).
-3. **Full task list** — with dependencies, validation, and rollback for each.
-4. **Risk report** — any remaining concerns and mitigations (omitted in `--lite`).
-5. **Context management plan** — when to checkpoint and clear.
-6. **Assumption set** — the 3+ entries captured in Phase 1 (will land in ASSUMPTIONS.md).
-
-**Ask explicitly: "Does this plan look correct? Should I adjust anything before we lock it in?"**
-
-The plan is NOT approved until the user says so. (In `--non-interactive`, skip approval and add "plan not reviewed by user" to `awaiting_user_review`.)
-
-Save Phase 5 checkpoint.
-
-### Phase 6: Plan Export — Split into 5 Strategic + Operational Files
-
-Once approved, emit the **RAD 8-doc standard** outputs to the project root (or `--output-dir <path>`). Each file has a single canonical purpose; see `references/file-conventions.md` (pointer to `docs/file-conventions.md`) for the spec.
-
-**Files written (or archived-then-overwritten in `--reboot`):**
-
-1. **`PRD.md`** — from Phase 1 Discovery output: project summary, goal, scope (in/out), success criteria, tech-stack summary (from Phase 2), constraints. Target 50–150 lines. Replaces section 1 of the v2.x mega-doc.
-2. **`ARCHITECTURE.md`** — from Phase 2 stack-advisor + Phase 5 architecture decisions: Mermaid component diagram, system boundaries, data flow, key design decisions table with rationale. Target 100–300 lines. Replaces section 2 of the v2.x mega-doc.
-3. **`ASSUMPTIONS.md`** — from Phase 1 assumption-capture interview: 3+ tight one-line entries describing what's true about the project's reality that wouldn't be obvious from code. Target 20–80 lines. **New file type in 3.0.**
-4. **`DECISIONS.md`** — initial entries from Phase 2 stack rationale + Phase 4 risk-assessor verdict history. Sequence-numbered (`0001`, `0002`, …). Target 50–500 lines (above threshold, prompt to convert to ADR layout under `decisions/NNNN-slug.md`). In `--reboot`, append new entries to the existing file and mark prior entries `**Status:** Superseded by <new-entry-number> (reboot YYYY-MM-DD)` where applicable.
-5. **`PLAN.md`** — milestones, refined implementation steps, checkpoints, target files, risks/considerations. Target 100–400 lines. Replaces sections 3–7 of the v2.x mega-doc. **This is the renamed `implementation_plan.md`.**
-6. **`tasks.md`** — machine-readable task list per `references/task-format.md`. Unchanged shape from 2.x. Validated by `plan-lint.py` after write.
-7. **`CLAUDE-FRAGMENT.md`** — transient handoff artifact. Contains an `@-import` block listing the 5 strategic/operational paths above:
-   ```markdown
-   # CLAUDE-FRAGMENT — Strategic docs for this project
-   <!-- Emitted by /rad-planner:plan. Consumed-and-deleted by rad-session /init. -->
-
-   @PRD.md
-   @ARCHITECTURE.md
-   @ASSUMPTIONS.md
-   @DECISIONS.md
-   @PLAN.md
-   ```
-   rad-session `/init` merges this into CLAUDE.md and deletes the FRAGMENT. If FRAGMENT is missing at `/init` time, the import block is auto-generated from detected strategic docs. Safe to delete by hand if you've already merged manually.
-
-**Files NOT written by /plan (single-writer rule):**
-- `CLAUDE.md` — owned by rad-session `/init`, `/wrapup`, `/add-resource`
-- `HANDOFF.md` — owned by rad-session `/wrapup`
-- `.claude/session-log.md` — owned by rad-session `/wrapup`
-
-**Files dropped from v2.x:**
-- `implementation_plan.md` — renamed to `PLAN.md`
-- `EXECUTION-PROMPT.md` — rad-session `/startup` briefing covers the same role
-
-**After all writes:**
-
-8. **Run `plan-lint.py --mode all`** one final time on the exported `tasks.md`. If clean, report it. If issues, surface them — the user has the choice to fix or accept.
-9. **`--reboot` only:** print the supersession summary — which DECISIONS entries were marked superseded, which originals were archived to `*.pre-reboot`. If `DECISIONS.md` is now over ~500 lines, surface the ADR-layout conversion prompt (decoupled from reboot; user decides independently).
-10. Recommend the user run `/rad-session:init` (or restart their session) to pick up the new FRAGMENT.
-11. Save Phase 6 checkpoint (terminal).
-
-In `--non-interactive` mode, emit a trailing JSON block:
-```json
-{
-  "plan_complete": true,
-  "run_id": "string",
-  "mode": "full | lite | reboot",
-  "files_written": ["PRD.md", "ARCHITECTURE.md", "ASSUMPTIONS.md", "DECISIONS.md", "PLAN.md", "tasks.md", "CLAUDE-FRAGMENT.md"],
-  "files_archived": [],
-  "decisions_superseded": [],
-  "milestones": 0,
-  "task_count": 0,
-  "plan_lint_clean": true,
-  "risk_verdict": "APPROVE | REVISE | not-run-in-lite",
-  "escalation_required": false,
-  "awaiting_user_review": ["string"]
-}
-```
-
-## Validate Mode Workflow (`--validate`)
-
-Cheap gap-check. **No agents dispatched, no writes, no user-approval gates.** For a deeper quality audit, use `/rad-planner:review-plan` (dispatches the risk-assessor).
-
-1. **Read the project root.** Issue parallel Reads for `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md`, `tasks.md`, plus a Glob for `CLAUDE-FRAGMENT.md` and `CLAUDE.md` (to check whether FRAGMENT was already merged).
-2. **Run plan-lint on tasks.md (if present):**
-   ```bash
-   python3 ${plugin_root}/scripts/plan-lint.py --mode all tasks.md --json
-   ```
-3. **Emit a checklist:**
-   ```markdown
-   # Plan Validation — <project>
-
-   ## 8-doc gap-check
-   - [x] PRD.md (52 lines)
-   - [x] ARCHITECTURE.md (148 lines)
-   - [ ] ASSUMPTIONS.md ← MISSING (run /plan to create)
-   - [x] DECISIONS.md (12 entries, 87 lines)
-   - [x] PLAN.md (231 lines)
-   - [x] tasks.md (24 tasks, plan-lint clean)
-   - [ ] CLAUDE-FRAGMENT.md ← already merged (CLAUDE.md @-imports present)
-
-   ## plan-lint result
-   [output verbatim, or "skipped — tasks.md not present"]
-
-   ## Strategic-doc staleness
-   [Best-effort: compare git mtime of strategic docs against most-recent commit
-    that touched files outside docs. If strategic docs haven't been touched in
-    N commits while code has churned, surface as "potentially stale".]
-
-   ## Recommendation
-   [One-liner: "Plan is execution-ready" / "Create missing docs first" / etc.]
-   ```
-4. **Exit clean.** No writes. In `--non-interactive`, emit a trailing JSON:
-   ```json
-   {
-     "validate_complete": true,
-     "docs_present": ["PRD.md"],
-     "docs_missing": ["ASSUMPTIONS.md"],
-     "plan_lint_clean": true,
-     "stale_warnings": [],
-     "recommendation": "Create missing docs first"
-   }
-   ```
-
-## Lite Mode Workflow (`--lite`)
-
-For small, single-milestone work, the workflow collapses:
-
-1. **Discovery** — 1-2 questions, not 5. Still ask for 1-2 ASSUMPTIONS entries.
-2. **Skip Phase 2** (stack eval) — assume the existing stack
-3. **Phase 3 plan** — 5-10 tasks, single milestone, no architecture diagram needed
-4. **Skip Phase 4** (risk assessor) — but still run `plan-lint.py` for the mechanical checks
-5. **Phase 5 review** — present and approve
-6. **Phase 6 export** — same 5 strategic/operational files + tasks.md + FRAGMENT, but PRD/ARCHITECTURE/ASSUMPTIONS sections will be brief (often single-paragraph)
-
-Lite mode trades the architectural review for speed. Use it when you'd otherwise be tempted to skip planning entirely. Don't use it when the work is novel, cross-cutting, or touches anything security/auth/payment.
-
-## Reboot Mode Workflow (`--reboot`)
-
-Project has been built, and now you're regenerating the plan after a pivot, scope change, or significant architectural restructuring. Key differences from a fresh run:
-
-1. **Phase 0.5 fires first** — audit existing code, archive prior strategic docs to `*.pre-reboot`.
-2. **Phase 1 anchors to current code reality**, not the prior PRD's aspirations. Interview includes "which prior assumptions have flipped?"
-3. **Phase 6 DECISIONS.md is appended-to, not overwritten.** Prior entries get marked `**Status:** Superseded by <new-entry-number> (reboot YYYY-MM-DD)` where the reboot caused them to no longer apply. The new entry's sequence number is the cross-reference.
-4. **~500-line threshold prompt.** If DECISIONS.md crosses the index-style cutoff during reboot, surface independently: *"DECISIONS.md is over the index-style threshold. Convert to /decisions/ ADR layout? (y/N)"*. This conversion is a decoupled decision — it's not automatic in 4.0.
-5. **All other strategic docs (PRD, ARCHITECTURE, ASSUMPTIONS, PLAN, tasks)** are overwritten after archiving. The `.pre-reboot` archives stay in git history; remove them when you're confident the reboot landed.
-
-Don't use `--reboot` for small course corrections — for those, just edit DECISIONS.md by hand or run `/rad-planner:plan --lite` for a fresh small plan. Reboot is for "we're rethinking the whole shape of this."
-
-## Key References
-
-These contain the detailed templates and contracts. Load them as needed:
-- `references/plan-template.md` — Master plan structure (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN sections, with shared rules)
-- `references/file-conventions.md` — Pointer to canonical `docs/file-conventions.md` (8-doc standard, single-writer rule, ownership matrix)
+- `references/plan-template.md` — Master plan structure (will be updated in M1–M5)
 - `references/task-format.md` — Task states, dependency rules, complexity scoring
 - `references/golden-path-matrix.md` — Tech stack evaluation criteria
-- `references/anti-patterns.md` — 14 documented anti-patterns
+- `references/anti-patterns.md` — Documented anti-patterns
 - `references/failure-state-template.md` — Triple-component validation
 - `references/tdd-constraints.md` — Testing requirements per task
 - `references/context-management.md` — Document & Clear protocol + checkpoint schema
 - `references/subagent-prompts/stack-eval.md` — Stack-advisor dispatch template
 - `references/subagent-prompts/risk-assessment.md` — Risk-assessor dispatch template
-- `examples/example-plan.md` + `examples/example-tasks.md` — A real, validator-clean output
+- `examples/example-plan.md` + `examples/example-tasks.md` — A real, validator-clean output (will be updated in M1–M5)
 - `scripts/README.md` — Validator script documentation
