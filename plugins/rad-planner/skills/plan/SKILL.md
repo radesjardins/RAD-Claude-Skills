@@ -25,7 +25,7 @@ You are orchestrating a project planning workflow. The deliverable is **the plan
 
 **CRITICAL: Pre-flight discovery (M0) runs before any writes. Hard gate. No file is created, modified, or moved until M0 confirms project directory, agent scope, existing state, and entry point.**
 
-> **Status:** This SKILL.md represents the rad-planner 4.0 workflow currently under construction. **M0–M6 are implemented; M7–M9 are placeholders** until subsequent Phase 1 milestones land (validators, fixture testing, release prep). The plugin.json remains at 3.0.0; the live marketplace version still runs the prior workflow.
+> **Status:** This SKILL.md represents the rad-planner 4.0 workflow currently under construction. **M0–M7 are implemented; M8–M9 are placeholders** until subsequent Phase 1 milestones land (fixture testing, release prep). The plugin.json remains at 3.0.0; the live marketplace version still runs the prior workflow.
 
 ## What this skill does — honestly
 
@@ -906,14 +906,14 @@ For each entry in `doc_set_draft.approved_skills`, create `.claude/skills/<name>
 
 #### 6g — Post-write validation
 
-Run validators (per M7's eventual implementation; emit warnings rather than errors if validators aren't yet built):
+Run validators (all four are implemented in M7 and live at `plugins/rad-planner/scripts/`):
 
-- `plan-lint.py` on `docs/planning/current.md` — DAG sanity, missing fields, vague language
-- `doc-redundancy.py` cross-doc duplicate detection
-- `doc-contradiction.py` cross-doc disagreement detection
-- `status-validator.py` freshness check (scaffold should be marked "no data yet")
+- `plan-lint.py` on `docs/planning/current.md` — required-section presence, acceptance-criteria checkbox format, runnable validation commands, vague-language detection
+- `status-validator.py` on `docs/status.md` — freshness vs git mtime, 8-section presence, evidence-based validation results, read-order non-empty
+- `doc-redundancy.py` on `project_dir` — cross-doc bullet/heading duplicate detection via Jaccard similarity
+- `doc-contradiction.py` on `project_dir` — vision.md non-goals vs current.md acceptance criteria via stemmed token overlap
 
-Surface any issues to the user. Plan-lint CRITICAL/HIGH issues require user attention before considering /plan complete.
+Surface any issues to the user. plan-lint CRITICAL/HIGH issues are surfaced strongly but not gated — the user decides whether to fix before considering /plan complete. status-validator HIGH issues surface similarly. doc-redundancy MEDIUM and doc-contradiction findings are advisory.
 
 #### 6h — Final summary
 
@@ -935,6 +935,7 @@ Save terminal M6 checkpoint to `.planner/state/<run-id>.json`:
   ],
   "validator_results": {
     "plan_lint": "pass | warn | fail | not_run",
+    "status_validator": "pass | warn | fail | not_run",
     "doc_redundancy": "pass | warn | fail | not_run",
     "doc_contradiction": "pass | warn | fail | not_run"
   },
