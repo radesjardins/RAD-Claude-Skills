@@ -69,12 +69,12 @@ Not every project needs every file. The planner recommends a doc set based on pr
 
 | File | Owner | Created at |
 |---|---|---|
-| `AGENTS.md` (if Codex in scope) | rad-session (file); rad-planner contributes Constitution sections | `/init` or `/plan` M6 |
-| `CLAUDE.md` (if Claude in scope; as `@AGENTS.md` shim when both) | rad-session (file); rad-planner contributes Constitution sections | `/init` or `/plan` M6 |
+| `AGENTS.md` (if Codex in scope) | rad-session (file); rad-planner contributes Constitution sections | `/startup` bootstrap or `/plan` M6 |
+| `CLAUDE.md` (if Claude in scope; as `@AGENTS.md` shim when both) | rad-session (file); rad-planner contributes Constitution sections | `/startup` bootstrap or `/plan` M6 |
 | `docs/vision.md` | rad-planner | `/plan` M6 |
 | `docs/architecture.md` | rad-planner | `/plan` M6 |
 | `docs/planning/current.md` | rad-planner | `/plan` M6 |
-| `docs/status.md` | rad-planner scaffolds; rad-session populates | `/init` or `/plan` M6 |
+| `docs/status.md` | rad-planner scaffolds; rad-session populates | `/startup` bootstrap or `/plan` M6 |
 | `.rad/profile` | rad-planner or rad-session (whoever runs first) | first run |
 
 ### Strongly recommended (most non-trivial projects)
@@ -83,8 +83,8 @@ Not every project needs every file. The planner recommends a doc set based on pr
 |---|---|---|
 | `docs/roadmap.md` (when >1 milestone in view) | rad-planner | `/plan` M6 if Phase 3 produced multiple milestones |
 | `docs/decisions/README.md` | rad-planner | `/plan` M6 if any ADRs warranted |
-| `.claude/settings.json` (if Claude in scope) | rad-session scaffolds | `/init` |
-| `.codex/config.toml` (if Codex in scope) | rad-session scaffolds | `/init` |
+| `.claude/settings.json` (if Claude in scope) | rad-session scaffolds | `/startup` bootstrap (first run) |
+| `.codex/config.toml` (if Codex in scope) | rad-session scaffolds | `/startup` bootstrap (first run) |
 
 ### Situational (planner recommends in Phase 5 when project warrants; human owns)
 

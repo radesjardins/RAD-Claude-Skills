@@ -863,7 +863,7 @@ Per `discovery_state.agent_scope`:
 
 - **claude_only:** write `CLAUDE.md` with Constitution sections from M1
 - **codex_only:** write `AGENTS.md` with Constitution sections from M1
-- **claude_and_codex:** write `AGENTS.md` canonical with Constitution sections + `CLAUDE.md` shim (`@AGENTS.md` import + placeholders for Claude-specific Operational sections that rad-session fills at /init)
+- **claude_and_codex:** write `AGENTS.md` canonical with Constitution sections + `CLAUDE.md` shim (`@AGENTS.md` import + placeholders for Claude-specific Operational sections that rad-session fills during `/startup`'s Phase 0.5 bootstrap path)
 
 Sections written by rad-planner (per `docs/cross-plugin-contracts.md` sectioned-writer exception):
 
@@ -874,7 +874,7 @@ Sections written by rad-planner (per `docs/cross-plugin-contracts.md` sectioned-
 - **Definition of done** — from `quality_gates_draft.project_definition_of_done`
 - **Escalate triggers** — from `constitution_draft.escalation_triggers`
 
-Sections NOT written by rad-planner (rad-session populates at /init):
+Sections NOT written by rad-planner (rad-session populates during `/startup`'s Phase 0.5 bootstrap path on first run):
 
 - Commands (install / test / lint / build)
 - Compact Instructions (CLAUDE.md only)
@@ -920,8 +920,8 @@ Surface to the user:
 - **Files created** — list with absolute paths
 - **Guard rail decisions** — what was preserved, overwritten, or skipped
 - **Validation results** — pass / warn / fail per validator
-- **Recommended next step** — "Run `/rad-session:init` to populate operating-manual Commands section, then `/rad-session:startup` begins your work"
-- **Operating-manual handoff note** — "Commands, Compact Instructions, and Claude-specific sections are owned by rad-session — they'll be populated at /init"
+- **Recommended next step** — "Run `/rad-session:startup` — its Phase 0.5 bootstrap will populate the operating manual's Commands / Compact / Claude-specific sections on first run, then the normal briefing begins your work"
+- **Operating-manual handoff note** — "Commands, Compact Instructions, and Claude-specific sections are owned by rad-session — they'll be populated during `/startup`'s Phase 0.5 bootstrap on first run"
 
 Save terminal M6 checkpoint to `.planner/state/<run-id>.json`:
 

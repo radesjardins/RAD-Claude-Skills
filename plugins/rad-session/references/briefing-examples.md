@@ -118,7 +118,7 @@ Type: [Coding (stack) | Non-coding]
 [Branch: [name] — if git project]
 Mode: [mentor | dev]    Scope: [claude_only | codex_only | claude_and_codex]
 
-No status.md or current.md yet — this looks like a fresh project, or one that hasn't run /init / /plan / /wrapup.
+No status.md or current.md yet — this looks like a fresh project, or one that hasn't run /startup (which bootstraps on first run) / /plan / /wrapup.
 
 [If operating manual exists:]
 From [CLAUDE.md | AGENTS.md | <non-canonical name>]: [brief summary — Project section, one line]
@@ -136,7 +136,7 @@ What would you like to work on?
 
 ---
 
-## First-time briefing (after /init, before first /plan or /wrapup)
+## First-time briefing (after /startup bootstrap, before first /plan or /wrapup)
 
 ```
 Project: [name]

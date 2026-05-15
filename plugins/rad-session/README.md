@@ -1,14 +1,14 @@
-# rad-session — agent session lifecycle: init, startup, wrapup, with cross-machine continuity for Claude + Codex.
+# rad-session — agent session lifecycle: startup (with first-run bootstrap), wrapup, add-resource, with cross-machine continuity for Claude + Codex.
 
-**What it is.** A four-skill plugin that gives agent-driven projects a structured session lifecycle: bootstrap a project once, orient each session at the start, capture each session at the end, register tools as you discover them. Works for a single agent on a single machine — and **transparently keeps PC ↔ GitHub ↔ Laptop in sync across Claude Code and Codex sessions** when a git remote exists.
+**What it is.** A three-skill plugin that gives agent-driven projects a structured session lifecycle: orient + bootstrap once at first run, capture each session at the end, register tools as you discover them. Works for a single agent on a single machine — and **transparently keeps PC ↔ GitHub ↔ Laptop in sync across Claude Code and Codex sessions** when a git remote exists.
 
 **What it solves.** The default Claude / Codex experience loses session state at compaction, can't tell you what tools the project has, lets the operating manual grow forever, and forgets everything when you switch machines or agents. rad-session keeps `docs/status.md` (evidence-based reality), pairs it with `docs/planning/current.md` (intent — owned by rad-planner), archives shipped milestones, and pulls/commits/pushes the relevant files via git so your laptop sees what your PC did, and your Codex session sees what your Claude session did.
 
 **What it isn't.** It is **not** an automation layer over your code: it never runs builds, never touches non-session files in commits, and never force-pushes. It does not write your strategic docs — that's rad-planner's job. It does not invent state — `/wrapup` writes from **evidence** (git diff, test output, plan-task state), not chat synthesis.
 
-## The canonical doc structure (v5.0)
+## The canonical doc structure (v5.0+)
 
-rad-session 5.0 is built around the canonical structure aligned with published OpenAI / Anthropic project-structure research. The structure is shared with rad-planner 4.0 via the **single-writer rule** (each file has exactly one automated writer) with a **sectioned-writer exception** for the operating manual.
+rad-session is built around the canonical structure aligned with published OpenAI / Anthropic project-structure research. The structure is shared with rad-planner 4.0 via the **single-writer rule** (each file has exactly one automated writer) with a **sectioned-writer exception** for the operating manual.
 
 ```
 <project-root>/
@@ -49,14 +49,14 @@ The operating manual is the **one file with two automated writers**. The single-
 | Section | Owner |
 |---|---|
 | Project, Read order, Hard boundaries, Engineering rules, Definition of done, Escalate triggers | rad-planner `/plan` M6 (Constitution) |
-| Commands, Compact Instructions (CLAUDE.md only), Claude-specific behavior (CLAUDE.md only), `@AGENTS.md` import line (CLAUDE.md shim case) | rad-session `/init` (Operational) |
+| Commands, Compact Instructions (CLAUDE.md only), Claude-specific behavior (CLAUDE.md only), `@AGENTS.md` import line (CLAUDE.md shim case) | rad-session `/startup` bootstrap (Operational) |
 | Any other section | User-owned. Plugins preserve as-is and surface in output. |
 
 `/wrapup` Phase 5 (prune) operates on **Operational sections only**. Constitution sections are never touched by rad-session. User-added sections are never touched by either plugin.
 
 ## Agent scope routing
 
-`/init` asks once whether the project will be worked by Claude, Codex, or both — and routes operating-manual writes accordingly:
+`/startup`'s bootstrap path asks once on first run whether the project will be worked by Claude, Codex, or both — and routes operating-manual writes accordingly:
 
 | `agent_scope` | Files scaffolded |
 |---|---|
@@ -66,12 +66,11 @@ The operating manual is the **one file with two automated writers**. The single-
 
 The choice is persisted to `.rad/profile`. `/startup` and `/wrapup` read the profile and behave per scope.
 
-## The four skills
+## The three skills
 
 | Skill | When | What it does |
 |---|---|---|
-| **`/init`** | Once per project | Detects stack via Python scripts (`detect-stack.py`, `detect-resources.py`, `audit-plugin-bloat.py`), asks the agent-scope question, scaffolds the operating manual's **Operational sections only** (sectioned-writer rule), scaffolds `docs/status.md`, creates `.rad/profile`, creates `.claude/settings.json` / `.codex/config.toml` per scope, runs the plugin-bloat audit, gap-checks strategic docs and recommends `/rad-planner:plan` if any are missing. |
-| **`/startup`** | Every session | **Doorman model — under 5 seconds wall clock.** Fetches origin and prompts to pull when behind. Reads `.rad/profile`, the operating manual per scope (including non-canonical filenames via header heuristic), `docs/status.md`, `docs/planning/current.md`. Surfaces a concise briefing (<35 lines). Read-only — never writes. |
+| **`/startup`** | Every session | **Phase 0** fetches origin and prompts to pull when behind. **Phase 0.5 — bootstrap check.** On first run (when `.rad/profile` / operating manual / `docs/status.md` are missing), runs the one-time setup inline: stack detection via Python scripts, agent_scope question, operating manual Operational sections scaffold (sectioned-writer rule), `docs/status.md` scaffold, `.rad/profile` creation, `.claude/settings.json` / `.codex/config.toml` per scope, plugin-bloat audit. **Phase 1+ in steady state** reads `.rad/profile`, the operating manual (per scope, including non-canonical filenames via header heuristic), `docs/status.md`, `docs/planning/current.md`, and surfaces a concise briefing (<35 lines, <5s wall clock — doorman model). Read-only in steady state; only writes during the one-time bootstrap path. |
 | **`/wrapup`** | Every session | **9-phase workflow.** Refuses if no work changed since the last status (Phase 0). Writes `docs/status.md` from **evidence** (Phase 2). Detects candidate decisions mechanically (dep adds, schema changes, env additions, new top-level dirs) plus soft triggers (Phase 3). Mode-aware: mentor mode teaches and drafts an ADR; dev mode shows a quick list. Runs cross-doc validators from rad-planner (`doc-redundancy.py` + `doc-contradiction.py`) (Phase 4). Prunes the operating manual's Operational sections only (Phase 5). Detects milestone-shipped state (all ACs checked) and proposes archiving `current.md` to `planning/archive/YYYY-MM-DD-MN-slug.md` (Phase 6). Commits + prompts to push (Phase 7). Anomaly-gated final output (silent on success) (Phase 8). |
 | **`/add-resource`** | Any time | Register a new MCP server, CLI tool, script, or note in the operating manual's Resources section so `/startup` picks it up next session. |
 
@@ -79,12 +78,11 @@ The choice is persisted to `.rad/profile`. `/startup` and `/wrapup` read the pro
 
 | Skill | Triggers | Flags |
 |---|---|---|
-| **`/init`** | "/init", "set up rad-session", "bootstrap this project" | `--non-interactive` skip prompts · `--dry-run` preview without writing · `--agents <scope>` set agent scope without prompting (`claude_only` / `codex_only` / `claude_and_codex`) |
-| **`/startup`** | "/startup", "where did we leave off", "catch me up", "what's the state" | `--auto-pull` skip Phase 0 prompt, fast-forward silently · `--no-pull` skip sync entirely · `--quiet` even more terse briefing |
+| **`/startup`** | "/startup", "where did we leave off", "catch me up", "what's the state", "set up rad-session here", "bootstrap this project" | `--auto-pull` skip Phase 0 prompt, fast-forward silently · `--no-pull` skip sync entirely · `--bootstrap` force Phase 0.5 even if artifacts present · `--no-bootstrap` skip Phase 0.5 even if missing (diagnostic) · `--agents <scope>` set agent_scope during bootstrap (`claude_only` / `codex_only` / `claude_and_codex`) · `--non-interactive` suppress bootstrap prompts · `--dry-run` propose bootstrap scaffolds without writing |
 | **`/wrapup`** | "/wrapup", "wrap up", "end of session", "save state" | `--push` skip Phase 7 prompt, push immediately · `--no-push` commit locally only · `--quick` skip Phase 3 deep scan + Phase 4 validators + Phase 5 prune · `--non-interactive` suppress all prompts · `--force` override Phase 0 no-work check |
 | **`/add-resource`** | "add this MCP", "remember the supabase CLI", "register this resource" | (none) |
 
-Combine flags freely — e.g. `/wrapup --push --quick` (autonomous-loop wrapup), `/startup --no-pull` (offline work).
+Combine flags freely — e.g. `/wrapup --push --quick` (autonomous-loop wrapup), `/startup --no-pull` (offline work), `/startup --bootstrap --agents claude_and_codex --non-interactive` (scripted setup).
 
 Plus one hook:
 
@@ -109,7 +107,7 @@ If your project has a git remote, rad-session keeps the canonical docs in sync �
 
 | Phase | What it does |
 |---|---|
-| `/init` | Ensures `docs/status.md`, `docs/planning/`, `docs/decisions/`, and the operating manual aren't gitignored. |
+| `/startup` bootstrap (first run) | Ensures `docs/status.md`, `docs/planning/`, `docs/decisions/`, and the operating manual aren't gitignored. |
 | `/wrapup` Phase 7 | Auto-commits `docs/status.md` + any `planning/archive/` entries + any new `decisions/NNNN-*.md` ADRs + operating-manual changes. Prompts: `Push session files to origin? (Y/n)`. Commit message: `session: YYYY-MM-DD on <hostname> — <status>`. |
 | `/startup` Phase 0 | Fetches origin and prompts to pull when behind. Lists incoming commits before approval. On approval, fast-forwards. On decline, briefing leads with `⚠ Reading stale local state`. If the most recent session commit was made on a different host, briefing also leads with `Continuing from <other-host>`. |
 
@@ -121,17 +119,19 @@ If your project has a git remote, rad-session keeps the canonical docs in sync �
 
 ## Working with rad-planner
 
-rad-session 5.0 and rad-planner 4.0 are **soft-coupled** — each is independently useful, and they share contracts via the canonical doc structure:
+rad-session and rad-planner are **soft-coupled** — each is independently useful, and they share contracts via the canonical doc structure:
 
-1. **Operating manual (sectioned-writer).** rad-planner writes Constitution sections during `/plan` M6; rad-session writes Operational sections during `/init`. Each parses headers and modifies only its owned list.
+1. **Operating manual (sectioned-writer).** rad-planner writes Constitution sections during `/plan` M6; rad-session writes Operational sections during `/startup` bootstrap. Each parses headers and modifies only its owned list.
 2. **`docs/status.md` (single-writer, rad-session).** Written by `/wrapup` from evidence. Read by `/plan` to ground the conversation in current reality.
 3. **`docs/planning/current.md` (single-writer, rad-planner).** Written by `/plan` from intent. Read by `/wrapup` to detect milestone-shipped state.
 4. **`docs/decisions/` (creation by rad-planner; prompts by both).** rad-planner creates the directory + README at `/plan` M6 and seeds initial ADRs. rad-session prompts to add new ADRs when candidate decisions surface at `/wrapup`. The user's `y` is what authorizes the write.
 5. **Cross-doc validators.** rad-planner ships four Python validators at `plugins/rad-planner/scripts/`: `plan-lint.py`, `status-validator.py`, `doc-redundancy.py`, `doc-contradiction.py`. rad-session's `/wrapup` Phase 4 invokes `doc-redundancy.py` and `doc-contradiction.py` against the project; if rad-planner is not installed, Phase 4 silently no-ops.
 
-**rad-session works standalone** — `/init` notes when strategic docs are missing; `/wrapup` skips cross-doc validators gracefully. **rad-planner works standalone** — `/plan` produces strategic docs whether rad-session is installed or not.
+**rad-session works standalone** — `/startup` bootstrap notes when strategic docs are missing; `/wrapup` skips cross-doc validators gracefully. **rad-planner works standalone** — `/plan` produces strategic docs whether rad-session is installed or not.
 
-## What `/init` does (one-time bootstrap)
+## What `/startup`'s bootstrap does (first run only)
+
+Fires automatically in Phase 0.5 when `.rad/profile` / operating manual / `docs/status.md` are missing. Skipped silently on every subsequent invocation.
 
 1. **Verify Python availability** — falls back to LLM-based detection if missing.
 2. **Run `detect-stack.py`** — scans languages, frameworks, package manager, scripts, deploy targets, infrastructure.
@@ -142,11 +142,11 @@ rad-session 5.0 and rad-planner 4.0 are **soft-coupled** — each is independent
 7. **Scaffold `docs/status.md`** with the 8-section schema, all sections marked "No data yet — populated by /wrapup from evidence."
 8. **Scaffold `.claude/settings.json` and/or `.codex/config.toml`** per scope.
 9. **Write `.rad/profile`** with mode + agent_scope + multi_branch_status.
-10. **Final report** — what was created/modified, what to do next (typically: `/rad-planner:plan` to populate strategic docs and Constitution sections).
+10. **Bootstrap summary** — what was created/modified, what to do next (typically: `/rad-planner:plan` to populate strategic docs and Constitution sections). Then falls through to the normal Phase 1+ briefing.
 
-Safe to re-run: merges, never overwrites. Has `--non-interactive`, `--dry-run`, `--agents` flags for autonomous setup runs.
+Safe to re-run: merges, never overwrites. `/startup --bootstrap` forces it; `/startup --no-bootstrap` skips it. Has `--non-interactive`, `--dry-run`, `--agents <scope>` flags for autonomous setup runs.
 
-## Example `/startup` briefing
+## Example `/startup` briefing (steady state)
 
 ```
 Project: wayfinder
@@ -178,9 +178,19 @@ Ready to continue. What would you like to work on?
 
 See `references/briefing-examples.md` for the full template set (5 shapes).
 
-## Upgrading from 3.x / 4.x
+## Upgrading
 
-Run the bundled migration helper **before** installing rad-session 5.0:
+### From rad-session 5.0 to 5.1
+
+No project-level migration needed. v5.1 keeps the same artifacts (`.rad/profile`, operating manual Operational sections, `docs/status.md`); only the command surface changed:
+
+- The separate `/init` skill is retired (it conflicted with Claude Code's built-in `/init`).
+- Bootstrap logic moved to `/startup` Phase 0.5 — fires automatically on first run for a project; skipped on every subsequent run.
+- If you typed `/rad-session:init` before, type `/rad-session:startup` now. It detects whether bootstrap is needed.
+
+### From rad-session 3.x / 4.x
+
+Run the bundled migration helper **before** installing rad-session 5.0+:
 
 ```bash
 # Preview the changes (writes nothing)
@@ -195,7 +205,7 @@ python3 ${rad-claude-skills}/plugins/rad-session/scripts/migrate-to-v5.py /path/
 
 **What gets transformed:**
 
-| v3.x / v4.x artifact | v5.0 outcome |
+| v3.x / v4.x artifact | v5.0+ outcome |
 |---|---|
 | `HANDOFF.md` at project root | Archived; `docs/status.md` replaces it. User prompted to seed status.md from archived content. |
 | `.claude/session-log.md` | Archived; `docs/planning/archive/` replaces it (per-milestone, not per-session). |
@@ -205,15 +215,15 @@ python3 ${rad-claude-skills}/plugins/rad-session/scripts/migrate-to-v5.py /path/
 
 All originals archive to `.rad-archive/<UTC-timestamp>/` (gitignored). The archive's `manifest.json` records every action.
 
-**Re-run safety:** the migration script is a no-op on projects already on the v5.0 layout.
+**Re-run safety:** the migration script is a no-op on projects already on the v5.0+ layout.
 
 > See `scripts/README.md` for the full `migrate-to-v5.py` contract.
 
 ## How this compares to alternatives
 
-|  | **rad-session 5.0** | claude-plugins-official/remember | claude-mem | thepushkarp/handoff |
+|  | **rad-session 5.1** | claude-plugins-official/remember | claude-mem | thepushkarp/handoff |
 |---|---|---|---|---|
-| Project bootstrap (`/init`) with deterministic stack detection | ✅ | ❌ | ❌ | ❌ |
+| Project bootstrap (auto-fires in `/startup`) with deterministic stack detection | ✅ | ❌ | ❌ | ❌ |
 | Multi-agent (Claude + Codex) support | ✅ **unique** | ❌ | ❌ | ❌ |
 | Intent-vs-reality split (status.md from evidence) | ✅ **unique** | ❌ | ❌ | ❌ |
 | Sectioned-writer operating manual | ✅ **unique** | ❌ | ❌ | ❌ |
@@ -223,7 +233,7 @@ All originals archive to `.rad-archive/<UTC-timestamp>/` (gitignored). The archi
 | PreCompact safety net | ✅ | ✅ | ✅ | ✅ |
 | Zero dependencies for skills (Python optional for scripts) | ✅ | ❌ (Haiku) | ❌ (Chroma) | ✅ |
 
-**When to use rad-session:** you want a structured workflow lifecycle for an agent-driven project across Claude and/or Codex — bootstrap once, orient each session, capture each session from evidence.
+**When to use rad-session:** you want a structured workflow lifecycle for an agent-driven project across Claude and/or Codex — bootstrap once (automatically on first `/startup`), orient each session, capture each session from evidence.
 
 ## Quick Start
 
@@ -232,19 +242,16 @@ All originals archive to `.rad-archive/<UTC-timestamp>/` (gitignored). The archi
 /plugin install rad-session@rad-claude-skills
 ```
 
-**First time in a project:**
-```
-/init                                # interactive bootstrap
-/init --non-interactive              # accept proposed scaffold without prompting
-/init --dry-run                      # preview detection + scaffold
-/init --agents claude_and_codex      # pre-set agent scope without prompting
-```
+**First time in a project (and every session thereafter):**
 
-**Start of every session:**
 ```
-/startup                # fetches origin, prompts to pull if behind, then reads canonical docs
-/startup --auto-pull    # fast-forward silently when behind
-/startup --no-pull      # skip sync entirely
+/startup                                # first time: bootstraps inline (interactive)
+                                        # subsequent: read-only briefing (<5s)
+/startup --non-interactive              # accept defaults during bootstrap
+/startup --agents claude_and_codex      # pre-set agent scope; skips the prompt
+/startup --auto-pull                    # fast-forward silently when behind
+/startup --no-pull                      # skip sync entirely
+/startup --bootstrap                    # force bootstrap re-run (refresh audit, etc.)
 ```
 
 **Register resources as you discover them:**
@@ -264,8 +271,8 @@ remember we have the coolify MCP available for this project
 
 ## What's NOT in scope
 
-- **Does not write strategic docs** — that's rad-planner's `/plan`. `/init` notes missing strategic docs and recommends `/rad-planner:plan`.
-- **Does not install rad-* plugins for you** — `/init` recommends; you decide.
+- **Does not write strategic docs** — that's rad-planner's `/plan`. `/startup`'s bootstrap notes missing strategic docs and recommends `/rad-planner:plan`.
+- **Does not install rad-* plugins for you** — `/startup`'s bootstrap recommends; you decide.
 - **Does not configure MCP servers** — detects what's already there.
 - **Does not run tests, builds, or any side-effect commands** beyond detection scripts and `mkdir`.
 - **Does not exec stack binaries** without `--check-clis` opt-in.
@@ -274,12 +281,14 @@ remember we have the coolify MCP available for this project
 
 ## Version
 
+**5.1.0** — **`/init` folded into `/startup` Phase 0.5; resolves name conflict with Claude Code's built-in `/init`.** Same artifacts, same scaffolds, one less command surface to learn. Bootstrap auto-fires on first run for a project (detects missing `.rad/profile` / operating manual / `docs/status.md`); skipped on every subsequent run. New flags on `/startup`: `--bootstrap` (force re-run), `--no-bootstrap` (skip even if missing — diagnostic), `--agents <scope>` (set scope without prompting), `--non-interactive`, `--dry-run`. No project-level migration needed from 5.0.
+
 **5.0.0** — **Canonical doc structure + intent-vs-reality split + multi-agent support.** Aligned with published OpenAI/Anthropic project-structure research.
 - **`docs/status.md` replaces `HANDOFF.md`** — project-scoped, evidence-based, written from git + test output, not chat synthesis.
 - **`docs/planning/current.md` (rad-planner-owned)** carries intent. `docs/status.md` (rad-session-owned) carries reality. The split makes each artifact reliable independently.
 - **`docs/planning/archive/`** replaces `.claude/session-log.md` — one file per shipped milestone, not per session.
 - **Sectioned-writer rule for the operating manual** — rad-planner writes Constitution; rad-session writes Operational. Each parses headers, modifies only owned sections, preserves user-added sections.
-- **Agent scope routing** — `/init` asks once (Claude / Codex / both); persists to `.rad/profile`; all skills read the profile and write to the correct file(s).
+- **Agent scope routing** — first-run setup asks once (Claude / Codex / both); persists to `.rad/profile`; all skills read the profile and write to the correct file(s). (In 5.0 this was `/init`; folded into `/startup` Phase 0.5 in 5.1.)
 - **Mode-aware `/wrapup` Phase 3** — `mentor` mode teaches and drafts ADRs; `dev` mode shows quick lists.
 - **Cross-doc validators integrated** — `/wrapup` Phase 4 calls `doc-redundancy.py` and `doc-contradiction.py` from rad-planner.
 - **Milestone-shipped archive** — `/wrapup` Phase 6 detects all ACs checked in `current.md` and prompts to archive.
@@ -291,7 +300,7 @@ remember we have the coolify MCP available for this project
 
 **3.7.0** — Removed Haiku model pin (context-window regression fix).
 
-**3.6.0** — Per-project plugin-bloat audit in `/init` (Step 5.5). `audit-plugin-bloat.py` detects 10 stack signals and writes `enabledPlugins` disables to `.claude/settings.local.json`. ~1–3K tokens cut from baseline per turn on typical projects.
+**3.6.0** — Per-project plugin-bloat audit (Step 5.5 in the bootstrap path). `audit-plugin-bloat.py` detects 10 stack signals and writes `enabledPlugins` disables to `.claude/settings.local.json`. ~1–3K tokens cut from baseline per turn on typical projects.
 
 **3.5.2** — Anomaly-gated final output for `/wrapup` (silent on success).
 
@@ -307,7 +316,7 @@ remember we have the coolify MCP available for this project
 
 **3.1.0** — Cross-machine continuity via auto-commit + prompted push.
 
-**3.0.0** — Lifecycle expansion. Added `/init`, two Python detection scripts. Absorbed retired rad-stack-guide.
+**3.0.0** — Lifecycle expansion. Added `/init` (retired in 5.1, folded into `/startup`) and two Python detection scripts. Absorbed retired rad-stack-guide.
 
 **2.x** — Original Resource Discovery and CLAUDE.md prune protection.
 

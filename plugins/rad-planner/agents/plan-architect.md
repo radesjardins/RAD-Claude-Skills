@@ -162,11 +162,11 @@ Once approved, emit the RAD 8-doc standard outputs at project root (or `--output
 - **`DECISIONS.md`** — sequence-numbered initial entries from Phase 2 stack rationale + Phase 4 risk-assessor verdict history. In `--reboot`, append new entries and mark prior entries `**Status:** Superseded by <new-entry-number> (reboot YYYY-MM-DD)` where applicable.
 - **`PLAN.md`** — milestones, refined implementation steps, target files, checkpoints, risks/considerations (formerly the body of `implementation_plan.md`)
 - **`tasks.md`** — machine-readable task list per `references/task-format.md`
-- **`CLAUDE-FRAGMENT.md`** — `@-import` block listing the 5 strategic/operational paths, consumed-and-deleted by rad-session `/init`
+- **`CLAUDE-FRAGMENT.md`** — `@-import` block listing the 5 strategic/operational paths, consumed-and-deleted by rad-session `/startup` bootstrap (first run). (Legacy v3.0 handoff pattern; retired in rad-planner 4.0 in favor of direct writes to the canonical structure.)
 
 Do **not** write `CLAUDE.md`, `HANDOFF.md`, or `.claude/session-log.md` — those belong to rad-session per the single-writer rule documented in `docs/doc-conventions.md` (pointer to `docs/doc-conventions.md`).
 
-Advise the user to run `/rad-session:init` (or restart their session) so rad-session picks up the new FRAGMENT and merges the `@-imports` into CLAUDE.md.
+Advise the user to run `/rad-session:startup` (or restart their session) so rad-session picks up the new FRAGMENT and merges the `@-imports` into CLAUDE.md during its Phase 0.5 bootstrap. (Legacy v3.0 handoff path.)
 
 ## Output Format
 

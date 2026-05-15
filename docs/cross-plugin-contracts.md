@@ -41,7 +41,7 @@ The operating manual (`CLAUDE.md` and/or `AGENTS.md`) is the one file with two a
 | Engineering rules | rad-planner (Phase 1); human edits |
 | Definition of done | rad-planner (Phase 1) |
 | Escalate triggers | rad-planner (Phase 1) |
-| Commands (install / test / lint / build) | rad-session (during `/init`); human edits |
+| Commands (install / test / lint / build) | rad-session (during `/startup` bootstrap path, first run only); human edits |
 | Compact Instructions (CLAUDE.md only) | rad-session |
 | Claude-specific behavior (CLAUDE.md only) | rad-session |
 | `@AGENTS.md` import line (CLAUDE.md shim case) | rad-session |
@@ -94,9 +94,9 @@ If vision.md (or any other strategic doc rad-planner is about to write) already 
 
 Three-option menu. User picks.
 
-### 2. Operating manual exists during /init
+### 2. Operating manual exists during `/startup` bootstrap
 
-If CLAUDE.md or AGENTS.md exists with substantial content (>500 bytes, more than /init residue), rad-session prompts:
+If CLAUDE.md or AGENTS.md exists with substantial content (>500 bytes, more than residue from Claude Code's or Codex's built-in `/init`), rad-session prompts:
 
 > "`CLAUDE.md` exists with N lines. Adding `## Commands` and `## Compact Instructions` sections. Preserved your existing sections: `## Project gotchas`. Continue?"
 
@@ -161,7 +161,7 @@ Additional keys allowed for future extensions; both plugins ignore unknown keys.
 
 **Conflict resolution:** not needed under normal use because plugins run sequentially. If concurrent invocations somehow happen, last-writer-wins for the file as a whole.
 
-**First creation:** whichever plugin runs first creates the file. /plan M6 creates it with all known fields populated; /init creates it with whatever fields it knows about and defaults the rest.
+**First creation:** whichever plugin runs first creates the file. /plan M6 creates it with all known fields populated; `/startup`'s bootstrap path (first run) creates it with whatever fields it knows about and defaults the rest.
 
 ## Read coordination
 
@@ -173,7 +173,7 @@ Both plugins read freely from any file in the project. No locks needed because r
 
 ## Plugin interaction edge cases
 
-**No `status.md` scaffold exists when /plan runs.** rad-planner creates the scaffold during M6 directly. Doesn't depend on rad-session's `/init` having run first.
+**No `status.md` scaffold exists when /plan runs.** rad-planner creates the scaffold during M6 directly. Doesn't depend on rad-session's `/startup` bootstrap having run first.
 
 **rad-planner adds a new strategic doc during a re-run** (e.g., roadmap.md goes from absent to present). rad-session reads it on next /startup like any other doc. No special handoff needed.
 
@@ -181,7 +181,7 @@ Both plugins read freely from any file in the project. No locks needed because r
 
 **/plan running while /wrapup is in progress.** Undefined behavior — but realistic only by user accident. File-level single-writer rule prevents corruption. Plugin runs are sequential in practice.
 
-**/init runs after /plan M6.** rad-session's `/init` detects existing operating manual (with rad-planner's Constitution content) and only adds Operational sections (Commands, Compact Instructions) if those sections are empty. Honors the section-level single-writer rule.
+**`/startup` bootstrap runs after /plan M6.** rad-session's bootstrap path (in `/startup` Phase 0.5, first run only) detects existing operating manual (with rad-planner's Constitution content) and only adds Operational sections (Commands, Compact Instructions) if those sections are empty. Honors the section-level single-writer rule.
 
 **Project has non-standard operating manual filename** (e.g., `GUIDE.md` instead of `CLAUDE.md`). rad-session detects via heuristic — looks for the characteristic "Agent Operating Manual" header or `@AGENTS.md` imports — and treats it as the manual. Does not impose canonical naming on existing projects. Per Phase 0 lock: roll with what's there.
 

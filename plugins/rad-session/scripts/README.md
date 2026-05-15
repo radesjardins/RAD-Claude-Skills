@@ -24,7 +24,7 @@ python3 scripts/detect-stack.py <project-root> --plain    # text only, no decora
 - Toolchain (mise, asdf, nix, devbox)
 - Whether it's a coding project at all
 
-**JSON output structure** — see the script's docstring for the full schema. Used by `/init` Step 4 and read by `/startup` for the briefing's project-type line.
+**JSON output structure** — see the script's docstring for the full schema. Used by `/startup` (Phase 0.5 bootstrap path on first run, and read by the steady-state briefing for the project-type line).
 
 **Exit codes:** `0` always (this is a measurement, not pass/fail), `2` script error.
 
@@ -42,7 +42,7 @@ python3 scripts/detect-resources.py <project-root> --include-env-names    # also
 **Detects:**
 - MCP servers from `.mcp.json` and `.claude/settings.json` (`enabledMcpjsonServers`)
 - Stack CLIs inferred from marker files (supabase/config.toml → supabase, fly.toml → flyctl, etc. — same table referenced in `/startup`)
-- CLI presence in PATH (with `--check-clis`) — useful at `/init` time to flag CLIs the project assumes but aren't installed
+- CLI presence in PATH (with `--check-clis`) — useful during `/startup`'s bootstrap path to flag CLIs the project assumes but aren't installed
 - Documented resources from the operating manual (if a `## Resources` section is present) — backward-compatible with v4.0 layouts
 - `.env.example` variable names (with `--include-env-names`) — names only, never values
 
@@ -116,7 +116,7 @@ python3 scripts/audit-plugin-bloat.py <project-root> --json --installed-plugins-
 
 | Skill | Script | When |
 |---|---|---|
-| `/init` | `detect-stack.py --json` + `detect-resources.py --check-clis --json` + `audit-plugin-bloat.py --json --installed-plugins-stdin` | Once on project bootstrap. Drives operating manual `## Commands` scaffold, rad-* plugin recommendations, and per-project `enabledPlugins` disables in `.claude/settings.local.json`. Safe to re-run for refresh. |
+| `/startup` (Phase 0.5 bootstrap) | `detect-stack.py --json` + `detect-resources.py --check-clis --json` + `audit-plugin-bloat.py --json --installed-plugins-stdin` | First run for a project. Drives operating manual `## Commands` scaffold, rad-* plugin recommendations, and per-project `enabledPlugins` disables in `.claude/settings.local.json`. Skipped silently on subsequent runs. Re-runnable via `/startup --bootstrap`. |
 | `/startup` | `detect-resources.py --json --cache` | Optional. Phase 2.5 (drift surfacing only). Cache-keyed by input mtimes. Skipped silently if no drift. |
 | (user-invoked) | `migrate-to-v5.py` | One-shot during upgrade from 3.x/4.x. Not called from any skill — the user runs it manually. |
 | (user-invoked) | `migrate-to-v4.py` | Legacy. One-shot during upgrade from 2.x/3.x to v4.0. Kept in-repo for projects that want a staged migration. |
@@ -127,4 +127,4 @@ python3 scripts/audit-plugin-bloat.py <project-root> --json --installed-plugins-
 - **Do not read `.env`** (only `.env.example`, and only variable names).
 - **Do not modify any files.** (Migration scripts are the exception — they're explicitly destructive but always archive first.)
 - **Do not call out to the network.** No registry lookups, no version checks. (For framework version verification, that's the LLM's job with WebSearch / Context7.)
-- **Do not prescribe** which rad-* plugins to install. They surface what's there; `/init` decides what to recommend based on the data.
+- **Do not prescribe** which rad-* plugins to install. They surface what's there; `/startup`'s bootstrap path decides what to recommend based on the data.
