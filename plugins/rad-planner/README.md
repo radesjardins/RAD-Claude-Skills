@@ -2,6 +2,14 @@
 
 Structured implementation-planning scaffolding for Claude Code, with **mechanical validators** (Python scripts) backing the parts that templates alone can't enforce.
 
+> **v4.1 — Internal split: validator surface promoted to standalone commands.**
+>
+> - **Four new validators**: `estimate-validator.py` (flag plans with no effort/size signal), `dependency-cycle-detector.py` (DFS cycle detection across milestone deps), `coverage-validator.py` (flag ACs with no apparent validation command), `scope-creep-detector.py` (vision non-goals dropped from current.md AND present in plan content).
+> - **Eight standalone slash commands** wrap the validator surface, usable on any plan-shaped markdown outside the `/plan` workflow: `/plan-lint`, `/status-validate`, `/doc-redundancy`, `/doc-contradiction`, `/plan-estimates`, `/plan-cycles`, `/plan-coverage`, `/plan-scope-creep`.
+> - **New `/plan --assessment` flag** — non-interactive risk-assessor pass over an existing plan (reads current.md + vision.md + architecture.md, returns the agent's findings, no file writes).
+>
+> The `/plan` workflow itself is unchanged — the validators were always there, just nested inside the workflow. v4.1 makes them addressable on their own.
+
 ## What this actually is
 
 A 5-skill plugin that walks you through Discovery → Stack Eval → Plan → Risk → Review → Export, dispatches subagents for stack and risk work, and runs Python validators on the generated artifacts. The plan output is markdown intended for a fresh AI session to pick up cold.

@@ -104,6 +104,87 @@ python3 scripts/doc-contradiction.py /path/to/project --json
 
 **Exit codes:** `0` always (findings are advisory), `2` script error.
 
+## estimate-validator.py (v4.1)
+
+Flags planning files that carry no effort/size signal. Plans should have SOMETHING — a t-shirt size, a time range, a context-window bar — so reviewers can reason about scope vs capacity.
+
+```bash
+python3 scripts/estimate-validator.py docs/planning/current.md
+python3 scripts/estimate-validator.py docs/planning/current.md --json
+```
+
+**Accepted signals (any one passes):**
+
+- Section heading: `## Effort`, `## Estimate`, `## Size`, `## Sizing`, `## Complexity`
+- Inline field: `Effort: M`, `Estimate: ~2 days`, `Size: Large`, `Complexity: medium-high`, `Context bar: ~50%`
+- T-shirt size suffix on the milestone line: `M2 (M): User-defined constraints` or `M3 [L]`
+- Per-AC parenthetical: `- [ ] Task X (S)`, `- [ ] Task Y (~2d)`, `- [ ] Task Z (3pts)`
+
+**Severity:** MEDIUM if no signal found; LOW if signal exists but partial (e.g., 2 of 8 ACs have estimates).
+
+**Exit codes:** `0` at least one signal present, `1` MEDIUM/HIGH issues, `2` script error.
+
+## dependency-cycle-detector.py (v4.1)
+
+DFS cycle detection across milestone dependency declarations. Detects cycles within a single planning directory and (optionally) across the archive.
+
+```bash
+python3 scripts/dependency-cycle-detector.py docs/planning/
+python3 scripts/dependency-cycle-detector.py docs/planning/ --include-archive
+python3 scripts/dependency-cycle-detector.py docs/planning/ --json
+```
+
+**Dependency declarations recognized:**
+
+- Dedicated `## Dependencies` section listing milestone IDs (`M1`, `M2`, …)
+- Inline `Depends on: M1, M3` field anywhere in the doc
+- Per-AC `(depends on M2)` parenthetical
+
+**Milestone ID resolution:** prefers the `M\d+` prefix on the first non-blank line of `## Current milestone`; falls back to filename pattern (`2026-04-30-M3-foo.md` → `M3`).
+
+**Severity:** HIGH on detected cycle; MEDIUM on self-dependency; LOW on parse warnings.
+
+**Exit codes:** `0` clean, `1` cycle detected, `2` script error.
+
+## coverage-validator.py (v4.1)
+
+Flags acceptance criteria with no apparent verification path. Computes stemmed token overlap between each AC and the entries in `## Validation commands`.
+
+```bash
+python3 scripts/coverage-validator.py docs/planning/current.md
+python3 scripts/coverage-validator.py docs/planning/current.md --threshold 0.15
+python3 scripts/coverage-validator.py docs/planning/current.md --json
+```
+
+**Severity policy:**
+
+- HIGH: no `## Validation commands` section, or empty.
+- MEDIUM: a specific AC has overlap below threshold (default 0.15) with every validation command.
+- LOW: ACs:commands ratio looks suspicious (≥5 ACs, ratio < 0.2).
+
+**Heuristic.** Token overlap can miss legitimate pairings (an AC about "rate limiting" validated by a command named `test:api`). The validator surfaces signals; the user judges.
+
+**Exit codes:** `0` clean, `1` HIGH/MEDIUM issues, `2` script error.
+
+## scope-creep-detector.py (v4.1)
+
+Detects when current.md is doing things vision.md said are non-goals. Complementary to `doc-contradiction.py` but more targeted: focuses on the case where the milestone non-goals have ALSO failed to preserve the project-level boundary.
+
+```bash
+python3 scripts/scope-creep-detector.py /path/to/project
+python3 scripts/scope-creep-detector.py /path/to/project --threshold 0.35
+python3 scripts/scope-creep-detector.py /path/to/project --json
+```
+
+**Two signals:**
+
+1. **Dropped non-goal**: a vision.md non-goal whose substantive tokens don't appear in current.md's `## Non-goals` section.
+2. **Active creep**: a dropped non-goal whose tokens DO appear in current.md's `## Acceptance criteria` or `## Planned changes`.
+
+**Severity:** HIGH on active creep; MEDIUM on dropped-only; LOW on weak match.
+
+**Exit codes:** `0` clean, `1` HIGH/MEDIUM issues, `2` script error.
+
 ## validate-json.py
 
 Validates a JSON payload against a JSON Schema (the rad-planner subagent contracts at `references/subagent-prompts/*.schema.json`). Unchanged from v3.0.
