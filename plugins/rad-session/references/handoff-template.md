@@ -1,84 +1,24 @@
-# HANDOFF.md Template
+# HANDOFF.md template (retired in v5.0)
 
-Canonical structure for HANDOFF.md files. The `/wrapup` skill follows this template every time, adapting content but keeping sections consistent across all projects.
+`HANDOFF.md` is retired as of rad-session 5.0. Its session-tier handoff role is replaced by `docs/status.md` — a project-scoped, evidence-based status document owned by rad-session's `/wrapup`.
 
-## Template
+The canonical schema for the new artifact lives at the repo root:
 
-```markdown
-# Session Handoff
+→ **[`docs/status-md-schema.md`](../../../docs/status-md-schema.md)** — `docs/status.md` 8-section schema (canonical source)
+→ **[`docs/doc-conventions.md`](../../../docs/doc-conventions.md)** — full doc structure
+→ **[`docs/cross-plugin-contracts.md`](../../../docs/cross-plugin-contracts.md)** — `docs/status.md` is owned by rad-session; rad-planner reads it
 
-**Date:** YYYY-MM-DD
-**Status:** [One-line project state]
+## Why the change
 
-## Last Session Summary
-[2-4 sentences — outcomes, not play-by-play]
+v4.0's `HANDOFF.md` was session-scoped (overwritten each wrapup) and synthesis-based (the LLM summarized the conversation). Two structural problems:
 
-## Where I Left Off
-- [Specific file, feature, or task in progress]
-- [Include paths and line numbers when relevant]
+1. **Session-scoped state is fragile** — a single bad wrapup wiped the previous handoff. `docs/status.md` is project-scoped: it persists across milestones and accumulates evidence.
+2. **Synthesis is unreliable** — what the LLM remembers from a 200-turn conversation isn't the same as what actually changed. v5.0 `/wrapup` writes `docs/status.md` from **evidence** (git diff, test output, plan-task state) — not chat synthesis.
 
-## Key Decisions
-- [Decision]: [Brief reasoning — the WHY matters more than the WHAT]
+## Migrating a v3/v4 project
 
-## What NOT To Do
-- TRIED: [specific approach that was attempted]
-  FAILED BECAUSE: [root cause — not just "it didn't work"]
-  CORRECT APPROACH: [what actually worked, or what should be tried instead — omit if unknown]
+Run `scripts/migrate-to-v5.py` from the rad-session plugin directory. It archives the old `HANDOFF.md` to `.rad-archive/<UTC-timestamp>/` and prompts whether to seed the new `docs/status.md` from the archived content.
 
-## Open Work
-- [Item]: [Current state described as a fact, not an instruction]
+## If you're following an old link
 
-## Modified Files
-- `path/to/file` — [what changed, briefly]
-
-## Key Insights
-[Non-obvious things the next session must know — API quirks, environment issues,
-user preferences discovered, architectural constraints not captured in CLAUDE.md]
-```
-
-## Canonical trap format (What NOT To Do)
-
-Every trap entry uses a structured three-part form so `/startup` can reliably extract it into the next session's briefing without paraphrasing. The prefix tokens (`TRIED:`, `FAILED BECAUSE:`, `CORRECT APPROACH:`) are load-bearing — don't rewrite them.
-
-**Full form (preferred):**
-
-```
-- TRIED: [specific approach that was attempted]
-  FAILED BECAUSE: [root cause — not just "it didn't work"]
-  CORRECT APPROACH: [what actually worked, or what should be tried instead]
-```
-
-**Compact form (when the correct approach is unknown):**
-
-```
-- TRIED: [approach] — FAILED BECAUSE: [root cause]
-```
-
-### Good vs. bad examples
-
-**Bad** (unstructured, no root cause, no corrective action):
-```
-- Don't mock the Stripe webhook, it doesn't work
-```
-
-**Good** (full form):
-```
-- TRIED: mocking the Stripe webhook in integration tests
-  FAILED BECAUSE: signature verification ran against the mock, not the real code path — prod broke on deploy
-  CORRECT APPROACH: use `stripe listen` against a real test-mode endpoint
-```
-
-**Good** (compact form, correct approach not yet known):
-```
-- TRIED: sharing the Supabase client across server components — FAILED BECAUSE: cookies leaked between requests in RSC streaming
-```
-
-## Rules
-
-1. **Every section is optional.** Omit sections that don't apply — never fill with "N/A" or "None."
-2. **Be specific.** "`src/auth.ts:45-80` — added JWT validation middleware" beats "made auth changes."
-3. **State, not instructions.** "Open Work" describes what IS, not what to DO. "EBirdProvider started, API auth not wired" — not "Wire up the eBird API auth next."
-4. **Keep it scannable.** Bullet points over paragraphs. One idea per bullet.
-5. **Per-bullet length cap: ≤ 3 sentences (~300 chars).** A bullet is one thought, not a mini-essay. If a decision needs more, break it into multiple bullets — each its own thought. If it can't be broken down, the rationale belongs in a code comment, design doc, or git commit message, not in HANDOFF.
-6. **Total length: target 30–80 lines, hard cap 100 lines / 8 KB.** If the handoff exceeds the hard cap, the wrapup synthesis is over-preserving — re-compress before writing. Long sessions don't justify long handoffs; the handoff captures *state*, not *narrative*.
-7. **Traps are gold.** The "What NOT To Do" section is the most valuable part of the handoff — it prevents the next session from re-running dead ends. Always include a `FAILED BECAUSE:` clause with a real root cause. Each trap is 2–4 lines (TRIED + FAILED BECAUSE + optional CORRECT APPROACH), not multiple paragraphs.
+The v4.0 `HANDOFF.md` template (status / what NOT to do / open work / key insights structure) is preserved in the `.rad-archive/<UTC-timestamp>/` folder of any project that ran the v5.0 migration. The structural lesson — capture failed approaches explicitly — is preserved in v5.0's `docs/status.md` "Decisions made during execution" and "Known issues or blockers" sections.

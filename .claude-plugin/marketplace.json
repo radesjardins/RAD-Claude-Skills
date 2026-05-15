@@ -5,8 +5,8 @@
     "email": "rad@radesjardins.com"
   },
   "metadata": {
-    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more. v1.6.0 ships rad-planner 4.0 with the research-aligned canonical doc structure (plan-first workflow, four entry points, four mechanical validators). rad-session stays at 4.0 for this release — the rad-session 5.0 rebuild (intent/reality split, status.md owned-by-session, evidence-based handoff) is upcoming.",
-    "version": "1.6.0",
+    "description": "Curated marketplace of Claude Code plugins — developer frameworks, productivity, accessibility, SEO, writing, DevOps, and more. v1.7.0 ships rad-session 5.0 (intent-vs-reality split, evidence-based docs/status.md replaces HANDOFF.md, sectioned-writer rule with rad-planner for the operating manual, conditional CLAUDE.md/AGENTS.md per agent scope, milestone-shipped archive). v1.6.0 shipped rad-planner 4.0 (plan-first workflow, four entry points, four mechanical validators).",
+    "version": "1.7.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -117,7 +117,7 @@
     {
       "name": "rad-session",
       "source": "./plugins/rad-session",
-      "description": "Make Claude Code sessions remember each other — even across machines. /init bootstraps once with stack detection and CLAUDE.md scaffold. /startup orients each session, fetching origin and prompting to pull before reading any handoff file. /wrapup captures state with structured 'what NOT to do' traps, optional DECISIONS append, and auto-commits + prompts to push. PreCompact safety net included. Pairs with rad-planner via the RAD 8-doc standard.",
+      "description": "**5.0** — Make agent sessions remember each other — across machines, across agents (Claude + Codex). Built around the canonical doc structure aligned with published OpenAI/Anthropic project-structure research: operating manual conditional on agent scope (CLAUDE.md and/or AGENTS.md), `docs/status.md` (evidence-based reality), `docs/planning/current.md` (intent; rad-planner-owned), `docs/planning/archive/` (shipped-milestone journal), `docs/decisions/`. `/init` scaffolds the operating manual's Operational sections only (sectioned-writer rule with rad-planner), `docs/status.md`, `.rad/profile`, plus `.claude/settings.json` / `.codex/config.toml` per scope. `/startup` reads everything in <5s — doorman model. `/wrapup` writes `docs/status.md` from EVIDENCE (git diff, test output, plan-task state) — not chat synthesis; detects candidate decisions mechanically; runs cross-doc validators; archives shipped milestones; auto-commits + prompts to push. Mode-aware (mentor: teaches and drafts; dev: terse). Anomaly-gated final output (silent on success). Cross-machine continuity built-in. Pairs with rad-planner; works standalone.",
       "category": "productivity",
       "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-session",
       "license": "Apache-2.0"

@@ -1,56 +1,24 @@
-# Session Log Format
+# session-log.md format (retired in v5.0)
 
-The session log (`.claude/session-log.md`) is an append-only history of session summaries. It builds institutional memory across many sessions.
+`.claude/session-log.md` is retired as of rad-session 5.0. Its journal role is replaced by `docs/planning/archive/YYYY-MM-DD-MN-slug.md` — one file per shipped milestone, written by `/wrapup` Phase 6 when all acceptance criteria in `docs/planning/current.md` are checked.
 
-**Entries are derived mechanically from HANDOFF.md, not re-synthesized.** `/wrapup` Phase 3 compresses the structured HANDOFF.md it just wrote into log format — Status comes through verbatim, Changes/Decisions/Traps are the corresponding HANDOFF sections compressed to one line each. This avoids a second LLM synthesis pass and keeps the log consistent with the handoff that produced it.
+The canonical convention lives at:
 
-## Entry Format
+→ **[`docs/doc-conventions.md`](../../../docs/doc-conventions.md)** — section on `docs/planning/archive/` (canonical source)
 
-```markdown
-## YYYY-MM-DD — [Brief title of what was done]
-**Status:** [one-line project state]
-**Changes:** [file list or high-level summary]
-**Decisions:** [key choices made, if any]
-**Traps:** [what to avoid — only if something failed or a gotcha was discovered]
----
-```
+## Why the change
 
-## Rules
+v4.0's session-log.md was a flat append-only file capped at 20 entries. Two structural problems:
 
-1. **Newest first.** New entries prepend to the top of the file.
-2. **15–25 lines per entry, hard cap 30 lines / 1.5 KB.** This is a log, not a narrative. If your entry is over the cap, you're not compressing enough — drop secondary bullets, drop file-by-file descriptions, drop multi-clause rationales.
-3. **One sentence per bullet (~150 chars max).** Each Decision is ONE line: name + single-clause WHY. Each Trap is ONE line in compact form `TRIED: X — FAILED BECAUSE: Y` (drop CORRECT APPROACH for the log — that lives in HANDOFF). Each Change is a comma-separated path list with no per-file descriptions.
-4. **No file contents.** Reference paths only — never embed code or full file contents.
-5. **Separator required.** Each entry ends with `---` for parseability.
-6. **Traps only when real.** Only include "Traps" if something actually failed or a non-obvious gotcha was discovered. Don't fabricate traps.
-7. **Titles should be meaningful.** "Implemented JWT auth and fixed CORS" beats "Worked on the project."
+1. **Per-session granularity was too fine.** Sessions don't map cleanly to milestones — one milestone often spans 5–20 sessions; one session sometimes spans multiple milestones. Per-session entries fragmented the timeline.
+2. **20-entry hard cap forced premature trim.** Real projects have more than 20 milestones; the cap was a workaround for fixed-size flat files, not a meaningful boundary.
 
-### Why the per-bullet cap is strict
+`planning/archive/` solves both: one file per **shipped milestone** (the right granularity), unlimited count (one file per archive entry), and the filename's date+milestone-number prefix sorts chronologically without scanning content.
 
-The session-log is read across many sessions for trend detection (recurring traps, ongoing work threads). At 20 entries × 1 KB target, the whole log fits comfortably in a single read. At 20 entries × 5 KB (what happens without the cap), the log balloons to 100 KB and `/startup` can only read the most recent 3–5 entries — losing the cross-session trend signal entirely. The cap is what makes the log useful at scale.
+## Migrating a v3/v4 project
 
-## Maintenance
+Run `scripts/migrate-to-v5.py` from the rad-session plugin directory. It archives the old `.claude/session-log.md` to `.rad-archive/<UTC-timestamp>/` for reference. The historical entries are preserved but not migrated into the new archive structure (per-session entries don't map 1:1 to milestones).
 
-The `/wrapup` skill manages log size:
+## If you're following an old link
 
-- **Cap:** 20 entries maximum
-- **Trimming:** Oldest entries (bottom of file) are removed when cap is exceeded
-- **Trap promotion:** Before trimming, recurring traps (appeared 3+ times) are promoted to CLAUDE.md as permanent rules
-- **Notification:** User is told what was trimmed and what was promoted
-
-## Example
-
-```markdown
-## 2026-04-05 — Implemented DataProvider abstraction
-**Status:** Phase 2 in progress — MapboxProvider working, EBirdProvider started
-**Changes:** `src/providers/data-provider.ts` (new), `src/providers/mapbox-provider.ts` (new), `src/types/index.ts` (updated)
-**Decisions:** Used abstract class over interface for DataProvider — shared caching logic justified it
-**Traps:** eBird API rate limits at 100 req/hr — must throttle; don't use fetch directly, go through DataProvider.query()
----
-
-## 2026-04-04 — Set up project scaffolding and design system
-**Status:** Phase 1 complete — scaffolding, routing, and design tokens in place
-**Changes:** Initial project setup — 14 files created
-**Decisions:** Chose Next.js App Router over Pages — server components needed for map data
----
-```
+The v4.0 session-log format (newest-first, structured per-entry blocks) is preserved in `.rad-archive/<UTC-timestamp>/` of any project that ran the v5.0 migration.

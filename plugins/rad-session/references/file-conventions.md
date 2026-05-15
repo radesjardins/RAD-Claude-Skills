@@ -1,7 +1,11 @@
 # File Conventions
 
-This file has moved. The canonical specification of the RAD 8-doc standard — covering CLAUDE.md, HANDOFF.md, session-log.md, PRD.md, ARCHITECTURE.md, ASSUMPTIONS.md, DECISIONS.md, PLAN.md, plus `tasks.md` and `CLAUDE-FRAGMENT.md` — lives at the repository root:
+This file has moved. The canonical specification of the RAD doc structure — operating manual (`CLAUDE.md` and/or `AGENTS.md` per agent scope), `docs/vision.md`, `docs/architecture.md`, `docs/planning/current.md`, `docs/status.md`, `docs/planning/archive/`, `docs/decisions/`, plus optional `docs/roadmap.md` — lives at the repository root:
 
-→ **[`docs/file-conventions.md`](../../../docs/file-conventions.md)** (canonical source)
+→ **[`docs/doc-conventions.md`](../../../docs/doc-conventions.md)** (canonical source, v5.0)
+→ **[`docs/cross-plugin-contracts.md`](../../../docs/cross-plugin-contracts.md)** (single-writer rule and sectioned-writer exception)
+→ **[`docs/status-md-schema.md`](../../../docs/status-md-schema.md)** (`docs/status.md` 8-section schema)
 
-Both rad-session and rad-planner reference the same convention. If you found this file through an old link, follow the pointer above. If you're editing the conventions, edit the canonical file — don't fork the copy here.
+Both rad-session and rad-planner reference the same conventions. If you found this file through an old link, follow the pointers above. If you're editing the conventions, edit the canonical files at the repo root — don't fork copies here.
+
+> **Migration note.** Prior to v5.0 this pointer referenced `docs/file-conventions.md` (the v4.0 "8-doc standard": `CLAUDE.md`, `HANDOFF.md`, `session-log.md`, `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md`). v5.0 replaced that layout with the canonical structure above. `HANDOFF.md` retires in favor of `docs/status.md` (evidence-based, project-scoped). `.claude/session-log.md` retires in favor of `docs/planning/archive/` (shipped-milestone journal). Run `scripts/migrate-to-v5.py` to upgrade a v3/v4-layout project.

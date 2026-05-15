@@ -1,165 +1,195 @@
-# Briefing Examples
+# Briefing Examples (v5.0)
 
-Canonical output formats for `/startup` Phase 3. The startup skill picks one of these three shapes based on what it detected. Follow the structure verbatim — the formatting is load-bearing for scanability.
+Canonical output formats for `/startup` Phase 3. The startup skill picks one of these five shapes based on what it detected. Follow the structure verbatim — the formatting is load-bearing for scanability.
+
+**Target:** under 35 lines, under 5 seconds wall-clock (doorman model).
 
 ---
 
-## Full Briefing (HANDOFF.md exists + coding project)
+## Full Briefing (status.md + current.md both present, coding project)
 
 ```
-[If sync warnings from Phase 0, place them here above everything else:]
+[If sync warnings from Phase 0, place them above everything else:]
 ⚠ Reading stale local state — origin has N unpulled commits. Re-run /startup without --no-pull to sync.
 [or]
 ⚠ Couldn't sync — <dirty working tree | local diverged from origin>. Resolve with: <git stash | git pull --rebase>.
 
-[If cross-machine handoff detected in Phase 0:]
-Continuing from <other-host> — last session committed there.
+[If cross-machine handoff detected:]
+Continuing from <other-host> — last status committed there.
 
+Project: [name]
+Type: Coding ([stack from architecture.md or detect-stack.py])
+Branch: [name] ([N ahead, M behind] or [up to date])
+Mode: [mentor | dev]    Scope: [claude_only | codex_only | claude_and_codex]
+
+Current milestone: [from current.md current_milestone]
+Status: [from status.md current state — one line]
+
+Where we left off (status.md):
+  - [last-completed item 1]
+  - [last-completed item 2]
+
+Open acceptance criteria (current.md):
+  - [ ] [AC 1]
+  - [ ] [AC 2]
+
+Latest validation:
+  - [command] → [result from status.md]
+
+[If status.md has "Known issues or blockers":]
+Blockers:
+  - [item]
+
+Next recommended step:
+  [from status.md next-recommended-step]
+
+[If gap-check found any missing strategic docs:]
+⚠ Missing strategic docs: <list> — run /rad-planner:plan --improve to populate.
+
+Ready to continue. What would you like to work on?
+```
+
+### Concrete example (Wayfinder mid-flight)
+
+```
+Project: wayfinder
+Type: Coding (Next.js + Supabase + Drizzle)
+Branch: main (up to date)
+Mode: mentor    Scope: claude_only
+
+Current milestone: M2 — Activity-constraint engine
+Status: on track
+
+Where we left off (status.md):
+  - Constraint evaluator implemented at lib/constraints/evaluator.ts (24/24 tests passing)
+  - Constraint type definitions locked at lib/constraints/types.ts
+
+Open acceptance criteria (current.md):
+  - [ ] Failure reasons surfaced (which constraint failed, by how much)
+  - [ ] UI handles 1+ constraint sets per user
+  - [ ] Visual Crossing rate-limit handling
+
+Latest validation:
+  - bun test lib/constraints/ → pass (24/24)
+  - bun run typecheck → pass
+
+Next recommended step:
+  Start the Drizzle CRUD layer in lib/constraints/queries.ts. First decide: per-user vs per-account scope.
+
+Ready to continue. What would you like to work on?
+```
+
+---
+
+## Status-only briefing (status.md present, current.md missing)
+
+When `docs/planning/current.md` is absent (project hasn't run `/rad-planner:plan` yet) but `docs/status.md` exists:
+
+```
 Project: [name]
 Type: [Coding (stack) | Non-coding]
-Branch: [name] ([N ahead, M behind] or [up to date])
-Last session: [date] — [status line from HANDOFF.md]
-
-Where we left off:
-  - [item from HANDOFF.md]
-  - [item from HANDOFF.md]
-
-Watch out for:
-  - [trap from HANDOFF.md "What NOT To Do" — preserve TRIED/FAILED BECAUSE/CORRECT APPROACH wording]
-  - [recurring trap from session log, if any]
-
-Open work:
-  - [item from HANDOFF.md]
-
-[If any resources detected or documented:]
-Resources available:
-  MCPs: [list from .mcp.json + settings]
-  Stack CLIs: [list inferred from marker files]
-  Scripts ([pm]): [top scripts from package.json]
-  Env template: [names from .env.example]
-  [⚠ documented but not found: <items>]
-  [Also detected (not in CLAUDE.md): <items>  →  run /add-resource to register]
-
-[If imports resolved non-trivial content:]
-Imports: [<path1>, <path2>]
-
-[If uncommitted changes exist:]
-Uncommitted changes from last session:
-  - [file list from git status]
-
-[If commits made outside last session:]
-Changes since last session (not from Claude Code):
-  - [commit list]
-
-Ready to continue. What would you like to work on?
-```
-
-### Concrete example
-
-```
-Project: my-app
-Type: Coding (Next.js + Supabase)
-Branch: main (up to date)
-Last session: 2026-04-10 — Auth flow complete, billing next
-
-Where we left off:
-  - Stripe checkout endpoint wired, webhook handler still TODO
-  - Supabase RLS policies applied for users table
-
-Watch out for:
-  - TRIED: mocking the Stripe webhook in integration tests
-    FAILED BECAUSE: signature verification ran against the mock, not real code path
-    CORRECT APPROACH: use Stripe CLI `stripe listen` against a real test-mode endpoint
-
-Open work:
-  - Stripe webhook handler: scaffolded at src/app/api/webhook/route.ts, signature verify done, event routing pending
-
-Resources available:
-  MCPs: supabase, stripe, coolify
-  Stack CLIs: supabase, gh, docker
-  Scripts (pnpm): dev, build, test, typecheck, lint
-  Env template: DATABASE_URL, STRIPE_SECRET_KEY, SUPABASE_ANON_KEY (.env.example)
-
-Ready to continue. What would you like to work on?
-```
-
----
-
-## Stale-handoff auto-refresh variant
-
-When HANDOFF.md is 7+ days old, lead with a staleness note and include the auto-synthesized git-log summary.
-
-```
-⚠ Handoff is 12 days old — auto-refreshed from git log.
-
-Project: [name]
-Type: [Coding (stack)]
 Branch: [name] ([ahead/behind])
-Last session (per HANDOFF.md): [date] — [status]
+Mode: [mentor | dev]    Scope: [claude_only | codex_only | claude_and_codex]
 
-Changes since last session (outside Claude Code):
-  - abc1234 fix: resolve billing webhook timeout (2 days ago)
-  - def5678 chore: bump deps (5 days ago)
-  - [summarize 3–8 commits; collapse runs of trivial commits]
+Status: [from status.md current state]
 
-Where we left off:
-  - [from HANDOFF.md]
+Where we left off (status.md):
+  - [items]
 
-Watch out for:
-  - [from HANDOFF.md]
+[If "Decisions made during execution" non-trivial:]
+Recent decisions:
+  - [items]
 
-Ready to continue. What would you like to work on?
+Next recommended step:
+  [from status.md]
+
+⚠ No planning/current.md found — run /rad-planner:plan to define the current milestone.
+
+Ready to continue.
 ```
 
 ---
 
-## Minimal Briefing (No HANDOFF.md)
+## Minimal briefing (no status.md, no current.md)
 
 ```
-Project: [name from directory or CLAUDE.md]
+Project: [name from directory or operating manual]
 Type: [Coding (stack) | Non-coding]
 [Branch: [name] — if git project]
+Mode: [mentor | dev]    Scope: [claude_only | codex_only | claude_and_codex]
 
-No session handoff found — this is either a new project or one that hasn't used /wrapup yet.
+No status.md or current.md yet — this looks like a fresh project, or one that hasn't run /init / /plan / /wrapup.
 
-[If CLAUDE.md exists:]
-From CLAUDE.md: [brief summary of project rules/conventions]
-
-[If any resources detected:]
-Resources available:
-  MCPs: [list]
-  Stack CLIs: [list]
-  Scripts ([pm]): [list]
+[If operating manual exists:]
+From [CLAUDE.md | AGENTS.md | <non-canonical name>]: [brief summary — Project section, one line]
 
 [If git history exists:]
 Recent activity:
-  - [last 5 commits]
+  - [last 3-5 commits]
+
+Recommendations:
+  - Run /rad-session:init if rad-session hasn't been set up
+  - Run /rad-planner:plan to define the current milestone
 
 What would you like to work on?
 ```
 
 ---
 
-## Non-Coding Briefing
+## First-time briefing (after /init, before first /plan or /wrapup)
+
+```
+Project: [name]
+Type: Coding ([stack])
+Branch: [name] ([up to date])
+Mode: mentor    Scope: [from .rad/profile]
+
+Operating manual: [CLAUDE.md | AGENTS.md | both] — Operational sections scaffolded.
+docs/status.md: scaffolded, awaiting first /wrapup.
+
+⚠ Strategic docs not present — run /rad-planner:plan to define vision, architecture, and the current milestone.
+
+Detected resources:
+  MCPs: [list]
+  Stack CLIs: [list]
+  Scripts ([pm]): [list]
+
+Ready to plan. What's the project about?
+```
+
+---
+
+## Non-coding briefing
 
 ```
 Project: [name]
 Type: Non-coding
-Last session: [date] — [status from HANDOFF.md]
+Mode: [mentor | dev]
 
-Where we left off:
+Status: [from status.md]
+
+Where we left off (status.md):
   - [items]
-
-Watch out for:
-  - [traps]
-
-[If any resources documented/detected:]
-Resources available:
-  MCPs: [list]
-  Tools: [list]
 
 Recently modified files:
   - [file list]
 
-Ready to continue. What would you like to work on?
+Next recommended step:
+  [from status.md]
+
+Ready to continue.
 ```
+
+---
+
+## What changed from v4.0
+
+| v4.0 briefing source | v5.0 briefing source |
+|---|---|
+| `HANDOFF.md` | `docs/status.md` (project-scoped, evidence-based) |
+| Strategic docs at project root (PRD / ARCH / ASSUMPTIONS / DECISIONS / PLAN) | `docs/` canonical structure (vision / architecture / planning/current / decisions) |
+| `CLAUDE.md` (always) | Operating manual per agent_scope (CLAUDE.md / AGENTS.md / both) |
+| Resource discovery as a separate Phase 2.5 section | Resources only surfaced if drift detected (otherwise silent) |
+| `## Resources` section in CLAUDE.md | Strategic resources documented in `docs/architecture.md`; transient session resources via `/add-resource` |
+
+The briefing length target tightened from "no fixed target" to **under 35 lines** to honor the doorman model.
