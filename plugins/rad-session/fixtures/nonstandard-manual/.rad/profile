@@ -1,0 +1,5 @@
+# rad-planner / rad-session project profile
+mode = "mentor"
+agent_scope = "claude_only"
+multi_branch_status = false
+operating_manual_path = "GUIDE.md"   # non-canonical name; detected via header heuristic

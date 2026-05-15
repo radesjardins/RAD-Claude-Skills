@@ -1,0 +1,11 @@
+# Codex project configuration
+# rad-session scaffolds this file on /init; rad-planner adds hook entries on /plan M6.
+
+approval_policy = "on-request"
+sandbox_mode    = "workspace-write"
+
+# [shell.env]
+# Project-scoped environment variables Codex agents should inherit.
+
+# [hooks]
+# Add approved hooks here (e.g., pre-commit lint, post-test summary).

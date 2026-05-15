@@ -1,0 +1,4 @@
+# rad-planner / rad-session project profile
+mode = "dev"
+agent_scope = "claude_only"
+multi_branch_status = false

@@ -1,0 +1,4 @@
+# rad-planner / rad-session project profile
+mode = "mentor"
+agent_scope = "codex_only"
+multi_branch_status = false
