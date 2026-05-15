@@ -170,7 +170,7 @@ MAY follow the JSON block, but the JSON is authoritative and is what the orchest
   },
   "findings": [
     {
-      "id": "UCR-001",
+      "id": "RADCR-001",
       "title": "string (prefix with [PRE-EXISTING] if attribution != introduced)",
       "severity": "critical | major | moderate | minor",
       "category": "functional | security | ai-slop | architecture | tests | performance | ux | accessibility | release | documentation",
@@ -201,7 +201,7 @@ After the JSON block, optionally include a ≤200-word human summary. Do not dup
 - If blame-aware, do NOT flag issues on unchanged lines unless dependency chain rule applies.
 - If a category has zero findings, include it in `zero_finding_categories` with confidence.
 - Cross-reference findings: if a security issue is also an architecture issue, note both in the JSON description/impact.
-- Track exclusions and accepted risks from .ucrconfig.yml — do not re-flag accepted risks.
+- Track exclusions and accepted risks from .radcrconfig.yml — do not re-flag accepted risks.
 
 ## Files to Review
 {scoped_file_list}

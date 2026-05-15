@@ -73,10 +73,10 @@ MAY follow the JSON block, but the JSON is authoritative.
 ```json
 {
   "adversarial_review_complete": true,
-  "confirmed_ids": ["UCR-001", "UCR-003"],
+  "confirmed_ids": ["RADCR-001", "RADCR-003"],
   "challenged": [
     {
-      "id": "UCR-002",
+      "id": "RADCR-002",
       "reasoning": "string — what disconfirming evidence was found",
       "proposed_action": "remove | downgrade | change-confidence",
       "proposed_severity": "critical | major | moderate | minor | null",
@@ -88,7 +88,7 @@ MAY follow the JSON block, but the JSON is authoritative.
   ],
   "severity_adjustments": [
     {
-      "id": "UCR-004",
+      "id": "RADCR-004",
       "old_severity": "critical",
       "new_severity": "major",
       "reasoning": "string"
@@ -96,7 +96,7 @@ MAY follow the JSON block, but the JSON is authoritative.
   ],
   "disagreements": [
     {
-      "id": "UCR-005",
+      "id": "RADCR-005",
       "summary": "string — substantive disagreement not covered above"
     }
   ],

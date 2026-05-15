@@ -175,7 +175,7 @@ After completing all phases, produce a structured report:
 ## Finding Format
 
 Every finding must include:
-- **ID**: UCR-NNN
+- **ID**: RADCR-NNN
 - **Severity**: critical | major | moderate | minor
 - **Category**: which phase/dimension
 - **Confidence**: confirmed | probable | possible

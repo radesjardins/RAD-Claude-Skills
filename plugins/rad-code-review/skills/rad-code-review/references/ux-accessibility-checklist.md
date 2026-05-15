@@ -1,6 +1,6 @@
 # UI/UX and Accessibility Review Checklist
 
-This document provides the complete UX and accessibility checklist for UCR review agents evaluating web applications and websites. Every check includes what to look for, how to verify it from source code, the severity when violated, and common AI-generated mistakes.
+This document provides the complete UX and accessibility checklist for RADCR review agents evaluating web applications and websites. Every check includes what to look for, how to verify it from source code, the severity when violated, and common AI-generated mistakes.
 
 ---
 

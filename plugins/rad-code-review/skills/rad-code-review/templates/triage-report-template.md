@@ -1,6 +1,6 @@
 # RAD Code Review — Triage Report
 
-<!-- UCR Triage Report Template v1.0.0
+<!-- RADCR Triage Report Template v1.0.0
      This template is used instead of the full report when the project has
      systemic issues that make a standard per-finding review inappropriate.
      The triage report focuses on diagnosis and remediation planning rather
@@ -75,7 +75,7 @@
      - Done when: Measurable completion criteria
      - Validates by: How to confirm the phase is complete
 
-     After all phases, the project should be ready for a full UCR review.
+     After all phases, the project should be ready for a full RADCR review.
      Do not try to fix everything in one phase — sequence by dependency
      order and impact. -->
 

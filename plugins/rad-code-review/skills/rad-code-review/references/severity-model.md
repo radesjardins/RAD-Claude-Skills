@@ -1,6 +1,6 @@
-# UCR Severity Model
+# RADCR Severity Model
 
-This document defines the severity classification system used by all UCR review agents. Every finding must be assigned exactly one severity level and one confidence level. No exceptions.
+This document defines the severity classification system used by all RADCR review agents. Every finding must be assigned exactly one severity level and one confidence level. No exceptions.
 
 ---
 

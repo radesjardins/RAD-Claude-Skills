@@ -18,7 +18,7 @@ Apply fixes for all findings at Critical or Major severity, regardless of whethe
 
 ### Preset: "selected"
 
-The user provides a list of specific finding IDs (e.g., `UCR-001, UCR-007, UCR-014`). Apply fixes only for those findings. Validate that every provided ID exists in the current review before proceeding. If any ID is not found, report it and ask the user to confirm before continuing with the valid subset.
+The user provides a list of specific finding IDs (e.g., `RADCR-001, RADCR-007, RADCR-014`). Apply fixes only for those findings. Validate that every provided ID exists in the current review before proceeding. If any ID is not found, report it and ask the user to confirm before continuing with the valid subset.
 
 ### Scope confirmation
 
@@ -27,8 +27,8 @@ After the user selects a preset, display the list of findings that will be addre
 ```
 Scope: {preset name}
 Findings to fix ({count}):
-  UCR-001: {title} [{severity}]
-  UCR-003: {title} [{severity}]
+  RADCR-001: {title} [{severity}]
+  RADCR-003: {title} [{severity}]
   ...
 
 Proceed? (yes / adjust selection)
@@ -54,7 +54,7 @@ Apply these rules in order:
 
 2. **Wider scope wins (same severity).** If both fixes are the same severity, apply the fix that affects more code paths or more users. "Wider scope" means the fix that addresses a more systemic issue rather than a localized one.
 
-3. **If still tied**, apply the fix for the finding with the lower UCR ID number (i.e., the one discovered first). This is arbitrary but deterministic.
+3. **If still tied**, apply the fix for the finding with the lower RADCR ID number (i.e., the one discovered first). This is arbitrary but deterministic.
 
 ### Deferral
 
@@ -70,11 +70,11 @@ For every conflict, record:
 
 ```
 Conflict:
-  Fix A: UCR-{id} — {title}
-  Fix B: UCR-{id} — {title}
+  Fix A: RADCR-{id} — {title}
+  Fix B: RADCR-{id} — {title}
   Overlapping file(s): {path}:{line range}
-  Applied: UCR-{id} (reason: {severity advantage | wider scope | earlier discovery})
-  Deferred: UCR-{id}
+  Applied: RADCR-{id} (reason: {severity advantage | wider scope | earlier discovery})
+  Deferred: RADCR-{id}
   Manual resolution: {step-by-step guidance for applying the deferred fix after the applied fix}
 ```
 
@@ -131,14 +131,14 @@ Read every file that will be modified by any fix in the current group. This ensu
 
 ### Step B: Apply fixes
 
-Use the Edit tool to apply each fix in the group. Apply fixes within a group in order of severity (Critical first, then Major, then Moderate, then Minor). Within the same severity, apply in UCR ID order.
+Use the Edit tool to apply each fix in the group. Apply fixes within a group in order of severity (Critical first, then Major, then Moderate, then Minor). Within the same severity, apply in RADCR ID order.
 
 For each fix:
 
 - Make the minimum change necessary to address the finding.
 - Preserve existing code style, indentation, and conventions.
 - Do not refactor surrounding code unless the fix requires it.
-- Do not add comments like `// UCR fix` to the code. The commit message provides traceability.
+- Do not add comments like `// RADCR fix` to the code. The commit message provides traceability.
 
 ### Step C: Run targeted validation
 
@@ -160,7 +160,7 @@ If any validation step fails:
 - **Do not attempt to fix the fix.** Automated fix-on-fix chains compound risk.
 - **Document the failure**:
   ```
-  Failed fix: UCR-{id} — {title}
+  Failed fix: RADCR-{id} — {title}
   Validation failure: {which step failed}
   Error: {error message or description}
   Why: {brief analysis of why the automated fix didn't work}
@@ -176,13 +176,13 @@ After all fixes in the group are applied and validated (or reverted), create a s
 Commit message format:
 
 ```
-fix(ucr): {group description} [UCR-{comma-separated ids}]
+fix(radcr): {group description} [RADCR-{comma-separated ids}]
 
 Applied {count} automated fixes for {category} findings.
 
 Findings addressed:
-- UCR-{id}: {one-line title}
-- UCR-{id}: {one-line title}
+- RADCR-{id}: {one-line title}
+- RADCR-{id}: {one-line title}
 ```
 
 Rules:
@@ -205,7 +205,7 @@ After ALL fix groups have been applied (or attempted), run a scoped re-review.
 
 ### Re-review process
 
-Spawn a focused review subagent (not a full UCR pass) that:
+Spawn a focused review subagent (not a full RADCR pass) that:
 
 1. Reads all affected files in their current (post-fix) state.
 2. Checks each applied fix: does the original finding still exist? Is the fix correct and complete?
@@ -217,10 +217,10 @@ Spawn a focused review subagent (not a full UCR pass) that:
 ```
 Post-Fix Re-Review Results:
   Verified as resolved: {count}
-    - UCR-{id}: {title} — confirmed fixed
+    - RADCR-{id}: {title} — confirmed fixed
     - ...
   Still present: {count}
-    - UCR-{id}: {title} — {why it's still present}
+    - RADCR-{id}: {title} — {why it's still present}
     - ...
   New issues introduced: {count}
     - NEW-001: {description} in {file}:{line}
@@ -241,23 +241,23 @@ After the re-review completes, produce the final fix summary. This is included i
 ### Applied ({count})
 | Finding | Title | Commit |
 |---------|-------|--------|
-| UCR-001 | {title} | `{short hash}` |
-| UCR-003 | {title} | `{short hash}` |
+| RADCR-001 | {title} | `{short hash}` |
+| RADCR-003 | {title} | `{short hash}` |
 
 ### Deferred Due to Conflicts ({count})
 | Finding | Conflicts With | Reason | Manual Steps |
 |---------|---------------|--------|--------------|
-| UCR-002 | UCR-001 | {explanation} | {steps} |
+| RADCR-002 | RADCR-001 | {explanation} | {steps} |
 
 ### Failed Validation ({count})
 | Finding | Title | Failure Reason | Manual Steps |
 |---------|-------|---------------|--------------|
-| UCR-005 | {title} | {why} | {what to do} |
+| RADCR-005 | {title} | {why} | {what to do} |
 
 ### Not Attempted ({count})
 | Finding | Title | Reason |
 |---------|-------|--------|
-| UCR-010 | {title} | Outside selected scope |
+| RADCR-010 | {title} | Outside selected scope |
 
 ### Post-Fix Re-Review
 - **{count}** findings verified as resolved

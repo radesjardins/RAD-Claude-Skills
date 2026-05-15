@@ -15,10 +15,10 @@ This workflow governs how the orchestrator assembles, masks, and writes the fina
 ### History archive
 
 - **Filename**: `{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md`
-- **Location**: `.ucr/history/` relative to repository root
-- **Example**: `.ucr/history/2026-03-15-143022-full-strict.md`
+- **Location**: `.radcr/history/` relative to repository root
+- **Example**: `.radcr/history/2026-03-15-143022-full-strict.md`
 - **Purpose**: Enables cross-review comparison over time
-- **Create directory**: If `.ucr/history/` does not exist, create it before writing
+- **Create directory**: If `.radcr/history/` does not exist, create it before writing
 
 The `scope` segment reflects the review scope (e.g., `full`, `src-only`, `api-routes`). The `strictness` segment reflects the configured strictness level (e.g., `strict`, `standard`, `lenient`).
 
@@ -73,10 +73,10 @@ Before writing ANY code snippet, configuration fragment, environment variable, o
 2. **If a finding is ABOUT a secret exposure**, describe the type and location of the secret but NEVER include the actual value.
 
    Correct:
-   > UCR-004: Hardcoded database password found in `src/config/db.ts` at line 12. The password is assigned directly to the `DB_PASSWORD` constant.
+   > RADCR-004: Hardcoded database password found in `src/config/db.ts` at line 12. The password is assigned directly to the `DB_PASSWORD` constant.
 
    Incorrect:
-   > UCR-004: Hardcoded database password `supersecret` found in `src/config/db.ts` at line 12.
+   > RADCR-004: Hardcoded database password `supersecret` found in `src/config/db.ts` at line 12.
 
 3. **Multi-line secrets** (e.g., PEM keys): Replace the entire block with `[MASKED: private key]` or `[MASKED: certificate]`.
 
@@ -146,16 +146,16 @@ Detected automatically from the repository:
 - Assumptions made during the review (e.g., "assumed production database uses different credentials than .env.example")
 - Limitations of the review (e.g., "no runtime testing performed", "third-party API behavior not verified")
 
-### 3.7 .ucrconfig.yml Disclosure
+### 3.7 .radcrconfig.yml Disclosure
 
-For auditability, disclose the full contents of the project's `.ucrconfig.yml` if one exists. Specifically call out:
+For auditability, disclose the full contents of the project's `.radcrconfig.yml` if one exists. Specifically call out:
 
 - **Exclusions**: Files or directories excluded from review
 - **Accepted risks**: Any findings the user has explicitly accepted
 - **Custom severity overrides**: Any finding categories with adjusted severity
 - **Disabled categories**: Any review categories that were turned off
 
-If no `.ucrconfig.yml` exists, state: "No .ucrconfig.yml found. Default settings were used for all review parameters."
+If no `.radcrconfig.yml` exists, state: "No .radcrconfig.yml found. Default settings were used for all review parameters."
 
 ### 3.8 Top Release Blockers
 
@@ -176,7 +176,7 @@ Four subsections, in order: Critical, Major, Moderate, Minor.
 Each finding follows this format:
 
 ```markdown
-#### UCR-{NNN}: {Title}
+#### RADCR-{NNN}: {Title}
 
 - **Severity**: {Critical | Major | Moderate | Minor}
 - **Category**: {category}
@@ -329,7 +329,7 @@ An ordered list of findings to fix, prioritized by:
 Each entry includes:
 
 ```markdown
-{priority}. **UCR-{id}**: {title} — Effort: {estimate}, Impact: {high/medium/low}
+{priority}. **RADCR-{id}**: {title} — Effort: {estimate}, Impact: {high/medium/low}
 ```
 
 ### 3.23 Fastest Path to Production Readiness
@@ -343,16 +343,16 @@ The minimum viable fix set to achieve a "Fit for public release" or "Fit for pub
 
 ### 3.24 History Comparison (conditional)
 
-Include only if previous reports exist in `.ucr/history/`.
+Include only if previous reports exist in `.radcr/history/`.
 
 ```markdown
 ### Comparison with Previous Review ({date of previous review})
 
 | Status | Count | Findings |
 |--------|-------|----------|
-| Resolved since last review | {count} | UCR-{ids} |
-| Remaining from last review | {count} | UCR-{ids} |
-| New since last review | {count} | UCR-{ids} |
+| Resolved since last review | {count} | RADCR-{ids} |
+| Remaining from last review | {count} | RADCR-{ids} |
+| New since last review | {count} | RADCR-{ids} |
 
 **Trend**: {Improving / Stable / Degrading} — {one sentence explanation}
 ```
@@ -384,7 +384,7 @@ Findings where confidence was `possible` — things that might be issues but cou
 
 ### Step 1: Check for previous reports
 
-Look for files in `.ucr/history/` matching the pattern `*.md`. If the directory does not exist or is empty, skip history comparison.
+Look for files in `.radcr/history/` matching the pattern `*.md`. If the directory does not exist or is empty, skip history comparison.
 
 ### Step 2: Read the most recent report
 
@@ -440,7 +440,7 @@ When generated, the JSON file contains:
   },
   "findings": [
     {
-      "id": "UCR-001",
+      "id": "RADCR-001",
       "title": "{title}",
       "severity": "critical",
       "category": "{category}",
@@ -460,9 +460,9 @@ When generated, the JSON file contains:
   ],
   "history": {
     "previous_date": "{date or null}",
-    "resolved": ["UCR-xxx"],
-    "remaining": ["UCR-xxx"],
-    "new": ["UCR-xxx"],
+    "resolved": ["RADCR-xxx"],
+    "remaining": ["RADCR-xxx"],
+    "new": ["RADCR-xxx"],
     "trend": "improving"
   }
 }
@@ -549,7 +549,7 @@ The triage report is a shorter, recovery-focused document generated when the cod
 
 - **Secret masking is mandatory.** Every code snippet, config fragment, and log output must pass through the masking protocol before being written to any report file.
 - **Never omit mandatory sections.** If a section has no content, include it with a "No findings" or "Not applicable" note.
-- **History directory creation is automatic.** If `.ucr/history/` does not exist, create it. Do not ask the user.
+- **History directory creation is automatic.** If `.radcr/history/` does not exist, create it. Do not ask the user.
 - **Overwrite the primary report.** The file at repo root is always the latest. History preserves previous versions.
 - **JSON companion is opt-in.** Only generate it if the user's config requests it or the user asks for it.
 - **Triage mode is automatic.** If the criteria are met, generate the triage report in addition to (not instead of) the full report.

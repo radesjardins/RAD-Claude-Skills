@@ -1,6 +1,6 @@
 # Adversarial Review Protocol
 
-This document defines the structured adversarial review process for UCR Phase 4. The adversarial pass is not "look again" -- it is a systematic challenge of the primary review's findings, a hunt for false negatives, and a calibration of severity ratings.
+This document defines the structured adversarial review process for RADCR Phase 4. The adversarial pass is not "look again" -- it is a systematic challenge of the primary review's findings, a hunt for false negatives, and a calibration of severity ratings.
 
 The adversarial reviewer's job is to make the review ACCURATE, not to make it longer. Remove false positives. Find real false negatives. Correct miscalibrated severity. The output should be a high-confidence, trustworthy report.
 

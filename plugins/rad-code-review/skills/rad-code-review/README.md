@@ -135,14 +135,14 @@ Web app, API/backend, Chrome extension, CLI tool, library/package, Electron app,
 - **Report history and comparison** — track findings over time, diff between runs
 - **8 project-type modules** — type-specific checklists loaded automatically
 - **Local-only mode** — all analysis works offline
-- **Configurable via `.ucrconfig.yml`** — project-level settings
+- **Configurable via `.radcrconfig.yml`** — project-level settings
 
 ## Configuration
 
-Create a `.ucrconfig.yml` in your project root to customize behavior:
+Create a `.radcrconfig.yml` in your project root to customize behavior:
 
 ```yaml
-# .ucrconfig.yml
+# .radcrconfig.yml
 version: 1
 
 defaults:
@@ -166,7 +166,7 @@ licenses:
 
 history:
   enabled: false
-  directory: .ucr/history
+  directory: .radcr/history
 ```
 
 ## Architecture
@@ -243,7 +243,7 @@ rad-code-review/
     findings-schema.md              # Finding format template
     report-template.md              # Full report template
     triage-report-template.md       # Triage report template
-    ucrconfig-template.yml          # Default config template
+    radcrconfig-template.yml          # Default config template
   scripts/
     dep-audit.sh                    # Dependency vulnerability audit
     license-check.sh                # License compliance check

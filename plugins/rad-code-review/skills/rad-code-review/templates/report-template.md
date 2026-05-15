@@ -1,6 +1,6 @@
 # RAD Code Review Report
 
-<!-- UCR Report Template v1.0.0
+<!-- RADCR Report Template v1.0.0
      This template is populated by the RAD Code Review skill.
      Placeholder variables use {{curly_braces}} syntax.
      Do not remove section headers — the report parser depends on them.
@@ -58,21 +58,21 @@
 
 ### Configuration
 
-<!-- Disclose which .ucrconfig.yml settings were active during this review.
+<!-- Disclose which .radcrconfig.yml settings were active during this review.
      If no config file was found, state that defaults were used. -->
 
-{{ucrconfig_disclosure}}
+{{radcrconfig_disclosure}}
 
 ### Exclusions
 
 <!-- List paths, files, or patterns that were excluded from review,
-     either by .ucrconfig.yml exclude_paths or by scope constraints. -->
+     either by .radcrconfig.yml exclude_paths or by scope constraints. -->
 
 {{exclusions_list}}
 
 ### Accepted Risks
 
-<!-- List any accepted_risks from .ucrconfig.yml that were active during
+<!-- List any accepted_risks from .radcrconfig.yml that were active during
      this review. Include their expiry dates. Flag any that have expired. -->
 
 {{accepted_risks_list}}

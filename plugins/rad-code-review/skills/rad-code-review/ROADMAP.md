@@ -4,20 +4,20 @@
 
 **Optimized for Claude Opus 4.7** — major platform-level upgrade, no new review dimensions. Retains full compatibility with Sonnet 4.6 and (for narrow scopes) Haiku 4.5.
 
-- **Opus 4.7 as default primary-review model** — agent and skill both default to Opus; `--model sonnet|haiku` overrides per-run; `.ucrconfig.yml` `review_model` sets a project default.
+- **Opus 4.7 as default primary-review model** — agent and skill both default to Opus; `--model sonnet|haiku` overrides per-run; `.radcrconfig.yml` `review_model` sets a project default.
 - **Parallel tool-call pipeline** — agent Phase 1 issues Glob/Grep/Read as a single parallel batch. Orchestrator Steps 3a–3e run in parallel. Step 5 automated checks (npm audit, pip-audit, gitleaks, tsc, eslint, etc.) run concurrently via `run_in_background`. Deep reviews ~3–5× faster on Opus/Sonnet.
 - **JSON-first subagent output** — primary and adversarial subagents emit structured JSON per the schema in `references/subagent-prompts/*.md`. Orchestrator parses JSON as authoritative. Markdown fallback retained for legacy resilience.
-- **Compaction-safe checkpointing** — state written to `.ucr/state/<run-id>.json` after Steps 5, 7, 9. `--resume <run-id>` rehydrates mid-review and continues from the last checkpoint. Long reviews of 500+ file repos no longer lose progress when context compacts.
+- **Compaction-safe checkpointing** — state written to `.radcr/state/<run-id>.json` after Steps 5, 7, 9. `--resume <run-id>` rehydrates mid-review and continues from the last checkpoint. Long reviews of 500+ file repos no longer lose progress when context compacts.
 - **`--non-interactive` mode** — Step 10 menu is skipped; findings, verdict, and report path return as structured data. Used by the `code-reviewer` agent, `/loop` sessions, and CI integrations.
 - **Externalized subagent prompts** — moved from inline in `orchestrate-review.md` Step 6/8 to `references/subagent-prompts/{primary,adversarial,self-adversarial}-review.md`. Cleaner orchestrator, easier to audit and version.
-- **`.ucrconfig.yml` accepted-risk expiry enforcement** — entries with `expires < today` are surfaced as stale and re-evaluated rather than silently suppressed. Prevents permanent suppression via never-reviewed acceptances.
+- **`.radcrconfig.yml` accepted-risk expiry enforcement** — entries with `expires < today` are surfaced as stale and re-evaluated rather than silently suppressed. Prevents permanent suppression via never-reviewed acceptances.
 - **Structured JSON blame context** — Step 3f now emits a single JSON document with per-file changed ranges, blame metadata (scoped to changed lines only via `git blame -L`), and dependency edges. Replaces the prose "annotated diff context document" — smaller, more reliable, faster to produce on large diffs.
 - **History filename unified** — `{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` across both orchestrator and report-generation. Multiple same-day reviews no longer overwrite.
 - **Cleanup** — removed vestigial `install.sh`/`install.ps1` (handled by plugin manifest) and unused `scripts/*.sh` that no workflow referenced.
 
 ## v2.1
 
-Interactive findings menu — accept specific findings or all minor findings as intentional, persisted to `.ucrconfig.yml` with 1-year expiry and optional justification. Show-new-only mode filters the current report against `.ucr/history/` to surface only findings introduced since the last review. First-run `.ucrconfig.yml` creation with optional `.gitignore` integration.
+Interactive findings menu — accept specific findings or all minor findings as intentional, persisted to `.radcrconfig.yml` with 1-year expiry and optional justification. Show-new-only mode filters the current report against `.radcr/history/` to surface only findings introduced since the last review. First-run `.radcrconfig.yml` creation with optional `.gitignore` integration.
 
 ## v2.0
 
@@ -43,7 +43,7 @@ The foundation. A complete, production-ready code review skill.
 - Fix application with build/test validation
 - Structured JSON report with severity-ranked findings
 - Report history and comparison between runs
-- `.ucrconfig.yml` project-level configuration
+- `.radcrconfig.yml` project-level configuration
 - GitHub Action for CI/CD (PR comments, check runs, artifact upload)
 - Local-only mode (no network dependencies)
 - Dependency vulnerability audit (npm, yarn, pnpm, pip, cargo, go, gem, composer)
@@ -68,7 +68,7 @@ Interactive and visual review capabilities, plus extensibility.
 - **Accessibility deep-dive mode** — Interactive accessibility audit using Playwright to render pages, run axe-core, check keyboard navigation, verify ARIA attributes, test screen reader compatibility, and validate color contrast.
 - **UI/UX teardown mode** — Visual analysis via screenshots. Review layout consistency, spacing, typography hierarchy, interactive element sizing, loading states, error states, empty states, and responsive breakpoints.
 - **Performance-focused mode** — Integrate with profiling data (Lighthouse, webpack-bundle-analyzer, py-spy, Go pprof) to correlate code patterns with measured performance characteristics.
-- **Custom project-type module support** — User-defined project-type modules in `.ucr/project-types/` that extend or override built-in modules.
+- **Custom project-type module support** — User-defined project-type modules in `.radcr/project-types/` that extend or override built-in modules.
 - **Plugin system for custom checks** — Define custom review rules as small scripts or prompt fragments.
 
 ## v5.0 (future)

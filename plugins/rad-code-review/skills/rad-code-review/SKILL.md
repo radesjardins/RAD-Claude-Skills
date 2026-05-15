@@ -13,7 +13,7 @@ allowed-tools: Read Write Edit Bash Glob Grep Agent AskUserQuestion WebSearch We
 
 **Cross-model note.** v3.0 defaults to **Opus 4.7** for the primary review (best reasoning for the adversarial protocol + severity calibration). **Sonnet 4.6** is a first-class fallback — set `--model sonnet` for cost-sensitive PR scans. **Haiku 4.5** only for narrow blame-aware diffs with `--local-only`. Cross-engine (`--engine both`) runs primary on Opus and adversarial on whatever the config specifies, defaulting to Opus.
 
-**Branding note.** Finding IDs (`UCR-NNN`), config (`.ucrconfig.yml`), and history dir (`.ucr/history/`) retain the UCR prefix from the plugin's v1.0 heritage ("Universal Code Review"). The plugin itself is `rad-code-review`. Migration would be breaking; the aliasing is intentional and stable.
+**Naming.** Config (`.radcrconfig.yml`), finding IDs (`RADCR-NNN`), and history/state directories (`.radcr/history/`, `.radcr/state/`) use the RADCR prefix matching the plugin name. Users with an existing `.ucrconfig.yml` from a prior version of this plugin should rename it to `.radcrconfig.yml` and rename `.ucr/` to `.radcr/` — earlier versions used a `UCR` prefix as a heritage from this plugin's "Universal Code Review" predecessor. See `README.md` for details.
 
 <objective>
 Run a professional-grade, diff-aware code review and produce a structured report with
@@ -26,7 +26,7 @@ severity-ranked findings, release verdict, and optional fix application.
 - **Checkpoint / `--resume`** — compaction-safe state writes after Steps 5, 7, 9
 - **`--non-interactive`** — agent/CI callers skip the findings menu and get structured return
 - **Externalized subagent prompts** — primary/adversarial/self-adversarial templates in `references/subagent-prompts/`
-- **`.ucrconfig.yml` accepted-risk expiry enforcement** — stale entries re-evaluated, not silently suppressed
+- **`.radcrconfig.yml` accepted-risk expiry enforcement** — stale entries re-evaluated, not silently suppressed
 
 **v2.x differentiators (retained):**
 - Blame-aware scoping: `diff` and `commit` scopes only flag issues on changed lines by default
@@ -99,11 +99,11 @@ Arguments: $ARGUMENTS
 - `--non-interactive` — skip the findings menu, return findings + verdict + report path. Used by the `code-reviewer` agent, `/loop` sessions, and CI.
 
 **Resume (v3.0):**
-- `--resume <run-id>` — rehydrate mid-review state from `.ucr/state/<run-id>.json` after compaction or interruption. Run IDs are logged at the start of each run.
+- `--resume <run-id>` — rehydrate mid-review state from `.radcr/state/<run-id>.json` after compaction or interruption. Run IDs are logged at the start of each run.
 
-**Project config:** .ucrconfig.yml (if present in repo root)
-**History:** .ucr/history/{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md (previous review reports)
-**State:** .ucr/state/{run-id}.json (checkpoints for --resume)
+**Project config:** .radcrconfig.yml (if present in repo root)
+**History:** .radcr/history/{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md (previous review reports)
+**State:** .radcr/state/{run-id}.json (checkpoints for --resume)
 </context>
 
 <process>
@@ -119,10 +119,10 @@ Preserve all workflow gates, user checkpoints, and subagent boundaries.
 3. **Disclose internet usage** before proceeding if not --local-only — state what will be accessed and why
 4. **Never include secret values** in reports — show file, line, key name, and type only. Mask values completely in code snippets.
 5. **Triage-first mode:** If project appears fundamentally broken (50+ critical findings or unsalvageable architecture), switch to triage report — verdict, systemic diagnosis, top 5-10 blockers, remediation roadmap. Say plainly if rebuild is warranted.
-6. **Load .ucrconfig.yml** exclusions and accepted-risk rules if present. Surface all exclusions and accepted risks in the report for auditability.
-7. **Save report** to .ucr/history/{timestamp}-{scope}-{strictness}.md after completion
+6. **Load .radcrconfig.yml** exclusions and accepted-risk rules if present. Surface all exclusions and accepted risks in the report for auditability.
+7. **Save report** to .radcr/history/{timestamp}-{scope}-{strictness}.md after completion
 8. **Compare against history** — if previous reports exist for this repo, summarize resolved, remaining, and newly introduced findings
-9. **Secrets in config** — if .ucrconfig.yml contains accepted risks, validate they are still acknowledged, not stale
+9. **Secrets in config** — if .radcrconfig.yml contains accepted risks, validate they are still acknowledged, not stale
 10. **Do not fabricate findings** — if you cannot verify something, mark confidence as "possible" and say what verification is needed
 11. **Do not suppress findings** because they seem minor — rank them accurately and let severity speak. But do suppress findings that fail the evidence threshold for their severity level.
 </critical_rules>

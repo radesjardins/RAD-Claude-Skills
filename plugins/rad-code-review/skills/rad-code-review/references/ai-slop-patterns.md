@@ -1,6 +1,6 @@
 # AI Slop Detection Patterns
 
-This document catalogs code anti-patterns commonly produced by AI code generators. These patterns are dangerous because they look correct at a glance -- they have the shape of working code without the substance. Detection of these patterns is a core differentiator of the UCR skill.
+This document catalogs code anti-patterns commonly produced by AI code generators. These patterns are dangerous because they look correct at a glance -- they have the shape of working code without the substance. Detection of these patterns is a core differentiator of the RADCR skill.
 
 Every pattern below includes detection heuristics that a code reviewer can apply mechanically. When reviewing AI-generated or AI-assisted code, apply ALL of these checks.
 

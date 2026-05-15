@@ -1,13 +1,13 @@
 # =============================================================================
-# RAD Code Review Configuration (.ucrconfig.yml)
+# RAD Code Review Configuration (.radcrconfig.yml)
 # =============================================================================
 #
-# Copy this file to your repository root as .ucrconfig.yml
+# Copy this file to your repository root as .radcrconfig.yml
 #
 # All settings are optional. When omitted, sensible defaults are used.
 # Commented-out entries show the default values or example configurations.
 #
-# This file is read at the start of every UCR run. Changes take effect
+# This file is read at the start of every RADCR run. Changes take effect
 # immediately on the next review.
 # =============================================================================
 
@@ -218,7 +218,7 @@ custom_rules:
 # auto_compare:  Automatically compare against the most recent previous report.
 
 # history:
-#   directory: ".ucr-reports"
+#   directory: ".radcr-reports"
 #   max_reports: 20
 #   auto_compare: true
 

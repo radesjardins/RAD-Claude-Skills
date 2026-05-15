@@ -1,4 +1,4 @@
-# UCR Findings Schema v1.0.0
+# RADCR Findings Schema v1.0.0
 
 This document defines the exact format for individual findings produced by the
 RAD Code Review skill. All reviewers must structure their output using
@@ -14,7 +14,7 @@ below must be followed exactly — the report parser and history-comparison logi
 depend on consistent structure.
 
 ```markdown
-#### UCR-{{id}}: {{title}}
+#### RADCR-{{id}}: {{title}}
 
 | Field | Value |
 |-------|-------|
@@ -148,7 +148,7 @@ integrations, CI/CD gates, and historical comparison.
 
 ```json
 {
-  "id": "UCR-001",
+  "id": "RADCR-001",
   "title": "SQL injection via unsanitized user input in search endpoint",
   "severity": "critical",
   "category": "security",
@@ -172,7 +172,7 @@ integrations, CI/CD gates, and historical comparison.
   "verification": "Send GET /api/search?q=' OR '1'='1 and observe that all rows are returned.",
   "remediation": "Use parameterized queries: db.query('SELECT * FROM items WHERE name LIKE $1', [`%${req.query.q}%`])",
   "fix_effort": "trivial",
-  "related_findings": ["UCR-003", "UCR-015"],
+  "related_findings": ["RADCR-003", "RADCR-015"],
   "cwe": "CWE-89",
   "owasp": "A03:2021",
   "wcag": null
@@ -230,7 +230,7 @@ metadata, summary counts, the full findings array, and history comparison data.
   },
   "findings": [
     {
-      "id": "UCR-001",
+      "id": "RADCR-001",
       "title": "...",
       "severity": "...",
       "...": "... (full finding object as defined above)"
@@ -246,30 +246,30 @@ metadata, summary counts, the full findings array, and history comparison data.
     "Concurrency behavior under load was not testable via static analysis."
   ],
   "adversarial_pass": {
-    "confirmed": ["UCR-001", "UCR-002"],
+    "confirmed": ["RADCR-001", "RADCR-002"],
     "severity_adjusted": [
       {
-        "id": "UCR-005",
+        "id": "RADCR-005",
         "original_severity": "critical",
         "revised_severity": "major",
         "reason": "Mitigated by upstream validation in middleware."
       }
     ],
-    "new_findings": ["UCR-028"],
+    "new_findings": ["RADCR-028"],
     "disagreements": []
   },
   "config": {
-    "config_file": ".ucrconfig.yml",
+    "config_file": ".radcrconfig.yml",
     "exclude_paths": ["vendor/**"],
     "accepted_risks": ["example-risk-1"],
     "strictness_overrides": {},
     "review_focus": []
   },
   "history": {
-    "previous_report": "ucr-report-2026-03-01.json",
-    "resolved": ["UCR-004", "UCR-009"],
-    "remaining": ["UCR-001", "UCR-003"],
-    "new": ["UCR-028", "UCR-029"],
+    "previous_report": "radcr-report-2026-03-01.json",
+    "resolved": ["RADCR-004", "RADCR-009"],
+    "remaining": ["RADCR-001", "RADCR-003"],
+    "new": ["RADCR-028", "RADCR-029"],
     "trend": "improving"
   }
 }

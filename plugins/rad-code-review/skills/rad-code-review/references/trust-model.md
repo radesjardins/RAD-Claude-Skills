@@ -1,6 +1,6 @@
 # Trust Model and Review Depth Policy
 
-This document defines the trust levels applied to different types of code and artifacts during a UCR review. Trust level determines review depth, evidence requirements, and which checklists are applied.
+This document defines the trust levels applied to different types of code and artifacts during a RADCR review. Trust level determines review depth, evidence requirements, and which checklists are applied.
 
 ---
 
@@ -225,9 +225,9 @@ The route setup and auth decorator are semi-trusted. The custom authorization lo
 
 ---
 
-## Interaction with .ucrconfig.yml Exclusions
+## Interaction with .radcrconfig.yml Exclusions
 
-The `.ucrconfig.yml` configuration may specify files or directories to exclude from review. These exclusions interact with trust levels as follows:
+The `.radcrconfig.yml` configuration may specify files or directories to exclude from review. These exclusions interact with trust levels as follows:
 
 ### Exclusion Rules
 

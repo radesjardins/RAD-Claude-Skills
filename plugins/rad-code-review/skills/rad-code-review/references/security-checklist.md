@@ -1,6 +1,6 @@
 # Security Review Checklist
 
-This document provides the complete security checklist used by UCR security review agents. For each item: what to check, how to find it in code, the severity when violated, and common AI-generated mistakes to watch for.
+This document provides the complete security checklist used by RADCR security review agents. For each item: what to check, how to find it in code, the severity when violated, and common AI-generated mistakes to watch for.
 
 ---
 

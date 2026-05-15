@@ -13,8 +13,8 @@ This workflow is loaded by the orchestrator SKILL.md and executed end-to-end.
 - **Step 6 subagent emits JSON-first findings** (was markdown, fragile across models)
 - **Step 8 adversarial prompt externalized** to `references/subagent-prompts/adversarial-review.md` and `self-adversarial-review.md`
 - **Step 10 supports `--non-interactive`** — skips the menu, returns findings directly (for agent/loop invocation)
-- **Step 2 enforces `.ucrconfig.yml` accepted-risk expiry** — stale entries warn and are re-evaluated
-- **New Step 0.5: Checkpoint/Resume** — periodic state writes to `.ucr/state/{run-id}.json`; `--resume <run-id>` rehydrates mid-review after compaction
+- **Step 2 enforces `.radcrconfig.yml` accepted-risk expiry** — stale entries warn and are re-evaluated
+- **New Step 0.5: Checkpoint/Resume** — periodic state writes to `.radcr/state/{run-id}.json`; `--resume <run-id>` rehydrates mid-review after compaction
 - **History filename unified** across orchestrator and report-generation to `{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` (multiple same-day reviews no longer overwrite)
 
 **v2.x changes** (retained): blame-aware scoping, `--since`, `--full-scan`, framework IDOR, performance heuristics, dynamic ARIA state, finding attribution, adversarial blame validation, interactive findings menu.
@@ -32,9 +32,9 @@ Parse $ARGUMENTS for:
 - **Local-only**: --local-only flag (default: internet-enabled)
 - **Fix mode**: --fix blockers | --fix critical-major | --fix <ids> (default: no fixes)
 - **Non-interactive**: --non-interactive (skip the findings menu, return findings + save report directly — for agent/loop invocation)
-- **Resume**: --resume <run-id> (rehydrate state from `.ucr/state/<run-id>.json` and continue from last checkpoint)
+- **Resume**: --resume <run-id> (rehydrate state from `.radcr/state/<run-id>.json` and continue from last checkpoint)
 - **Model overrides**:
-  - `--model <name>` — override the default primary-review model (default: opus, resolved from `.ucrconfig.yml` `review_model` if present)
+  - `--model <name>` — override the default primary-review model (default: opus, resolved from `.radcrconfig.yml` `review_model` if present)
   - `--adversarial-model <name>` — override the adversarial-pass model (default: same as primary if engine=claude|codex, or Opus for engine=both cross-check)
 
 ### Resolve scan mode:
@@ -69,7 +69,7 @@ If user chooses option 5, prompt for the commit hash.
 
 ### If `--resume <run-id>` was provided
 
-1. Read `.ucr/state/<run-id>.json`. If missing, error: `No resumable state found for run-id <run-id>. Starting fresh.` and fall through to Step 1.
+1. Read `.radcr/state/<run-id>.json`. If missing, error: `No resumable state found for run-id <run-id>. Starting fresh.` and fall through to Step 1.
 2. Rehydrate state variables from the JSON: `scope`, `strictness`, `engine`, `blame_aware`, `commit_hash`, `file_count`, `annotated_diff_context`, `accepted_risks`, `exclusions`, `automated_check_output`, `primary_findings`, `adversarial_findings`, `phase_completed`.
 3. Jump directly to the step AFTER `phase_completed`:
    - `phase_completed: "step_5"` → jump to Step 6
@@ -79,15 +79,15 @@ If user chooses option 5, prompt for the commit hash.
 
 ### Checkpoint writes (applies to all non-resume runs)
 
-After each of the following steps completes, write/overwrite `.ucr/state/<run-id>.json`:
+After each of the following steps completes, write/overwrite `.radcr/state/<run-id>.json`:
 
 - After Step 5 (automated checks): `phase_completed: "step_5"`
 - After Step 7 (primary review return): `phase_completed: "step_7"` + `primary_findings`
 - After Step 9 (review-of-review): `phase_completed: "step_9"` + merged findings
 
-**Run ID format:** `{YYYY-MM-DD}-{HHmmss}` (local time). Create the directory first: `mkdir -p .ucr/state`.
+**Run ID format:** `{YYYY-MM-DD}-{HHmmss}` (local time). Create the directory first: `mkdir -p .radcr/state`.
 
-**Cleanup:** After a successful report write in Step 12, move the state file to `.ucr/state/completed/<run-id>.json` so future resumes don't accidentally target a finished run. Prune `completed/` entries older than 30 days.
+**Cleanup:** After a successful report write in Step 12, move the state file to `.radcr/state/completed/<run-id>.json` so future resumes don't accidentally target a finished run. Prune `completed/` entries older than 30 days.
 
 **Why this matters on Opus 4.7:** deep reviews of 500+ file repos can trip compaction mid-flight. Without checkpoints, the orchestrator loses track of findings and must restart. With checkpoints, resume is one flag.
 
@@ -117,10 +117,10 @@ If user switches to local-only, note the restrictions:
 
 ## Step 2: Load Project Config
 
-Check for `.ucrconfig.yml` in the repository root:
+Check for `.radcrconfig.yml` in the repository root:
 
 ```bash
-ls .ucrconfig.yml 2>/dev/null
+ls .radcrconfig.yml 2>/dev/null
 ```
 
 If present, read it and extract:
@@ -140,12 +140,12 @@ For each entry in `accepted_risks`, check `expires`:
   ```
   Stale accepted risk (expired {date}): <id> — <description>
   This finding will be RE-EVALUATED in the current review rather than suppressed.
-  Update .ucrconfig.yml to renew the acceptance if it's still valid.
+  Update .radcrconfig.yml to renew the acceptance if it's still valid.
   ```
   Do NOT apply suppression for stale entries — let the finding surface. Collect all stale entries and include them in the final report under a "Stale accepted risks" section.
 - If `expires >= today` → apply suppression as normal; record the entry for the disclosure section of the report.
 
-If NOT present, proceed with defaults. Note in report: "No .ucrconfig.yml found — using default configuration."
+If NOT present, proceed with defaults. Note in report: "No .radcrconfig.yml found — using default configuration."
 
 ## Step 3: Detect Project Context
 
@@ -245,7 +245,7 @@ git ls-files --others --exclude-standard
 git diff --name-only <commit>..HEAD
 ```
 
-Apply .ucrconfig.yml exclusions. Remove files matching trust model exclusions
+Apply .radcrconfig.yml exclusions. Remove files matching trust model exclusions
 (node_modules/, vendor/, lockfiles, generated code).
 
 Record total file count and estimated review scope.
@@ -328,25 +328,25 @@ into the primary-review.md template).
 For each detected project type, load the corresponding reference:
 
 ```
-@{{UCR_DIR}}/project-types/{type}.md
+@{{RADCR_DIR}}/project-types/{type}.md
 ```
 
 These provide type-specific review checklists and patterns.
 
 Also load universal references:
 ```
-@{{UCR_DIR}}/references/ai-slop-patterns.md
-@{{UCR_DIR}}/references/security-checklist.md
-@{{UCR_DIR}}/references/ux-accessibility-checklist.md
-@{{UCR_DIR}}/references/performance-heuristics.md
-@{{UCR_DIR}}/references/release-readiness.md
+@{{RADCR_DIR}}/references/ai-slop-patterns.md
+@{{RADCR_DIR}}/references/security-checklist.md
+@{{RADCR_DIR}}/references/ux-accessibility-checklist.md
+@{{RADCR_DIR}}/references/performance-heuristics.md
+@{{RADCR_DIR}}/references/release-readiness.md
 ```
 
 ## Step 5: Run Automated Checks (if available and permitted)
 
 If NOT --local-only, and tools are available:
 
-**Execution: parallel-first.** All checks below (5a–5e) are independent and should run concurrently. Use `run_in_background: true` on the Bash tool to start each check, then read their outputs once all have completed. Each check gets a per-command timeout (default 120s; configurable via `.ucrconfig.yml` `check_timeout_seconds`). A slow `npm audit` must not block `tsc` or `ruff`.
+**Execution: parallel-first.** All checks below (5a–5e) are independent and should run concurrently. Use `run_in_background: true` on the Bash tool to start each check, then read their outputs once all have completed. Each check gets a per-command timeout (default 120s; configurable via `.radcrconfig.yml` `check_timeout_seconds`). A slow `npm audit` must not block `tsc` or `ruff`.
 
 Run only the checks that match the detected stack (from Step 3b) — do not spawn `cargo audit` on a Node project. Detect tool availability via presence of config files / lockfiles rather than `which`; failed commands exit 0 via `|| true`.
 
@@ -373,7 +373,7 @@ pip-licenses --format=json 2>/dev/null || true
 ### 5c: Secrets Scan
 ```bash
 # Use gitleaks if available
-gitleaks detect --source . --report-format json --report-path /tmp/ucr-secrets.json 2>/dev/null || true
+gitleaks detect --source . --report-format json --report-path /tmp/radcr-secrets.json 2>/dev/null || true
 # Fallback: pattern-based grep for common secret patterns
 ```
 
@@ -409,7 +409,7 @@ go build ./... 2>/dev/null || true
 
 Collect results from all background commands. Build `automated_check_output` — a structured dict keyed by check name (`npm_audit`, `pip_audit`, `gitleaks`, `tsc`, `eslint`, `npm_test`, `npm_build`, etc.) with per-check: exit code, duration (ms), stdout (truncated to 50KB per check), stderr (truncated).
 
-Write checkpoint to `.ucr/state/<run-id>.json` with `phase_completed: "step_5"` and the aggregated output.
+Write checkpoint to `.radcr/state/<run-id>.json` with `phase_completed: "step_5"` and the aggregated output.
 
 ## Step 6: Spawn Primary Review Subagent (Phase 3 — Deep Review)
 
@@ -418,7 +418,7 @@ Write checkpoint to `.ucr/state/<run-id>.json` with `phase_completed: "step_5"` 
 Resolve the primary-review model in this order (first match wins):
 
 1. `--model <name>` CLI argument
-2. `.ucrconfig.yml` `review_model` field
+2. `.radcrconfig.yml` `review_model` field
 3. Default: **`opus`** (Opus 4.7 — best for deep reasoning, adversarial protocol, severity calibration)
 
 Fallback guidance:
@@ -430,7 +430,7 @@ Record the chosen model in the run state and in the final report.
 
 ### 6.2 Load the externalized prompt template
 
-Read `${UCR_DIR}/references/subagent-prompts/primary-review.md`. Substitute placeholders with values from prior steps:
+Read `${RADCR_DIR}/references/subagent-prompts/primary-review.md`. Substitute placeholders with values from prior steps:
 
 | Placeholder | Source |
 |-------------|--------|
@@ -450,7 +450,7 @@ Read `${UCR_DIR}/references/subagent-prompts/primary-review.md`. Substitute plac
 Agent(
   subagent_type="general-purpose",
   model="{resolved_model}",
-  description="UCR Primary Review",
+  description="RADCR Primary Review",
   prompt="{substituted_primary_review_template}"
 )
 ```
@@ -473,7 +473,7 @@ Parse the subagent's JSON output (`primary-review.md` schema). Extract:
 - `zero_finding_categories`
 - `scope_limitations`
 
-**Checkpoint write:** write `.ucr/state/<run-id>.json` with `phase_completed: "step_7"` and `primary_findings` = the parsed findings array.
+**Checkpoint write:** write `.radcr/state/<run-id>.json` with `phase_completed: "step_7"` and `primary_findings` = the parsed findings array.
 
 ### Triage trigger
 
@@ -497,8 +497,8 @@ Resolve adversarial model:
 
 ### 8.2 Load externalized prompt
 
-- `engine = "both"` → read `${UCR_DIR}/references/subagent-prompts/adversarial-review.md`
-- otherwise → read `${UCR_DIR}/references/subagent-prompts/self-adversarial-review.md`
+- `engine = "both"` → read `${RADCR_DIR}/references/subagent-prompts/adversarial-review.md`
+- otherwise → read `${RADCR_DIR}/references/subagent-prompts/self-adversarial-review.md`
 
 Substitute placeholders:
 
@@ -514,7 +514,7 @@ Substitute placeholders:
 Agent(
   subagent_type="general-purpose",
   model="{resolved_adversarial_model}",
-  description="UCR Adversarial Review" | "UCR Self-Adversarial Pass",
+  description="RADCR Adversarial Review" | "RADCR Self-Adversarial Pass",
   prompt="{substituted_adversarial_template}"
 )
 ```
@@ -597,28 +597,28 @@ What would you like to do?
 
 Fix Findings
   1. Fix all blockers
-  2. Fix specific findings          (I'll ask which UCRs)
+  2. Fix specific findings          (I'll ask which RADCRs)
   3. Get details on a finding       (I'll ask which one)
 
-Accept Findings  ← marks as intentional; won't affect verdict, tracked in .ucrconfig.yml
-  4. Accept specific findings       (I'll ask which UCRs)
+Accept Findings  ← marks as intentional; won't affect verdict, tracked in .radcrconfig.yml
+  4. Accept specific findings       (I'll ask which RADCRs)
   5. Accept all minor findings
 
 View
   6. Show new findings only         (compares against your previous review)
 
-Or type a UCR ID directly (e.g. UCR-003), or ask me anything about the findings.
+Or type a RADCR ID directly (e.g. RADCR-003), or ask me anything about the findings.
 ```
 
 ### Option 1: Fix all blockers
-Load and execute `${UCR_DIR}/workflows/offer-fixes.md` with preset `blockers`.
+Load and execute `${RADCR_DIR}/workflows/offer-fixes.md` with preset `blockers`.
 
 ### Option 2: Fix specific findings
-Prompt: `Which UCR IDs would you like to fix? Enter IDs separated by commas (e.g. UCR-001, UCR-003).`
-Load and execute `${UCR_DIR}/workflows/offer-fixes.md` with the specified IDs.
+Prompt: `Which RADCR IDs would you like to fix? Enter IDs separated by commas (e.g. RADCR-001, RADCR-003).`
+Load and execute `${RADCR_DIR}/workflows/offer-fixes.md` with the specified IDs.
 
 ### Option 3: Get details on a finding
-Prompt: `Which UCR ID would you like more details on?`
+Prompt: `Which RADCR ID would you like more details on?`
 Display the full finding entry for that ID: description, evidence, impact, recommendation, and references.
 Return to the menu.
 
@@ -626,14 +626,14 @@ Return to the menu.
 
 Prompt:
 ```
-Which findings would you like to accept? Enter UCR IDs separated by commas.
-(e.g. UCR-004, UCR-007)
+Which findings would you like to accept? Enter RADCR IDs separated by commas.
+(e.g. RADCR-004, RADCR-007)
 ```
 
 Validate that each provided ID exists in the current report's findings list.
 If any ID is not found, respond:
 ```
-These IDs were not found in the current report: UCR-XXX
+These IDs were not found in the current report: RADCR-XXX
 Please check the finding IDs above and try again.
 ```
 Re-prompt until all IDs are valid or the user cancels.
@@ -652,7 +652,7 @@ Compute dates:
 - `reviewed_date` = today in ISO 8601 format (YYYY-MM-DD)
 - `expires` = exactly one year from today in ISO 8601 format
 
-For each accepted finding ID, build a `.ucrconfig.yml` entry:
+For each accepted finding ID, build a `.radcrconfig.yml` entry:
 ```yaml
 - id: "{finding-id-lowercased}-{kebab-slug-of-first-5-words-of-title}"
   description: "{verbatim finding title from report}"
@@ -663,15 +663,15 @@ For each accepted finding ID, build a `.ucrconfig.yml` entry:
   finding_match: "{2-3 key terms extracted from finding title, space-separated}"
 ```
 
-**Check for `.ucrconfig.yml`:**
+**Check for `.radcrconfig.yml`:**
 
 ```bash
-ls .ucrconfig.yml 2>/dev/null
+ls .radcrconfig.yml 2>/dev/null
 ```
 
-**If `.ucrconfig.yml` does NOT exist**, prompt:
+**If `.radcrconfig.yml` does NOT exist**, prompt:
 ```
-No .ucrconfig.yml found in this project. Want me to create one?
+No .radcrconfig.yml found in this project. Want me to create one?
 
 It will store your accepted findings and let you configure exclusions,
 custom rules, and review defaults. Future reviews load it automatically.
@@ -681,21 +681,21 @@ custom rules, and review defaults. Future reviews load it automatically.
 ```
 
 If user chooses **1 (Yes)**:
-- Read `${UCR_DIR}/templates/ucrconfig-template.yml`
-- Write it to `.ucrconfig.yml` in the repository root
+- Read `${RADCR_DIR}/templates/radcrconfig-template.yml`
+- Write it to `.radcrconfig.yml` in the repository root
 - Append the accepted findings entries under the `accepted_risks:` key
 - Then prompt:
   ```
-  Created .ucrconfig.yml in your project root.
+  Created .radcrconfig.yml in your project root.
 
-    1. Add .ucrconfig.yml to .gitignore
+    1. Add .radcrconfig.yml to .gitignore
     2. Leave it as-is (I'll decide later)
   ```
-- If user chooses **1**: run `echo ".ucrconfig.yml" >> .gitignore` (append only if not already present — check first with grep)
-- Confirm: `.ucrconfig.yml added to .gitignore`
+- If user chooses **1**: run `echo ".radcrconfig.yml" >> .gitignore` (append only if not already present — check first with grep)
+- Confirm: `.radcrconfig.yml added to .gitignore`
 
 If user chooses **2 (No thanks)**:
-- Do not create `.ucrconfig.yml`
+- Do not create `.radcrconfig.yml`
 - Note the accepted findings in the session output:
   ```
   Accepted for this session only (not persisted):
@@ -704,18 +704,18 @@ If user chooses **2 (No thanks)**:
   ```
 - Return to menu.
 
-**If `.ucrconfig.yml` DOES exist**:
+**If `.radcrconfig.yml` DOES exist**:
 - Read the file
 - Append the new entries under `accepted_risks:`
 - Write the updated file back
 
 Confirm acceptance:
 ```
-Accepted {N} findings and added to .ucrconfig.yml.
+Accepted {N} findings and added to .radcrconfig.yml.
 These won't affect your release verdict in future reviews.
 
 Note: accepted risks expire {expires date} and will be re-flagged for
-re-evaluation. You can adjust the expiry in .ucrconfig.yml.
+re-evaluation. You can adjust the expiry in .radcrconfig.yml.
 ```
 
 Return to menu.
@@ -733,18 +733,18 @@ Return to menu.
 Otherwise, list them:
 ```
 Found {N} minor findings:
-{list of UCR IDs and titles}
+{list of RADCR IDs and titles}
 
 Optional: add a brief note on why these are intentional? Press Enter to skip.
 ```
 
 Capture justification (same default as Option 4 if skipped).
 
-Apply the same `.ucrconfig.yml` write logic as Option 4 (check exists, create if not, append entries, offer `.gitignore`).
+Apply the same `.radcrconfig.yml` write logic as Option 4 (check exists, create if not, append entries, offer `.gitignore`).
 
 Confirm:
 ```
-Accepted {N} minor findings and added to .ucrconfig.yml.
+Accepted {N} minor findings and added to .radcrconfig.yml.
 Note: accepted risks expire {expires date}.
 ```
 
@@ -753,7 +753,7 @@ Return to menu.
 ### Option 6: Show new findings only
 
 ```bash
-ls -t .ucr/history/*.md 2>/dev/null | head -1
+ls -t .radcr/history/*.md 2>/dev/null | head -1
 ```
 
 **If no previous report exists**:
@@ -763,8 +763,8 @@ No previous review found for this project. Showing all findings.
 Return to menu without filtering.
 
 **If a previous report exists**:
-- Read the most recent report file from `.ucr/history/`
-- Extract all UCR IDs present in that report (grep for `UCR-[0-9]+` pattern)
+- Read the most recent report file from `.radcr/history/`
+- Extract all RADCR IDs present in that report (grep for `RADCR-[0-9]+` pattern)
 - Identify the scope and strictness used in the previous report from its filename (format: `YYYY-MM-DD-{scope}-{strictness}.md`)
 - Filter current findings to those whose ID does NOT appear in the previous report
 
@@ -783,7 +783,7 @@ Already known:       {matched} (not shown)
 New this review:     {new_count}
 
 ─────────────────────────────────────────
-{new findings only, formatted as: [SEVERITY] UCR-NNN — Title}
+{new findings only, formatted as: [SEVERITY] RADCR-NNN — Title}
 ─────────────────────────────────────────
 ```
 
@@ -800,8 +800,8 @@ in the previous report.
 
 Redisplay the menu scoped to the new findings (options 1-5 operate on the filtered set).
 
-### UCR ID typed directly
-If the user types a UCR ID (matches pattern `UCR-[0-9]+`), display the full finding detail for that ID (same as Option 3). Return to menu.
+### RADCR ID typed directly
+If the user types a RADCR ID (matches pattern `RADCR-[0-9]+`), display the full finding detail for that ID (same as Option 3). Return to menu.
 
 ### Free text / question
 Answer the question using the current findings as context. Return to menu.
@@ -813,7 +813,7 @@ If the user types "done", "exit", "quit", or presses Enter with no input, procee
 
 Load the fix workflow:
 ```
-@{{UCR_DIR}}/workflows/offer-fixes.md
+@{{RADCR_DIR}}/workflows/offer-fixes.md
 ```
 
 ### Fix Protocol Summary:
@@ -830,7 +830,7 @@ Load the fix workflow:
       - If linter is configured, run it on affected files
       - Verify the fix addresses the finding
    c. Commit: one commit per logical fix group
-      - Message format: `fix(ucr): {group description} [UCR-{ids}]`
+      - Message format: `fix(radcr): {group description} [RADCR-{ids}]`
 5. **After all fix groups**: Run final scoped re-review of affected areas
    plus blocker revalidation
 6. **Report deferred fixes**: List fixes that were deferred due to conflicts,
@@ -840,7 +840,7 @@ Load the fix workflow:
 
 Load the report workflow:
 ```
-@{{UCR_DIR}}/workflows/report-generation.md
+@{{RADCR_DIR}}/workflows/report-generation.md
 ```
 
 ### Report Generation Summary:
@@ -852,7 +852,7 @@ The report must include:
 2. Release verdict with justification
 3. Project overview (inferred from repo)
 4. Review scope, commit hash, and assumptions
-5. Configuration (.ucrconfig.yml exclusions and accepted risks)
+5. Configuration (.radcrconfig.yml exclusions and accepted risks)
 6. Top release blockers
 7. Findings by severity (with full evidence)
 8. Findings by category
@@ -880,14 +880,14 @@ Before writing the report:
 
 ### History
 ```bash
-mkdir -p .ucr/history
+mkdir -p .radcr/history
 ```
 
-Save report to `.ucr/history/{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` (unified with `report-generation.md` as of v3.0 — the `HHmmss` segment prevents multiple same-day reviews from overwriting each other).
+Save report to `.radcr/history/{YYYY-MM-DD}-{HHmmss}-{scope}-{strictness}.md` (unified with `report-generation.md` as of v3.0 — the `HHmmss` segment prevents multiple same-day reviews from overwriting each other).
 
 If previous reports exist:
 ```bash
-ls -t .ucr/history/*.md | head -1
+ls -t .radcr/history/*.md | head -1
 ```
 
 Read the most recent report and compare:
@@ -930,7 +930,7 @@ After report generation:
 ## Review Complete
 
 Report saved: rad-code-review-report.md
-History saved: .ucr/history/{filename}
+History saved: .radcr/history/{filename}
 
 Reviewed at commit: {hash}
 This report reflects the codebase at that point in time.
