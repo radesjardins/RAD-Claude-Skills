@@ -1,6 +1,6 @@
 # rad-supabase scripts
 
-Three deterministic Python validators (pure stdlib, 3.8+) backing the plugin's security and current-state claims. Each takes optional paths, supports `--json` for machine-readable output, and uses standard exit codes:
+Four deterministic Python validators (pure stdlib, 3.8+) backing the plugin's security and current-state claims. Each takes optional paths, supports `--json` for machine-readable output, and uses standard exit codes:
 
 | Exit | Meaning |
 |------|---------|
@@ -99,6 +99,29 @@ python audit-edge-functions.py --json
 ```
 
 ---
+
+## audit-functions-permissions.py
+
+Static audit of Postgres function permission patterns in migration SQL. Companion to `audit-rls.py` — the RLS auditor mirrors Splinter codes 0002/0003/0008/0011/0013/0015; this one focuses on the function-permission dimension specifically.
+
+```bash
+python3 scripts/audit-functions-permissions.py
+python3 scripts/audit-functions-permissions.py path/to/file.sql
+python3 scripts/audit-functions-permissions.py --migrations-dir custom/migrations
+python3 scripts/audit-functions-permissions.py --json
+```
+
+**Detection categories:**
+
+| Code | Severity | What |
+|---|---|---|
+| `grant_all_to_public` | critical | `GRANT ALL ... TO PUBLIC` anywhere |
+| `security_definer_grant_public_no_revoke` | critical | SECURITY DEFINER function with explicit `GRANT EXECUTE TO PUBLIC` but no preceding `REVOKE EXECUTE FROM PUBLIC` |
+| `security_definer_implicit_public_execute` | warning | SECURITY DEFINER function in `public` schema with no explicit GRANT/REVOKE (Postgres default = TO PUBLIC) |
+| `security_definer_no_search_path` | warning | SECURITY DEFINER without `SET search_path = ...` (cross-link to Splinter 0011) |
+| `public_function_no_explicit_grants` | info | Public-schema function with no permission control (Postgres default applies) |
+
+**Exit codes:** `0` clean, `1` warnings only, `2` critical findings present.
 
 ## CI integration
 
