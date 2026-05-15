@@ -394,6 +394,8 @@ For each target file (per agent_scope table above):
 
   Default: append. Show diff before writing.
 
+  **Data-loss-protected: this prompt fires regardless of permission mode.** Auto / Bypass / `--non-interactive` do NOT suppress Case C. Overwriting user-authored content has asymmetric downside (potential loss of substantial work); permission-mode autonomy is about not pestering for routine tool approvals, not about silently overwriting files the user wrote. If the harness signals "don't ask clarifying questions," interpret that as "don't ask trivial in-execution confirmations," NOT "skip the overwrite-vs-append-vs-skip choice on a file with substantial user content." The only flag that bypasses this prompt is an explicit `--force-overwrite` (not currently implemented — would require a future opt-in addition).
+
 ##### 6.2 Operating manual template (Operational sections only)
 
 ```markdown
@@ -685,6 +687,20 @@ Soft gap-check for the v4.0 canonical strategic docs. The reads already happened
 ```
 
 **Why soft.** Many sessions are pure execution against an existing plan; some are exploratory; some projects are too small for the full set. The warning informs without blocking — session continues regardless.
+
+### 1.5.1 Draft-ADR check (NEW in v5.2)
+
+After globbing `docs/decisions/*.md` in the parallel batch, count files whose first ~10 lines contain the string `DRAFT — auto-recorded` (the banner inserted by `/wrapup` Phase 3 under Auto mode). These are ADRs that were captured autonomously and need user review of LLM-inferred rationale.
+
+**Output behavior:**
+
+- **Zero draft ADRs** → emit nothing
+- **One or more draft ADRs** → single briefing line (placed near the gap-check warnings):
+  ```
+  ⚠ N draft ADRs pending review: NNNN, NNNN — open and either remove the DRAFT banner to confirm, or edit/delete the rationale. Auto-recorded by previous /wrapup under harness autonomy.
+  ```
+
+This makes draft ADRs visible at session open so review doesn't get indefinitely deferred. Removing the banner is the user's signal that the ADR has been validated.
 
 ### 1.6 Status freshness check
 

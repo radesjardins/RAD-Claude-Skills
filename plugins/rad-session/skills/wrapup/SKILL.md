@@ -46,7 +46,8 @@ Close the store: write `docs/status.md` from observed evidence, surface candidat
 - `--no-push` — Skip push entirely; commit locally only.
 - Neither push flag → prompt at Phase 7.4 (default).
 - `--quick` — Fast wrapup: skip cross-doc checks (Phase 4), skip candidate-decision deep-scan (Phase 3), skip operating manual prune (Phase 5) unconditionally, simpler status update. Use when "I just sat down for an hour, save state and go."
-- `--non-interactive` — Suppress prompts (candidate-decision menu, ADR append, archive prompt, push). Tagged decisions land in status.md anyway; the durable DECISIONS.md append is gated by user `y` so non-interactive defaults to skipping.
+- `--non-interactive` — Suppress prompts (candidate-decision menu, ADR append, archive prompt, push). Tagged decisions land in status.md anyway; the durable DECISIONS.md append is gated by user `y` so non-interactive defaults to skipping. **Cautious mode** — no ADR writes without explicit user input.
+- `--auto` *(new in v5.2)* — Productive autonomy mode. No prompts, but candidate decisions are written as DRAFT-banner ADRs to `docs/decisions/NNNN-*.md` so the capture isn't lost. Each draft ADR explicitly labels the rationale as LLM-inferred and surfaces in Phase 8 anomaly block as "⚠ N draft ADRs auto-recorded — review when convenient." Also triggers when a harness-level `<system-reminder>` signals autonomous-mode behavior even without the explicit flag (see Phase 3.0.5). Use for autonomous loops / Auto permission mode where you want the captures but don't want to be interrupted. Distinct from `--non-interactive` (which is cautious / skip).
 - `--force` — Override the Phase 0 no-work check. Used when you want a status refresh even though there's no commit activity (e.g., bookkeeping refresh after manual file edits outside session).
 
 ## Cross-model note
@@ -260,8 +261,21 @@ Surface decisions that may want to become ADRs. Combines mechanical triggers (Ph
 
 Skip Phase 3 entirely if any of these hold:
 - `--quick` mode (skip the deep scan; mechanical triggers still feed status.md Phase 2.5)
-- `--non-interactive` (no prompt possible; candidates land in status.md but no ADR append)
+- `--non-interactive` (no prompt possible; candidates land in status.md but no ADR append — cautious CI default)
 - Zero mechanical triggers AND zero `DECISION`-tagged turns
+
+### 3.0.5 Autonomy detection (NEW in v5.2)
+
+Detect whether the model is running under harness-level autonomy. Two signals:
+
+1. **Explicit flag:** `--auto` was passed to `/wrapup` invocation
+2. **Harness hint:** a `<system-reminder>` is present in the current conversation that signals autonomous-mode behavior (e.g., "the user has asked to work without stopping for clarifying questions", "auto-accept", or equivalent)
+
+If either signal is present, Phase 3 enters **Auto mode** (sub-section 3.2 has a third branch for this; sub-section 3.3 writes draft-banner ADRs instead of prompting).
+
+If neither signal is present and `--non-interactive` is NOT set, run Phase 3 in the normal interactive mode based on `.rad/profile` `mode` field (mentor or dev).
+
+**Note on signal interpretation:** the harness autonomy hint covers tool-use approvals (Write, Edit, Bash). It does NOT cover the Case C guard rail in `/startup` Phase 0.5 (data-loss-protected). For `/wrapup` Phase 3 specifically — where the user's downside is "an auto-recorded ADR may have wrong rationale" rather than "I lose work" — the right behavior under autonomy is to write the ADR with a DRAFT banner so the user can review at their own pace. Better than skipping the capture entirely and losing the record.
 
 ### 3.1 Build the candidate list
 
@@ -317,9 +331,42 @@ Actions per candidate: [a]ccept / [s]kip / [d]efer
 Or: [A] accept all, [S] skip all, [D] defer all
 ```
 
+**Auto mode** (detected per 3.0.5: `--auto` flag OR harness autonomy hint):
+
+No prompt. Write all candidates as draft-banner ADRs directly. Surface counts in Phase 8 anomaly block.
+
+```
+(no terminal prompt — auto-recording)
+
+Phase 8 anomaly will surface:
+⚠ N draft ADRs auto-recorded this session: 0007, 0008, 0009 —
+  review when convenient. Each carries a DRAFT banner; the rationale
+  is LLM-inferred. Promote each ADR by removing the banner once you
+  confirm the rationale matches your intent.
+```
+
+The DRAFT banner inserted at the top of each auto-recorded ADR (immediately under the H1 title):
+
+```markdown
+> **DRAFT — auto-recorded by `/wrapup`** under harness autonomy. Rationale was
+> LLM-inferred from commit messages and changed files; review and revise.
+> Remove this banner to promote the ADR to a confirmed decision.
+```
+
+Status.md section 5 entry under Auto mode reads:
+
+```markdown
+**Decision: Adopt React Query for server-state management**
+- Status: DRAFT auto-recorded at decisions/0007-react-query.md
+- Evidence: package.json line 23; commits a1b2c3, d4e5f6
+- Action needed: review the LLM-inferred rationale; remove DRAFT banner to confirm
+```
+
+The point of Auto mode: capture the candidate decision (it would be lost otherwise) without falsely claiming user confirmation. The user can review draft ADRs at the next `/startup` (which surfaces them in the briefing as a soft-warning line) or whenever convenient.
+
 ### 3.3 Apply user decisions
 
-For each accepted candidate:
+**Default (mentor/dev mode):** for each accepted candidate:
 - Compute next ADR sequence number (read decisions/ for highest NNNN, +1)
 - Write `docs/decisions/NNNN-<slug>.md` with the canonical template (Context / Decision / Why / Alternatives / Consequences / Related files)
 - Update status.md section 5 (Decisions made during execution) to mark `Recorded in ADR? yes (decisions/NNNN-...)`
@@ -328,12 +375,26 @@ For skipped: include in status.md section 5 with `Recorded in ADR? no` and captu
 
 For deferred: include in status.md section 5 with `Recorded in ADR? pending — revisit next wrapup`.
 
+**Auto mode (detected per 3.0.5):** for every candidate:
+- Compute next ADR sequence number (read decisions/ for highest NNNN, +1)
+- Write `docs/decisions/NNNN-<slug>.md` with the canonical template **plus the DRAFT auto-recorded banner immediately under H1** (template shown in 3.2 Auto mode block)
+- Update status.md section 5 with the "Status: DRAFT auto-recorded at decisions/NNNN-..." format
+- No "skip" or "defer" outcomes possible under Auto — every candidate gets a draft ADR. Discarding noise is the user's review-time job.
+
 ### 3.4 Notify
 
-Emit one line per outcome to the Phase 8 anomaly block:
+**Default mode:** emit one line per outcome to the Phase 8 anomaly block:
 ```
 DECISIONS.md: appended N entries (NNNN–NNNN).
 ```
+
+**Auto mode:** emit a single anomaly-block line that explicitly flags review-needed:
+```
+⚠ N draft ADRs auto-recorded this session: NNNN, NNNN, NNNN — review when convenient.
+  Each carries a "DRAFT — auto-recorded" banner. Remove the banner on each to promote.
+```
+
+The next `/startup` briefing surfaces draft-banner ADR count as part of its strategic-doc gap-check, so the user sees pending review items at session open without needing to remember to look.
 
 ---
 
