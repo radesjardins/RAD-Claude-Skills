@@ -1,12 +1,15 @@
 ---
 name: wrapup
 description: >
-  End-of-session skill that captures session state to HANDOFF.md, appends to the
-  session log, and prunes CLAUDE.md of stale/ephemeral content (the ## Resources
-  section is protected from removal). Use at the end of any work session for
-  seamless handoffs. Trigger when the user says "/wrapup", "wrap up", "end of
-  session", "session handoff", "save session state", "wrap this up",
-  "let's wrap up", "close out this session".
+  End-of-session skill for v5.0 — writes docs/status.md from EVIDENCE (not chat
+  synthesis), surfaces candidate decisions for ADR recording, runs cross-doc
+  redundancy + contradiction checks via rad-planner validators, prunes the
+  operating manual's Operational sections (sectioned-writer rule), archives
+  the current plan if the milestone shipped, syncs session files to git. Mode-
+  aware (mentor vs dev from .rad/profile). HANDOFF.md and .claude/session-log.md
+  retire in v5.0 — docs/status.md replaces both. Trigger when the user says
+  "/wrapup", "wrap up", "end of session", "session handoff", "save session
+  state", "wrap this up", "close out this session".
 allowed-tools:
   - Read
   - Write
@@ -16,616 +19,660 @@ allowed-tools:
   - Bash
 ---
 
-# Session Wrapup
+# Session Wrapup (v5.0)
 
-Capture the current session's state, decisions, traps, and insights into structured handoff files, then prune CLAUDE.md to keep it lean. The `## Resources` section is protected from deletion.
+Close the store: write `docs/status.md` from observed evidence, surface candidate decisions the user may want to record as ADRs, run cross-doc maintenance checks, prune the operating manual's Operational sections, archive shipped milestones, sync session files to git. Predictable and deliberate — wrapup is bounded; tomorrow's open should be fast.
 
-**Model selection (3.7).** This skill runs in the **session model** — whatever Opus/Sonnet/Haiku tier you're already in. Earlier versions (3.5–3.6) pinned to Haiku 4.5 for speed, but that broke wrapup whenever the conversation grew past Haiku's 200K context window in a 1M-context Opus session ("context used up" error). Pinning is too sharp a tool for a workflow that must succeed regardless of conversation length. If you want extra speed on a short wrapup, run `/model haiku` *before* invoking `/wrapup` — the explicit choice keeps you in control of the context-window trade-off.
+**Janitor model:** clean up, ensure everything's in its place, move quickly when nothing's blocking, take time when something genuinely needs synthesis. No churn for ceremony.
 
-**Cross-model note.** The phase logic below uses an explicit tag-and-summarize pattern (Phase 1.3) so output is comparable across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Don't assume Opus-level latent reflection — the structure is the contract.
+> **Status:** rad-session 5.0 — released. plugin.json is at 5.0.0; the marketplace ships this workflow.
 
-**Announce at start:** "Wrapping up this session — gathering state, writing handoff, updating session log, pruning CLAUDE.md (Resources protected), surfacing insights, and syncing session files to git..."
+## What changed from v4.0
+
+| v4.0 | v5.0 |
+|---|---|
+| Wrote `HANDOFF.md` from chat synthesis (Phase 1.3 tagging → narrative) | Writes `docs/status.md` from EVIDENCE: git diff, test output, plan-task state, validator results |
+| Wrote `.claude/session-log.md` per session | Session-log retired — `docs/planning/archive/` serves the journal role |
+| Phase 1.3 conversation tagging was the primary synthesis pass | Candidate-decision detection (mechanical + soft) is primary; conversation tagging secondary, scoped to ADR prompts only |
+| Phase 4 pruned the whole CLAUDE.md | Phase 5 prunes ONLY Operational sections per sectioned-writer rule; Constitution sections never touched |
+| Phase 6 committed HANDOFF.md + session-log.md | Phase 7 commits `docs/status.md` + archives + ADRs + pruned manual |
+| (no cross-doc checks) | Phase 4 runs `doc-redundancy.py` and `doc-contradiction.py` from rad-planner (advisory findings) |
+| (no milestone archive) | Phase 6 detects milestone completion + prompts to archive `current.md` to `planning/archive/` |
+| (no work-detection gate) | Phase 0 refuses to run if no work since last status update (saves noise updates) |
 
 ## Mode flags
 
-- `--push` — Skip the Phase 6.4 push prompt and push the session commit immediately. For autonomous loops or when the user has already decided.
-- `--no-push` — Skip the push entirely; commit locally only. Useful for "I'm not done with this slice yet, don't share it."
-- Neither push flag → prompt at Phase 6.4 (default).
+- `--push` — Skip Phase 7.4 push prompt and push the session commit immediately.
+- `--no-push` — Skip push entirely; commit locally only.
+- Neither push flag → prompt at Phase 7.4 (default).
+- `--quick` — Fast wrapup: skip cross-doc checks (Phase 4), skip candidate-decision deep-scan (Phase 3), skip operating manual prune (Phase 5) unconditionally, simpler status update. Use when "I just sat down for an hour, save state and go."
+- `--non-interactive` — Suppress prompts (candidate-decision menu, ADR append, archive prompt, push). Tagged decisions land in status.md anyway; the durable DECISIONS.md append is gated by user `y` so non-interactive defaults to skipping.
+- `--force` — Override the Phase 0 no-work check. Used when you want a status refresh even though there's no commit activity (e.g., bookkeeping refresh after manual file edits outside session).
 
-- `--quick` — Fast wrapup for short sessions. Bounds Phase 1.3 tagging to the last 15 turns, skips Phase 4 (CLAUDE.md prune) unconditionally, skips recurring-trap promotion in Phase 3 maintenance, skips Phase 3.5 DECISIONS prompt entirely. Use when "I just sat down for an hour, save state and go." For thorough wrapups (end of phase, end of week), run without `--quick`.
+## Cross-model note
 
-- `--non-interactive` — Suppress prompts in Phase 3.5 (DECISIONS append) and Phase 6.4 (push). Implied by autonomous-loop / PreCompact-triggered / headless contexts and detected automatically; the explicit flag is for scripted runs or testing. Tagged decisions still land in HANDOFF.md / session-log either way — only the durable DECISIONS.md append is gated by the user's `y`, so non-interactive defaults to skipping the append.
+The phase logic uses explicit evidence-extraction patterns so output is comparable across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Don't assume Opus-level latent reflection — evidence is the contract.
+
+**Announce at start:** "Wrapping up — gathering evidence, writing status.md, surfacing candidate decisions, running cross-doc checks, pruning operating manual Operational sections, archiving milestone if shipped, syncing to git..."
 
 ---
 
-## Phase 1: Gather State
+## Phase 0: No-work check
 
-Collect all raw material silently — no user interaction in this phase. Phase 1.1 and 1.2 have no dependencies and can run in parallel.
+If nothing has changed since the last status update, refuse to run. Forcing a noise update erodes status.md's evidence quality.
 
-### 1.1 Read Existing Files
+### 0.1 Evidence inputs
 
-Read these files if they exist (skip silently if missing):
+Check three signals:
 
-1. `CLAUDE.md` at project root
-2. `HANDOFF.md` at project root (prior session's state — useful for comparison)
-3. `.claude/session-log.md` — last 3-5 entries for continuity context
-
-### 1.2 Detect Project Type
-
-Use Glob to check for project markers:
-
-**Coding project indicators** (any of these):
-```
-package.json
-Cargo.toml
-pyproject.toml
-go.mod
-Makefile
-*.sln
-.git/
-```
-
-**If coding project detected**, run as one combined command:
 ```bash
-git status --short 2>/dev/null && echo "---" && \
+# Commits since status.md was last updated
+LAST_STATUS_COMMIT=$(git log -1 --format=%H -- docs/status.md 2>/dev/null)
+[ -n "$LAST_STATUS_COMMIT" ] && COMMITS_SINCE=$(git rev-list "$LAST_STATUS_COMMIT..HEAD" --count 2>/dev/null || echo 0) || COMMITS_SINCE=0
+
+# Uncommitted changes
+DIRTY=$(git status --porcelain 2>/dev/null | wc -l)
+
+# Plan-task changes (acceptance criteria flips)
+PLAN_TASK_CHANGES=$(git diff docs/planning/current.md 2>/dev/null | grep -cE '^\+\s*-\s*\[' || echo 0)
+```
+
+### 0.2 Decision
+
+- `COMMITS_SINCE > 0` OR `DIRTY > 0` OR `PLAN_TASK_CHANGES > 0` → proceed to Phase 1.
+- All zero → refuse:
+
+```
+No work detected since last status update.
+
+  Commits since last status: 0
+  Uncommitted changes: 0
+  Plan acceptance-criteria changes: 0
+
+Nothing to wrap up. Options:
+  1. Exit (default) — status.md is already current.
+  2. Run anyway with --force to refresh the status.md timestamp.
+```
+
+In `--non-interactive` mode, exit silently with `wrapup_action: "skipped_no_work"` in the trailing JSON.
+
+If `--force` is passed, proceed regardless of the check.
+
+---
+
+## Phase 1: Gather evidence (parallel)
+
+All reads in Phase 1 are issued as one parallel batch. The phase numbering is for human readability.
+
+### 1.1 Read config and prior state
+
+- `.rad/profile` — extract `mode`, `agent_scope`, `multi_branch_status` (for Phase 2.1 status-file path and Phase 3 mode-aware surfacing)
+- `docs/status.md` (or `docs/status-<current-branch>.md` if multi_branch) — prior status for diff and "last completed" carry-forward filtering
+- `docs/planning/current.md` — current plan; acceptance-criteria state, planned changes, current milestone
+
+### 1.2 Read operating manual
+
+Per `agent_scope`:
+- `claude_only` → CLAUDE.md
+- `codex_only` → AGENTS.md
+- `claude_and_codex` → both (AGENTS.md canonical + CLAUDE.md shim)
+
+For Phase 5 prune logic.
+
+### 1.3 Capture git evidence
+
+Run as one combined command:
+
+```bash
+git status --porcelain 2>/dev/null && echo "---" && \
+git diff --name-only 2>/dev/null && echo "---" && \
 git diff --stat 2>/dev/null && echo "---" && \
-git log --oneline -10 2>/dev/null
+git log --oneline -10 2>/dev/null && echo "---" && \
+git log --since="$(git log -1 --format=%cI -- docs/status.md 2>/dev/null)" --format='%H|%s|%ai' 2>/dev/null && echo "---" && \
+git rev-parse --abbrev-ref HEAD 2>/dev/null
 ```
 
-Capture: branch name, uncommitted changes, recent commits.
+Capture:
+- Current branch
+- Uncommitted changes (file list)
+- Diff stat (lines added/removed per file)
+- Recent commits (last 10)
+- Commits since last status update
+- Branch name
 
-**If non-coding project:**
-- Use Glob for recently modified files: `**/*` sorted by modification time
-- Note the most recently touched files as "Modified Files"
+### 1.4 Detect dependency / schema / env changes (mechanical candidate-decision triggers)
 
-### 1.3 Synthesize Conversation Context
+Run mechanical detection for the most common ADR-worthy changes:
 
-Walk the conversation already in your context — no tool call needed. To produce reliable, comparable output across models, use this explicit scan pattern instead of freeform reflection.
+```bash
+# Dependency additions in package.json (or equivalent)
+git diff -- package.json 2>/dev/null | grep -E '^\+\s+"' | grep -v '^\+\s+"version"' || true
 
-**Recency window (bounds cost on long sessions).** Do not tag the entire visible conversation by default. Tagging is bounded to the most recent meaningful work. Determine the window like this:
+# New migration files
+git diff --name-only --diff-filter=A 2>/dev/null | grep -E '(migrations|schema)/' || true
 
-1. Scan backward through the conversation looking for any of these signals (the most recent one wins):
-   - A user message containing `/wrapup`, `/checkpoint`, "wrap up", or "checkpoint"
-   - A PreCompact systemMessage from rad-session (indicates context boundary)
-   - A prior `/startup` briefing (turns before this are last session, already captured)
+# .env.example additions
+git diff -- .env.example 2>/dev/null | grep -E '^\+\s*[A-Z_]+=' || true
 
-2. The window is everything from that signal forward to the current turn.
+# New top-level directories
+git diff --name-only --diff-filter=A 2>/dev/null | awk -F'/' '{print $1}' | sort -u || true
+```
 
-3. If no signal is found, the window is the **last 40 turns** (default cap).
+These feed into Phase 3 candidate-decision detection without needing model reasoning.
 
-4. In `--quick` mode (see Mode flags), the cap drops to the **last 15 turns** regardless of signals.
+### 1.5 Optionally run validators
 
-5. **Low-activity auto-quick (3.5).** If the window is signal-bounded (rules 1.1–1.3 above) AND contains fewer than **10 substantive turns** (excluding pure tool output, navigation, conversational filler), automatically apply `--quick` semantics for the rest of this wrapup: cap at last 15 turns, skip Phase 4 unconditionally, skip Phase 3.B.3 trap promotion. Emit one line under the wrapup announcement: `low-activity session — auto-quick wrapup applied (N substantive turns since signal).` This bounds wrapup cost on short sessions without requiring the user to remember the flag. Does not fire when no signal is found (default 40-turn cap stays in effect — assume it's a long-running unbounded session that genuinely needs full synthesis).
+If rad-planner is installed at a sibling path, invoke its validators:
 
-Only the turns inside the window are tagged. This bounds wrapup cost regardless of total session length — long sessions don't make wrapup proportionally slower. The PreCompact hook already covers the "context about to be lost" case separately, so safety isn't compromised.
+```bash
+RAD_PLANNER_SCRIPTS="${plugin_root}/../rad-planner/scripts"
 
-**Scan pass.** Within the window, starting from the earliest turn and moving forward, tag each meaningful turn with one or more of these labels:
+# Plan health check
+[ -f "${RAD_PLANNER_SCRIPTS}/plan-lint.py" ] && \
+  python3 "${RAD_PLANNER_SCRIPTS}/plan-lint.py" --mode all docs/planning/current.md --json 2>/dev/null
 
-| Label | What qualifies |
-|-------|----------------|
-| `DECISION` | Architecture choice, tool selection, naming rule, approach taken — with a stated or inferable reason |
-| `FAIL` | Something was tried and didn't work, **and** a root cause was identified |
-| `CORRECTION` | User explicitly redirected, rejected an approach, or stated a preference |
-| `INSIGHT` | Non-obvious fact about the codebase, environment, API, or user that a fresh session couldn't easily rediscover |
-| `OPEN` | Task started but not finished, or a next step that was identified but not executed |
+# Status freshness (re-run after Phase 2 writes the new status)
+# Cross-doc validators run in Phase 4
+```
 
-Skip turns that are pure tool output, navigation, or conversational filler. Do not re-tag the same content twice.
+If validators aren't available (rad-planner not installed), Phase 4 emits a "validators unavailable" note and skips cross-doc checks.
 
-**Synthesis pass.** After tagging, collapse the labels into the HANDOFF.md sections:
+### 1.6 Conversation tagging (scoped, for candidate-decision input only)
 
-- `DECISION` → Key Decisions (with the WHY preserved)
-- `FAIL` → What NOT To Do (use TRIED / FAILED BECAUSE / CORRECT APPROACH format — see below)
-- `CORRECTION` → Key Decisions (if it locks in a rule) or Key Insights (if it reveals a preference)
-- `INSIGHT` → Key Insights
-- `OPEN` → Open Work (stated as current state, not instructions)
+Walk the recent conversation window — bounded the same way as v4.0 (most recent of: prior /wrapup signal, PreCompact marker, prior /startup briefing; default cap 40 turns, 15 in `--quick`).
 
-If the conversation was truncated by compaction, note this explicitly in the Last Session Summary: "Context was compacted during this session — synthesis based on remaining visible turns only."
+Tag turns labeled `DECISION` (architecture choice, tool selection, naming rule, approach taken — with stated or inferable reason) — these feed Phase 3.
+
+In v5.0, conversation tagging is **scoped to ADR prompts only**. The bulk of status.md content comes from evidence (git, validators, plan state), not from the chat narrative. This is the biggest behavioral shift from v4.0.
+
+Other v4.0 tag categories (`FAIL`, `CORRECTION`, `INSIGHT`, `OPEN`) are NOT carried forward into v5.0 status.md — they were narrative-shaped, and v5.0 is evidence-shaped. If a real "what didn't work" or "open question" matters, it surfaces through plan-task state (acceptance criterion still unchecked) or git evidence (file changed but never tested), not from chat synthesis.
 
 ---
 
-## Phase 2: Write HANDOFF.md
+## Phase 2: Write docs/status.md from evidence
 
-Overwrite `HANDOFF.md` at the project root. Follow the template in `references/handoff-template.md`.
+Write the canonical handoff per the 8-section schema in [`docs/status-md-schema.md`](../../../../docs/status-md-schema.md). Every field has a documented inference policy (DIRECT / HEURISTIC / SYNTHESIZED / USER-STATED). Status.md is **evidence-grounded** — the planner's "intent" lives in current.md; the session's "reality" lives in status.md.
 
-### Content Rules
+### 2.1 Target path
 
-- **Every section is optional.** If nothing failed, omit "What NOT To Do" entirely — do not fill it with "N/A" or placeholders.
-- **Be specific.** "Modified `src/auth.ts` lines 45-80 — added JWT validation" is useful. "Made changes to auth" is not.
-- **Describe state, not instructions.** "Open Work" says "EBirdProvider started, API auth not wired" — not "Next, wire up the eBird API auth."
-- **Keep it scannable.** Bullet points over paragraphs. One idea per bullet.
-- **Per-bullet length cap: ≤ 3 sentences (~300 chars).** A bullet is one thought, not a mini-essay. If a decision needs more, break it into multiple bullets — each its own thought. If it can't be broken down, the rationale belongs in a code comment, design doc, or commit message — not in HANDOFF. Long sessions don't justify long bullets; the handoff captures *state*, not *narrative*.
-- **Target length: 30–80 lines, hard cap 100 lines / 8 KB.** If the handoff exceeds the hard cap after writing, re-compress before saving. Don't ship oversized handoffs — they pollute every subsequent session-log entry that derives from them.
-
-### "What NOT To Do" — canonical trap format
-
-Every entry under this section uses a structured three-part form. Small models (Haiku) and downstream parsers depend on it being literal. Opus/Sonnet can collapse to a single line when the third field is unknown; the two required prefixes remain.
-
-**Full form (preferred):**
-```
-- TRIED: [specific approach that was attempted]
-  FAILED BECAUSE: [root cause — not just "it didn't work"]
-  CORRECT APPROACH: [what actually worked, or what should be tried instead — omit the line if unknown]
+```bash
+if multi_branch_status:
+  STATUS_PATH=docs/status-${current_branch}.md
+else:
+  STATUS_PATH=docs/status.md
 ```
 
-**Compact form (acceptable when the correct approach is unknown):**
+### 2.2 Section-by-section content
+
+For each of the 8 sections, populate from evidence. Reference `docs/status-md-schema.md` for the exact inference policy per field.
+
+**1. Current state** (overwrite)
+- Branch / worktree: DIRECT from `git rev-parse --abbrev-ref HEAD`
+- Current milestone: DIRECT from `docs/planning/current.md` "Current milestone" section
+- Overall status: HEURISTIC per the schema (on_track / blocked / validating / needs_decision)
+
+**2. Last completed** (rewrite, top 5–10 items)
+- HEURISTIC consolidation of commits since last status + AC checkboxes that flipped to `[x]`
+- Each item: concrete completion (file path + what was done), not narrative
+- DROP items already in the previous status.md's "Last completed" — that's history now
+
+**3. Files changed recently** (rewrite, top 10)
+- DIRECT from `git diff --name-only <last_status_commit>..HEAD` (or current diff if uncommitted)
+- Path + one-line annotation per file (inferred from commit messages or diff content)
+- If > 10 files, prepend header: "Recent activity touched N files; showing 10 most-recently-modified:"
+
+**4. Latest validation results** (rewrite, evidence-strict)
+- DIRECT: commands that actually ran in this session, with their actual pass/fail/partial/not-run results
+- USER-STATED: results the user reported during the session
+- If no validation ran this session: write "No validation run this session — last run YYYY-MM-DD with results: [from prior status.md]" (DO NOT fabricate)
+
+**5. Decisions made during execution** (rewrite from Phase 3 output)
+- HEURISTIC candidates + USER-STATED confirmations from Phase 3
+- Items marked "recorded in ADR" can be dropped at next wrapup; items "no" or "pending" persist
+- Format: `Decision: ...` / `Why: ...` / `Recorded in ADR? yes (decisions/NNNN-...) | no | pending`
+
+**6. Known issues or blockers** (rewrite)
+- DIRECT: failed validations from Phase 1 that weren't fixed in this session
+- USER-STATED: blockers mentioned during the session
+- HEURISTIC: open questions in current.md older than N days
+
+**7. Next recommended step** (overwrite)
+- SYNTHESIZED from current.md current milestone + acceptance criteria + Notes for the next session + any blockers from section 6
+- 3-part format: most likely next action / first file to read / first question (if applicable)
+- Bounded by current.md content — cannot invent goals
+
+**8. If restarting from scratch** (overwrite)
+- Read order (DIRECT): operating manual file (per agent_scope) + planning/current.md + architecture.md
+- Resume question: SYNTHESIZED from section 7's content
+- Conditional vision.md inclusion if user-facing work is in scope
+
+### 2.3 Write the file
+
+Write `STATUS_PATH` with the populated 8-section content. Sections that are explicitly empty MUST say so ("No data this session" / "No validation run this session — last run YYYY-MM-DD") rather than be silently blank.
+
+---
+
+## Phase 3: Candidate-decision detection + mode-aware surfacing
+
+Surface decisions that may want to become ADRs. Combines mechanical triggers (Phase 1.4) and conversation tagging (Phase 1.6).
+
+### 3.0 Skip conditions
+
+Skip Phase 3 entirely if any of these hold:
+- `--quick` mode (skip the deep scan; mechanical triggers still feed status.md Phase 2.5)
+- `--non-interactive` (no prompt possible; candidates land in status.md but no ADR append)
+- Zero mechanical triggers AND zero `DECISION`-tagged turns
+
+### 3.1 Build the candidate list
+
+Combine:
+- Mechanical triggers from Phase 1.4 (new deps, schema changes, env additions, new top-level directories) → each becomes a candidate
+- `DECISION`-tagged turns from Phase 1.6 conversation walk
+
+For each candidate, compute:
+- **Title:** 8-word max summary
+- **Why:** one-clause rationale (from commit message, tag content, or "TBD — fill in")
+- **Evidence:** specific file path, commit SHA, or turn reference
+
+### 3.2 Mode-aware surfacing (read .rad/profile mode)
+
+**Mentor mode** (`mode = mentor` in .rad/profile, or default):
+
+For each candidate, show teaching + draft entry:
+
 ```
-- TRIED: [approach] — FAILED BECAUSE: [root cause]
+Candidate decision (mentor mode):
+
+  Title: Adopt React Query for server-state management
+  Why: Replaces the existing fetch-with-useEffect pattern (5 sites). React Query handles caching, retry, and revalidation that we've been re-implementing inconsistently.
+  Evidence: package.json line 23 added "@tanstack/react-query"; commits a1b2c3, d4e5f6
+
+  Why this is typically worth an ADR:
+    Adding dependencies commits future code to that library's API and lifecycle.
+    Without an ADR, the next session won't know whether to use React Query or
+    fall back to the prior fetch-with-useEffect pattern when adding a new
+    server-state read.
+
+  Draft entry for decisions/0007-react-query.md:
+    [full ADR template populated — Context, Decision, Why, Alternatives, Consequences]
+
+Actions:
+  [a] Accept — write decisions/0007-react-query.md as drafted
+  [e] Edit — open the draft for your edits before writing
+  [s] Skip — record in status.md only, no ADR
+  [d] Defer — record in status.md as "pending — revisit next wrapup"
 ```
 
-Do not write unstructured trap prose. The prefix tokens are how `/startup` reliably extracts the trap into the next session's briefing.
+**Dev mode** (`mode = dev`):
 
-### File Structure
+Quick list, skip-friendly:
 
-```markdown
-# Session Handoff
+```
+Candidate decisions surfaced:
+  1. Adopt React Query — Evidence: pkg.json + 2 commits
+  2. New migration: 0042_user_preferences.sql — schema change
+  3. Add ANTHROPIC_API_KEY to .env.example — env addition
 
-**Date:** [today's date]
-**Status:** [One-line project state — e.g., "Phase 2 implementation in progress, auth complete, data layer next"]
+Actions per candidate: [a]ccept / [s]kip / [d]efer
+Or: [A] accept all, [S] skip all, [D] defer all
+```
 
-## Last Session Summary
-[2-4 sentences — what was accomplished. Focus on outcomes, not play-by-play.]
+### 3.3 Apply user decisions
 
-## Where I Left Off
-- [Specific file, feature, or task that is mid-flight]
-- [Include file paths and line numbers when relevant]
+For each accepted candidate:
+- Compute next ADR sequence number (read decisions/ for highest NNNN, +1)
+- Write `docs/decisions/NNNN-<slug>.md` with the canonical template (Context / Decision / Why / Alternatives / Consequences / Related files)
+- Update status.md section 5 (Decisions made during execution) to mark `Recorded in ADR? yes (decisions/NNNN-...)`
 
-## Key Decisions
-- [Decision]: [Brief reasoning — WHY, not just WHAT]
+For skipped: include in status.md section 5 with `Recorded in ADR? no` and capture the reason.
 
-## What NOT To Do
-- TRIED: [failed approach]
-  FAILED BECAUSE: [root cause]
-  CORRECT APPROACH: [what works, if known]
+For deferred: include in status.md section 5 with `Recorded in ADR? pending — revisit next wrapup`.
 
-## Open Work
-- [Item]: [Current state as a description, not an instruction]
+### 3.4 Notify
 
-## Modified Files
-- `path/to/file` — [what changed, briefly]
-
-## Key Insights
-[Non-obvious things: API quirks, environment gotchas, architectural constraints not in CLAUDE.md,
-user preferences discovered during this session]
+Emit one line per outcome to the Phase 8 anomaly block:
+```
+DECISIONS.md: appended N entries (NNNN–NNNN).
 ```
 
 ---
 
-## Phase 3: Append + Maintain Session Log
+## Phase 4: Cross-doc checks (NEW)
 
-Update `.claude/session-log.md`. Phase 3 has two **separate, sequential** sub-phases — both must run. Skipping 3.B is the most common defect in this workflow; the structure below makes that defect impossible.
+Run rad-planner's cross-doc validators against the project's strategic docs. Findings are **advisory** — surface for user review, not blocking.
 
-**Derive, don't re-synthesize.** Phase 2 already wrote a structured HANDOFF.md from the conversation tagging in Phase 1.3. The session-log entry is a mechanical compression of that same handoff — do **not** re-walk the conversation or re-tag turns. The fields map directly:
+### 4.0 Skip conditions
 
-| Log entry field | Sourced from HANDOFF.md | Per-bullet cap (hard) |
+Skip Phase 4 if any of these hold:
+- `--quick` mode
+- rad-planner scripts not available at the expected sibling path
+- No strategic docs exist (vision.md / architecture.md / decisions/) — no cross-doc comparisons possible
+
+### 4.1 Run validators
+
+```bash
+RAD_PLANNER_SCRIPTS="${plugin_root}/../rad-planner/scripts"
+
+# Cross-doc redundancy
+python3 "${RAD_PLANNER_SCRIPTS}/doc-redundancy.py" "$PWD" --json 2>/dev/null > /tmp/rad-redundancy.json
+
+# Cross-doc contradiction
+python3 "${RAD_PLANNER_SCRIPTS}/doc-contradiction.py" "$PWD" --json 2>/dev/null > /tmp/rad-contradiction.json
+```
+
+### 4.2 Surface findings
+
+Parse the JSON outputs.
+
+**Redundancy findings:**
+- MEDIUM (similarity ≥ 0.85): show as "Likely duplicate — consider referencing rather than copying"
+- LOW (similarity in [threshold, 0.85)): show as "Related content — review for canonical placement"
+
+**Contradiction findings:**
+- MEDIUM (overlap ≥ 0.6): show as "Potential contradiction — vision non-goal overlaps with current AC"
+- LOW (overlap in [threshold, 0.6)): show with note "may be a real contradiction or unrelated overlap"
+
+Display under a single block in the Phase 8 anomaly output (only if any findings):
+
+```
+Cross-doc maintenance:
+  Redundancies: N (M MEDIUM, K LOW) — see /tmp/rad-redundancy.json or re-run doc-redundancy.py
+  Contradictions: N (M MEDIUM, K LOW) — see /tmp/rad-contradiction.json or re-run doc-contradiction.py
+  Action: review for canonical placement; resolve before next /plan if blocking.
+```
+
+Cross-doc findings are advisory — no automatic file changes. The user decides what to fix.
+
+---
+
+## Phase 5: Operating manual prune (Operational sections only)
+
+Prune the operating manual per the sectioned-writer rule. ONLY Operational sections may be touched — Constitution sections are owned by rad-planner and must never be modified by /wrapup.
+
+### 5.0 Skip conditions
+
+Skip Phase 5 entirely if any of these hold:
+- `--quick` mode
+- Operating manual unchanged this session (`git diff --quiet HEAD -- <manual_path>` returns 0 AND last commit modifying it is older than last status.md commit)
+- Operating manual doesn't exist (no work to prune)
+
+If skipped, log: `Operating manual unchanged since last wrapup — prune skipped.`
+
+### 5.1 Determine target file(s)
+
+Per `agent_scope` from .rad/profile:
+- `claude_only` → prune `CLAUDE.md`
+- `codex_only` → prune `AGENTS.md`
+- `claude_and_codex` → prune both (separate evaluations; CLAUDE.md may have shim-specific Operational content + `@AGENTS.md` import; AGENTS.md has its own Operational sections)
+
+### 5.2 Section ownership table
+
+| Section | Owner | /wrapup may prune? |
 |---|---|---|
-| Title | HANDOFF.md `**Status:**` line, summarized to ≤8 words | 8 words |
-| `**Status:**` | HANDOFF.md `**Status:**` line verbatim | 1 line |
-| `**Changes:**` | HANDOFF.md `## Modified Files`, compressed to comma-separated path list | drop per-file descriptions |
-| `**Decisions:**` | HANDOFF.md `## Key Decisions`, ONE LINE per decision: name + single-clause WHY | ≤ 1 sentence (~150 chars) per decision |
-| `**Traps:**` | HANDOFF.md `## What NOT To Do`, compact `TRIED: X — FAILED BECAUSE: Y` form | ≤ 1 line per trap; OMIT CORRECT APPROACH (lives in HANDOFF only) |
-
-If a HANDOFF.md section is empty or omitted, the corresponding log field is omitted too — never write `N/A` or placeholders.
-
-**Hard cap on entry size: 30 lines / 1.5 KB.** If your generated entry exceeds either, re-compress before writing. The compression table above is the floor — apply it strictly. The log isn't where context lives; it's where the *index* of context lives.
-
----
-
-### Phase 3.A — Append (mechanical)
-
-1. Read `.claude/session-log.md` if it exists (may be empty or missing). If `.claude/` directory doesn't exist, create it first.
-2. Build the new entry by mechanically compressing the HANDOFF.md you just wrote, applying the per-bullet caps above. No LLM synthesis needed — the compression is deterministic from the table.
-3. Prepend the new entry to the existing content (newest first).
-4. Write the full file back.
-
-#### Entry Format
-
-```markdown
-## YYYY-MM-DD — [Brief title of what was done]
-**Status:** [one-line project state]
-**Changes:** [comma-separated path list]
-**Decisions:** [one line per decision — name + single-clause WHY]
-**Traps:** [one line per trap — TRIED: X — FAILED BECAUSE: Y]
----
-```
-
-**Target: 15–25 lines per entry. Hard cap: 30 lines / 1.5 KB.** Be concise — this is a log, not a narrative.
-
----
-
-### Phase 3.B — Maintain (hard gate, MANDATORY)
-
-This sub-phase is **mandatory** after every append, **not** conditional. The decision to act is gated programmatically — Claude does not judge "is the log getting big?" Bash counts the entries; the count drives the action.
-
-**Why mandatory.** Prior wrapup versions made maintenance a conditional sub-section of Phase 3 ("if the log exceeds 20 entries..."). In practice, that conditional was consistently skipped — 23 wrapups across one project, zero trims fired. The conditional is now removed: 3.B always runs, the Bash count determines whether trimming/promotion is needed.
-
-#### 3.B.1 — Count entries (Bash, deterministic)
-
-Run this exact command:
-
-```bash
-ENTRY_COUNT=$(grep -c "^## [0-9]" .claude/session-log.md 2>/dev/null || echo 0)
-LOG_SIZE_KB=$(($(wc -c < .claude/session-log.md 2>/dev/null || echo 0) / 1024))
-echo "Session log: ${ENTRY_COUNT} entries, ${LOG_SIZE_KB} KB (cap: 20 entries / ~20 KB)"
-```
-
-The output makes the count visible to both you and the user. **You may not skip the rest of 3.B based on memory or assumption** — the count is the truth.
-
-#### 3.B.2 — Branch on count
-
-| ENTRY_COUNT | Action |
-|---|---|
-| ≤ 20 | Log "no maintenance needed — N entries within cap." Continue to Phase 4. |
-| 21–25 | Run trap promotion scan + trim oldest (ENTRY_COUNT − 20) entries. Mandatory. |
-| 26+ | Same as above plus: warn the user that maintenance was previously skipped — re-evaluate whether older retained entries also need re-compression. |
-
-In `--quick` mode, the only difference is: skip the trap promotion scan (still trim). The trim itself is **never** skipped, regardless of mode.
-
-#### 3.B.3 — Trap promotion (when ENTRY_COUNT > 20 and not --quick)
-
-For each entry that will be trimmed (the oldest ENTRY_COUNT − 20 entries):
-
-1. Read its `**Traps:**` line(s) if any.
-2. Match each trap's `FAILED BECAUSE:` clause against the same clause across the entire current log (not just trimmed entries). Match on root-cause similarity, not exact string match — same root cause with different surface attempts counts as recurrence.
-3. If a `FAILED BECAUSE:` recurs **3+ times** across the full log, it's a permanent gotcha. Promote it to CLAUDE.md:
-   - Add under the existing section that best fits ("Known Gotchas", "Conventions", "Architecture"), or create `## Known Gotchas` if none fits.
-   - Format: one-line rule with the root cause and the corrective pattern. Don't paste the trap form verbatim — translate to a permanent rule.
-
-#### 3.B.4 — Trim
-
-Remove all entries beyond position 20 from the bottom of the file (oldest entries). After trimming, re-run the Bash count to confirm `ENTRY_COUNT == 20`.
-
-#### 3.B.5 — Notify user (always, even when no action needed)
-
-The notification is **mandatory** — silent skip is what caused the original defect. Choose one:
-
-- **Trimmed:** `Session log: trimmed N oldest entries (was ENTRY_COUNT, now 20). [If promoted: Promoted recurring trap to CLAUDE.md: "<one-line description>".]`
-- **No action needed:** `Session log: ENTRY_COUNT entries within cap (20). No maintenance needed.`
-
-This line is captured in the Phase 6 summary so the user always sees the maintenance state, even on successful "no-op" wrapups.
-
----
-
-## Phase 3.5: Append Decisions to DECISIONS.md (4.0)
-
-Phase 1.3 conversation tagging may have produced `DECISION` labels (architecture choices, tool selections, naming rules, approaches taken — with stated or inferable reasons). When it does, those decisions are durable enough to outlive the session log: they belong in `DECISIONS.md`, where rad-planner `/plan` and any future executor can find them with their sequence numbers and supersession history.
-
-This phase prompts the user to append. **The user's `y` confirms the append** — rad-session does not auto-write to DECISIONS.md without explicit approval, per the convention that decisions are user-authored even when surfaced by a plugin.
-
-### 3.5.0 Skip conditions
-
-Skip Phase 3.5 entirely (and say nothing) if any of these hold:
-
-- **`--quick` mode is active** (explicit flag or auto-quick from Phase 1.3 low-activity short-circuit). Quick wrapups are "save state and go" — DECISIONS curation can wait for a full wrapup.
-- **Non-interactive context** (`--non-interactive` flag, autonomous loop, PreCompact-triggered wrapup). The prompt requires a user response; running silently and auto-appending would push noise into DECISIONS.md without curation. Tagged decisions still landed in HANDOFF.md (Phase 2) and the session-log (Phase 3) — the user can re-surface them next interactive wrapup.
-- **Phase 1.3 produced zero `DECISION` labels.** Nothing to prompt about.
-
-### 3.5.1 Build the prompt list
-
-From the Phase 1.3 tagging window, extract every turn labeled `DECISION`. Compress each into a one-line title + one-line rationale:
-
-```
-- <short title — 8 words max>: <single-clause WHY>
-```
-
-If there are more than 5 decisions, group them so the prompt stays scannable. Decisions that map cleanly to architecture or tooling choices are the durable kind; off-the-cuff "let's go with X for now" remarks usually aren't. Filter out anything that already reads like "we'll decide later" or "let's revisit."
-
-### 3.5.2 Present the prompt
-
-```
-The following decisions surfaced this session — append to DECISIONS.md?
-
-  1. <title>: <WHY>
-  2. <title>: <WHY>
-  ...
-
-Append? (y/N/edit)
-```
-
-- **Y** — append all listed entries to DECISIONS.md with the next available sequence numbers.
-- **N** (default) — skip. Decisions remain in HANDOFF.md / session-log. No write to DECISIONS.md.
-- **edit** — show the entries one by one and let the user accept/reject/rewrite each. Append the kept ones with sequence numbers.
-
-### 3.5.3 Append (when user confirms)
-
-Determine the next sequence number:
-
-```bash
-# Highest NNNN in existing DECISIONS.md, default to 0 if file missing or no entries.
-# Accept em-dash (U+2014), en-dash (U+2013), or hyphen-minus as the separator
-# so manually-edited entries that diverge from the canonical em-dash format
-# still count correctly. Plugin-written entries use em-dash; manual edits may differ.
-NEXT_SEQ=$(grep -oE '^## [0-9]{4} [—–-]' DECISIONS.md 2>/dev/null | grep -oE '[0-9]{4}' | sort -n | tail -1)
-NEXT_SEQ=$((${NEXT_SEQ:-0} + 1))
-```
-
-If `DECISIONS.md` does not exist, create it with a header line first:
-
-```markdown
-# Decisions: [Project Name]
-
-Chronological architecture and tooling decisions. Append new entries; never delete. Sequence numbers (`NNNN`) are the cross-reference for supersession.
-
-```
-
-Then append each confirmed entry in the canonical multi-line format (per `references/file-conventions.md` → `docs/file-conventions.md`):
-
-```markdown
-
-## NNNN — YYYY-MM-DD — <title>
-
-**Status:** Active
-
-**Context:** Surfaced during YYYY-MM-DD work session.
-
-**Decision:** <decision body — what was chosen>
-
-**Consequences:** <consequences body, or "TBD — fill in next session" if not captured during tagging>
-```
-
-Zero-pad the sequence number to four digits (`0001`, `0042`, `0123`). Increment for each appended entry within the same wrapup.
-
-### 3.5.4 Notify
-
-Emit one line, captured in the Phase 6 anomaly block (DECISIONS.md just changed permanently — worth surfacing):
-
-```
-DECISIONS.md: appended N entries (NNNN–NNNN). Edit consequences as needed.
-```
-
-If the user picked `N` or edited and rejected all entries, emit nothing — Phase 3.5 stays silent on the success-decline path. The decision to NOT append is itself a valid outcome; we don't need to announce it.
-
----
-
-## Phase 4: Prune CLAUDE.md
-
-Read CLAUDE.md and evaluate it for staleness, duplication, and ephemeral state.
-
-### 4.0 Skip when CLAUDE.md is unchanged this session
-
-The prune evaluation is the slowest non-synthesis phase of wrapup. Most sessions don't touch CLAUDE.md at all — re-evaluating an unchanged file every wrapup is wasted work.
-
-**Skip Phase 4 entirely if all of these hold:**
-
-1. CLAUDE.md exists (skipping the prune of a non-existent file is handled below).
-2. Project is a git repo.
-3. CLAUDE.md has no uncommitted changes: `git diff --quiet HEAD -- CLAUDE.md` returns 0.
-4. The last commit that modified CLAUDE.md is older than the last session-log entry's date (i.e., CLAUDE.md hasn't been changed since the last wrapup):
-   ```bash
-   last_claude_commit=$(git log -1 --format=%cI -- CLAUDE.md 2>/dev/null)
-   last_log_date=$(head -20 .claude/session-log.md | grep -m1 '^## ' | sed 's/^## \([0-9-]*\).*/\1/')
-   # Skip Phase 4 if last_claude_commit < last_log_date
-   ```
-
-If skipped, log: `CLAUDE.md unchanged since last wrapup — prune skipped.` Continue to Phase 6.
-
-In `--quick` mode, skip Phase 4 unconditionally (with the same one-line note).
-
-If CLAUDE.md does not exist, run the "If No CLAUDE.md Exists" sub-step below; otherwise proceed to 4.1.
-
-### If No CLAUDE.md Exists
-
-Create a minimal scaffold:
-
-```markdown
-# [Project Name — from directory name, package.json, or ask]
-
-## Tech Stack
-[Auto-detected if coding project, otherwise "TBD"]
-
-## Conventions
-[To be established]
-```
-
-Then skip the rest of Phase 4 — there's nothing to prune.
-
-### Pruning Heuristics
-
-For each identifiable section or statement in CLAUDE.md, evaluate:
+| Project | rad-planner | **NO** |
+| Read order | rad-planner | **NO** |
+| Hard boundaries | rad-planner | **NO** |
+| Engineering rules | rad-planner | **NO** |
+| Definition of done | rad-planner | **NO** |
+| Escalate triggers | rad-planner | **NO** |
+| Commands | rad-session | **YES** — prune stale entries |
+| Compact Instructions (CLAUDE.md only) | rad-session | **YES** |
+| Claude-specific behavior (CLAUDE.md only) | rad-session | **YES** |
+| `@AGENTS.md` import line (CLAUDE.md shim) | rad-session | **YES** — only to update or remove import |
+| User-added sections (any other heading) | User | **NO** — preserve |
+
+### 5.3 Pruning heuristics (Operational sections only)
+
+For each prunable section, evaluate:
 
 | Question | If YES |
 |----------|--------|
-| Is this about current work in progress? (e.g., "Currently refactoring auth") | Move to HANDOFF.md, remove from CLAUDE.md |
-| Is this a task or TODO? (e.g., "Need to add error handling to API routes") | Move to HANDOFF.md "Open Work" section |
-| Was this a temporary constraint that's been resolved? (e.g., "Don't touch billing — migration pending" when migration is done) | Remove |
-| Is this duplicating what HANDOFF.md now captures? | Remove |
-| Does this reference files, functions, or patterns that no longer exist? | Remove |
-| Would removing this cause Claude to make mistakes? | Keep |
-| Is this a permanent convention, rule, or architectural decision? | Keep |
-| Is this inside a protected Resources section (`## Resources`, `## MCP`, `## Tools`, `## CLI Tools`)? | Keep — see "Protected Sections" below |
+| Is this command referencing a binary or path that no longer exists? | Flag in diff; remove with user approval |
+| Is this Claude-specific behavior referencing a workflow that retired? (e.g., "merge CLAUDE-FRAGMENT.md" — that's v4.0; retired in v5.0) | Flag in diff; remove with user approval |
+| Is this entry duplicating what `docs/status.md` or `docs/planning/current.md` now captures? | Remove |
+| Does this Compact Instructions section reference fields that don't exist in current.md? | Remove the dead reference |
 
-**Primary heuristic:** Ephemeral state migrates out of CLAUDE.md into HANDOFF.md. CLAUDE.md is for permanent rules and registered resources.
+If you encounter ANY section outside the prunable list — including Constitution sections, user-added sections, or unknown headings — preserve it. Surface in the output: "Preserved user/Constitution sections: <list>."
 
-### Respecting Structure
-
-- Do NOT reorganize, reformat, or restructure the existing CLAUDE.md
-- Do NOT change heading levels or naming conventions the user chose
-- Do NOT add sections, comments, or formatting the user didn't ask for
-- Only prune within the existing structure
-- Exception: if CLAUDE.md was just created by this skill in this run, the scaffold format is used
-
-### Protected Sections
-
-The following sections are **protected** from removal. Never delete the section itself. Individual entries inside them may only be removed if they reference a file path, binary, or URL that clearly no longer exists — and even then, show the specific item in the diff and wait for explicit approval before removing.
-
-- `## Resources` (canonical)
-- `## MCP` / `## MCPs`
-- `## Tools` / `## CLI Tools`
-
-**Why:** these sections are the user's registered resources for the project — MCPs, CLIs, scripts, environment tools — and the `/startup` skill (Phase 2.5) reads them as the authoritative source when orienting a new session. Pruning them would force the user to re-explain available resources every session, defeating the purpose of the handoff system. Entries are typically added via the `/add-resource` skill or manually by the user.
-
-If a Resources-section entry appears stale, **flag it in the diff but keep it** unless the user explicitly says "remove it." When in doubt, keep.
-
-### Show the Diff
-
-After editing, present a summary of changes:
+### 5.4 Show the diff
 
 ```
-CLAUDE.md changes:
-  - Removed: "[quoted text or description]" ([reason])
-  - Removed: "[quoted text or description]" ([reason])
+Operating manual changes ({CLAUDE.md | AGENTS.md | both}):
+  - Removed: "[quoted text]" ([reason])
   - Updated: [section] — [what changed]
-  - Kept: [N] lines unchanged
+  - Preserved (Constitution + user sections): [N lines]
 ```
 
-### Auto-proceed threshold (autonomous-friendly)
+### 5.5 Auto-proceed threshold
 
-The confirmation gate was added for safety on large or surprising prunes. For small, low-risk edits, blocking on a confirmation prompt breaks autonomous loops and background sessions. Evaluate this gate against the diff:
+Auto-proceed without prompting if ALL of these hold:
+1. Total removals ≤ 3 lines/bullets
+2. No removed line is from a Constitution-owned section (defensive guard)
+3. No removed line contains the word "must", "never", "always", "required", or "forbidden"
+4. Not the first wrapup on this project
 
-**Auto-proceed is allowed only if ALL of these are true:**
-
-1. Total removals ≤ 3 lines/bullets (not including whitespace)
-2. No removed line resides in `## Tech Stack`, `## Conventions`, `## Architecture`, or any heading that matches the regex `(?i)^##\s+(rules?|principles?|guardrails?|do\s*not)` — these encode permanent rules
-3. No removed line comes from a protected Resources section
-4. No removed line contains the word "must", "never", "always", "required", or "forbidden" (signals a permanent rule the user wrote)
-5. The session is not the first run on this project (i.e., CLAUDE.md existed before this wrapup)
-
-If all five hold: proceed without waiting, and the diff block above becomes the record of what happened. Continue to Phase 6.
-
-Otherwise: wait for the user to respond. Acceptable responses:
-- "looks good" / "fine" / "ok" / approval → proceed to Phase 6
-- "undo [specific item]" → revert that change, show updated diff
-- If no changes were needed, say: "CLAUDE.md looks clean — no changes needed." and proceed
+Otherwise: wait for user approval ("looks good" / "fine" / "ok" → proceed; "undo X" → revert that change).
 
 ---
 
-## Phase 6: Cross-Machine Sync (auto-commit + prompted push)
+## Phase 6: Milestone-shipped archive (NEW)
 
-This phase keeps `HANDOFF.md` and `.claude/session-log.md` in sync across machines via git. Without it, the laptop never sees what the PC did, and vice versa.
+Detect if the current milestone is complete and offer to archive `current.md` to `planning/archive/`.
 
-**Behavior:**
+### 6.0 Skip conditions
 
-- **Commit:** always, silently. Local commits are cheap and recoverable; not committing risks losing session state if the working tree is later discarded.
-- **Push:** prompted by default. Yes → push; No → keep the commit local for next time. Stacking multiple unpushed session commits is fine and expected (e.g., several sessions on the same machine before switching).
+Skip Phase 6 if any of these hold:
+- `--quick` mode
+- `--non-interactive` mode (no prompt possible)
+- `docs/planning/current.md` doesn't exist
+- Current milestone hasn't shipped (Phase 6.1 check)
 
-### 6.1 Skip conditions
+### 6.1 Milestone-shipped detection
 
-Skip Phase 6 entirely (and say nothing) if any of these hold:
+Read acceptance criteria from `docs/planning/current.md`. A milestone is "shipped" when:
+- All acceptance criteria are `[x]` checked
+- OR the user explicitly marked completion in this session
 
-- Project is not a git repo (`git rev-parse --git-dir` fails).
-- All three target files are unchanged (no HANDOFF.md, session-log.md, or CLAUDE.md modifications this wrapup).
-- An in-progress merge, rebase, or cherry-pick is detected (`git status --porcelain=v2 --branch` shows merge/rebase state, or `.git/MERGE_HEAD` / `.git/REBASE_HEAD` exists).
+Heuristic: count `[x]` vs `[ ]` checkboxes in the Acceptance criteria section. If 100% checked → milestone shipped.
 
-### 6.2 Stage only session files
+### 6.2 Prompt the user
 
-**Critical: never `git add -A` or `git add .`** The user's other working-tree changes are theirs to manage.
+```
+Milestone M{N} ({theme from current.md}) appears complete:
+  Acceptance criteria: N/N checked
+  Status: on track
 
-Stage only the files this wrapup may have touched:
+Archive current.md to docs/planning/archive/YYYY-MM-DD-M{N}-{slug}.md and prepare for the next milestone? (y/N/edit)
 
-```bash
-git add HANDOFF.md .claude/session-log.md
-# Add CLAUDE.md only if Phase 4 modified it (created/pruned)
-[ "$claude_md_modified" = "true" ] && git add CLAUDE.md
+  [y] Archive — move current.md to planning/archive/; you'll run /rad-planner:plan --improve to set up the next milestone
+  [N] Skip — leave current.md alone (default)
+  [edit] Mark some criteria as unverified and re-evaluate
 ```
 
-If none of the staged files actually has changes after staging (`git diff --cached --quiet`), skip the rest of Phase 6 silently — there is nothing to commit.
+### 6.3 Execute
 
-### 6.3 Auto-commit
+On `y`:
+- `mkdir -p docs/planning/archive`
+- `git mv docs/planning/current.md docs/planning/archive/YYYY-MM-DD-M{N}-{slug}.md` (per git so history is preserved)
+- Note in Phase 8 output: `Milestone M{N} archived to docs/planning/archive/YYYY-MM-DD-M{N}-{slug}.md. Run /rad-planner:plan --improve for the next milestone.`
 
-Build the commit message from the HANDOFF.md status line and the current hostname:
+On `N`: no action.
+
+On `edit`: show acceptance criteria, let user uncheck some, re-evaluate.
+
+---
+
+## Phase 7: Cross-machine sync (auto-commit + prompted push)
+
+Keep session files in sync across machines. Behavior aligns with v4.0 but the file list is updated for v5.0.
+
+### 7.0 Skip conditions
+
+Skip Phase 7 entirely if any of these hold:
+- Not a git repo
+- All target files unchanged
+- In-progress merge / rebase / cherry-pick
+
+### 7.1 Stage only session files
+
+**Critical: never `git add -A` or `git add .`** Stage explicit paths only:
+
+```bash
+# Always stage status.md (Phase 2 wrote it)
+git add docs/status.md
+# Also stage status-<branch>.md if multi-branch
+[ -n "$multi_branch_status_file" ] && git add "$multi_branch_status_file"
+
+# Stage current.md if Phase 6 archived it
+[ "$milestone_archived" = "true" ] && git add docs/planning/archive/
+
+# Stage ADRs added in Phase 3
+[ "$adrs_added" = "true" ] && git add docs/decisions/
+
+# Stage operating manual if Phase 5 pruned it
+[ "$manual_pruned" = "true" ] && git add CLAUDE.md AGENTS.md 2>/dev/null
+```
+
+If `git diff --cached --quiet`, skip the rest of Phase 7 silently.
+
+### 7.2 Auto-commit
 
 ```bash
 HOSTNAME="${HOSTNAME:-${COMPUTERNAME:-$(hostname 2>/dev/null || echo unknown)}}"
 DATE=$(date +%Y-%m-%d)
-# STATUS comes from the HANDOFF.md **Status:** line written in Phase 2
+# STATUS is from status.md "Current state" Overall status field
 git commit -m "session: ${DATE} on ${HOSTNAME} — ${STATUS}"
 ```
 
-Commit must succeed before Phase 6 continues. If a commit hook fails, stop the phase and report the failure — do not retry with `--no-verify`. The local commit is the durable record; pushing is secondary.
+### 7.3 Push decision
 
-### 6.4 Push decision
-
-Determine push behavior in this priority order:
-
-1. **`--push` flag passed to `/wrapup`** → push without prompting.
-2. **`--no-push` flag passed to `/wrapup`** → skip push, end Phase 6.
-3. **Non-interactive context** (autonomous loop, PreCompact-triggered wrapup, headless mode) → skip push silently. The local commit is sufficient; the next interactive wrapup can push.
-4. **Otherwise** → prompt:
-
+Priority order:
+1. `--push` flag → push without prompting
+2. `--no-push` flag → skip push
+3. `--non-interactive` → skip push silently
+4. Otherwise → prompt:
    ```
    Push session files to origin? (y/N)
    ```
+   Default: skip (N). Y → push.
 
-   Default (empty / N / no) → skip push. Y → push.
+### 7.4 Execute push
 
-### 6.5 Push
-
-Only attempt push if the current branch has an upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` succeeds). If no upstream:
-
-```
-⚠ No upstream configured for this branch — session committed locally. Set an upstream with: git push -u origin <branch>
-```
-
-Then end Phase 6.
-
-If upstream exists:
-
+If branch has upstream:
 ```bash
 git push
 ```
 
-On success: continue. On rejection (non-fast-forward, diverged): do not force, do not retry. Report:
-
+On rejection: do not force, do not retry. Report:
 ```
 ⚠ Push rejected (likely diverged from origin). The session commit is safe locally. Resolve with: git pull --rebase  then  git push
 ```
 
-### 6.6 Sync summary line
+### 7.5 Sync summary
 
-Append one line to the final state assertion block (below) so the user knows what happened:
-
+For the Phase 8 anomaly block:
 - Committed + pushed: `Sync: committed + pushed (<short-sha>)`
 - Committed, push declined: `Sync: committed locally (<short-sha>) — N unpushed session commits`
 - Committed, push failed: `Sync: committed locally (<short-sha>) — push rejected, resolve manually`
-- Skipped: omit the line.
 
-### Session Complete — Anomaly-Gated Final Output (3.5.2)
+---
 
-Run the size assertion silently — it is internal-only and never echoed unless an anomaly is found. The check still runs every wrapup so silent skips remain impossible, but on the success path the user sees one line, not a readback.
+## Phase 8: Anomaly-gated final output
+
+Run size assertions silently. Emit verbose output only when something anomalous happened.
+
+### 8.1 Size assertions
 
 ```bash
-HANDOFF_LINES=$(wc -l < HANDOFF.md 2>/dev/null || echo 0)
-HANDOFF_BYTES=$(wc -c < HANDOFF.md 2>/dev/null || echo 0)
-LOG_ENTRIES=$(grep -c "^## [0-9]" .claude/session-log.md 2>/dev/null || echo 0)
-LOG_BYTES=$(wc -c < .claude/session-log.md 2>/dev/null || echo 0)
+STATUS_LINES=$(wc -l < docs/status.md 2>/dev/null || echo 0)
+STATUS_BYTES=$(wc -c < docs/status.md 2>/dev/null || echo 0)
 ```
 
-**Decide: success path or anomaly path.**
+Status.md soft caps per section (from `docs/status-md-schema.md`):
+- Section 1: < 5 lines
+- Section 2: 5–10 bullets
+- Section 3: 10 paths
+- Section 6: < 10 blockers
+- Section 7: 3–5 lines
+- Section 8: 3–6 files + 1 resume line
+
+Section 4 and 5 have no caps (strict evidence + variable candidates).
+
+### 8.2 Anomaly checklist
 
 An anomaly exists if any of these hold:
+- `STATUS_LINES > 200` (status.md is getting bloated)
+- Phase 3 appended ADRs to `docs/decisions/` (worth surfacing — DECISIONS just changed permanently)
+- Phase 4 found cross-doc redundancies or contradictions (worth surfacing for user review)
+- Phase 5 pruned the operating manual (file changed)
+- Phase 6 archived a milestone (state shifted)
+- Phase 7 push was rejected, declined explicitly, or skipped due to dirty tree / missing upstream
 
-- `HANDOFF_LINES > 100` OR `HANDOFF_BYTES > 8192` (over hard cap)
-- `LOG_ENTRIES > 20` OR `LOG_BYTES > 20480` (over hard cap — Phase 3.B trim should have fired; this is a defect signal)
-- Phase 3.B fired a trim AND promoted a recurring trap to CLAUDE.md (worth surfacing because CLAUDE.md just changed permanently)
-- Phase 3.5 appended entries to DECISIONS.md (worth surfacing because DECISIONS.md just changed permanently)
-- Phase 4 actually pruned CLAUDE.md (lines were removed and saved)
-- Phase 6 push was rejected, declined explicitly, or skipped because of a dirty tree / missing upstream
+### 8.3 Success path (no anomalies)
 
-**Success path (no anomalies).** Emit exactly one line:
+Emit exactly one line:
 
 ```
 Session wrapped up. Sync: pushed (<short-sha>).
 ```
 
-If sync was skipped (no changes to commit / not a git repo), drop the `Sync:` clause entirely:
+If sync was skipped, drop the `Sync:` clause:
 
 ```
 Session wrapped up.
 ```
 
-That's the entire output. Do not list HANDOFF size, log entry count, maintenance status, prune status, or any "Worth remembering" line. The user reads the diff and the commit if they want detail. The skill does the work; silence on success is the default.
+### 8.4 Anomaly path
 
-**Anomaly path.** Emit the verbose block — but only the anomalous fields, prefixed with `⚠`:
+Emit the anomalous fields only, prefixed with `⚠` where appropriate:
 
 ```
 Session wrapped up:
-  ⚠ HANDOFF.md: <N> lines / <N> KB — over hard cap (100 lines / 8 KB). Re-compress next wrapup: drop secondary bullets, move multi-clause rationales to commit messages.
-  ⚠ session-log: <N> entries / <N> KB — over hard cap (20 entries / 20 KB). Phase 3.B trim should have fired — investigate skill execution; this is a defect.
-  Maintenance: <line from Phase 3.B.5> — only include if 3.B promoted a trap to CLAUDE.md, otherwise omit.
-  DECISIONS.md: <line from Phase 3.5.4> — only include if 3.5 appended entries, otherwise omit.
-  CLAUDE.md: pruned <N> changes (auto-proceeded | confirmed) — only include if Phase 4 actually changed the file, otherwise omit.
-  Sync: <one of the lines from 6.6> — only include if push failed or was declined; on success the success-path line above already covers it.
+  ⚠ status.md: <N> lines — over soft cap (typical: <150 lines). Consider grooming.
+  DECISIONS.md: appended N entries (NNNN–NNNN). Edit consequences as needed.
+  Cross-doc: N redundancies, M contradictions surfaced (advisory; see /tmp/rad-*.json).
+  Operating manual: pruned N changes (auto-proceeded | confirmed).
+  Milestone M{N} archived to docs/planning/archive/YYYY-MM-DD-M{N}-{slug}.md.
+  ⚠ Sync: push rejected — resolve with: git pull --rebase  then  git push
 ```
 
-Each line is conditional on its own anomaly — do not include success-path lines mixed in with anomaly lines. The verbose block stays small even when triggered.
+Each line conditional on its own anomaly. Do not mix success-path lines into the anomaly block.
 
-**Why this design.** 3.4 made the verbose block mandatory after a real defect: the session-log grew to 23 entries / 105 KB across 23 wrapups without a single trim because Phase 3.B was buried as a conditional. The size assertion was the fix. 3.5.2 keeps the assertion (Bash always runs, anomalies always surface) but stops echoing the truth-telling on the success path — silent-skip protection is preserved, the wrapup just stops reading itself back to the user when there's nothing to act on.
+---
+
+## What this skill does NOT do
+
+- Does not write `HANDOFF.md` (retired in v5.0 — `docs/status.md` replaces it)
+- Does not write or maintain `.claude/session-log.md` (retired in v5.0 — `planning/archive/` serves the journal role)
+- Does not write Constitution sections of the operating manual (rad-planner's at /plan M6)
+- Does not write strategic docs (vision.md, architecture.md, planning/current.md — those are rad-planner or human-owned)
+- Does not run `git add -A` or `git add .` (always stages explicit paths)
+- Does not force-push (`git push --force`) under any circumstances
+- Does not merge or rebase automatically
+- Does not fabricate validation results — Section 4 is evidence-only
+
+## Key references
+
+**Canonical spec docs (top-level):**
+
+- [`docs/doc-conventions.md`](../../../../docs/doc-conventions.md) — canonical file structure
+- [`docs/cross-plugin-contracts.md`](../../../../docs/cross-plugin-contracts.md) — single-writer rule, sectioned-writer exception for operating manual
+- [`docs/status-md-schema.md`](../../../../docs/status-md-schema.md) — 8-section status schema with evidence sources and inference policies
+
+**rad-planner validators (used by Phase 4):**
+
+- `${plugin_root}/../rad-planner/scripts/doc-redundancy.py` — cross-doc Jaccard duplicate detection
+- `${plugin_root}/../rad-planner/scripts/doc-contradiction.py` — vision non-goals vs current ACs
+- `${plugin_root}/../rad-planner/scripts/plan-lint.py` — planning/current.md health
+- `${plugin_root}/../rad-planner/scripts/status-validator.py` — status.md schema validator
+
+**Plugin internals:**
+
+- `scripts/README.md` — full script documentation (v5.0; includes `migrate-to-v5.py` contract)
+
+## Mode flags (recap)
+
+- `--push` / `--no-push` — push behavior override
+- `--quick` — skip Phase 3 deep scan, Phase 4 cross-doc checks, Phase 5 prune
+- `--non-interactive` — suppress all prompts (Phase 3 menu, Phase 6 archive prompt, Phase 7 push)
+- `--force` — override Phase 0 no-work check

@@ -1,11 +1,14 @@
 ---
 name: startup
 description: >
-  Start-of-session skill that reads HANDOFF.md, session log, and CLAUDE.md to
-  orient a new session with full context from prior work. Read-only — never
-  modifies files. Trigger when the user says "/startup", "start session",
-  "orient me", "what's the state", "session briefing", "where did we leave off",
-  "catch me up", "what was I working on".
+  Start-of-session skill for v5.0 — orient a new session by reading the operating
+  manual (CLAUDE.md / AGENTS.md per .rad/profile agent_scope), docs/status.md
+  (evidence-based reality from last /wrapup), docs/planning/current.md (active
+  plan), and presenting a concise resume briefing. Read-only — never modifies
+  files. Targets <5s wall clock via parallel reads and detect-resources caching.
+  Trigger when the user says "/startup", "start session", "orient me", "what's
+  the state", "session briefing", "where did we leave off", "catch me up", "what
+  was I working on".
 allowed-tools:
   - Read
   - Glob
@@ -13,15 +16,24 @@ allowed-tools:
   - Bash
 ---
 
-# Session Startup
+# Session Startup (v5.0)
 
-Orient a new session by reading the handoff state left by `/wrapup`, detecting the project type, discovering available resources, and presenting a concise briefing.
+Open the store: read the operating manual, read `docs/status.md` (where things actually are), read `docs/planning/current.md` (where things should go), surface the resume context concisely, and get out of the way. Read-only; never modifies files.
 
-**This skill is read-only. It never creates, modifies, or deletes files.**
+**Doorman model:** quick, deliberate, no ceremony. Target under 5 seconds wall clock. If you need 30 seconds to brief, the project state is the problem, not this skill.
 
-**Model selection (3.7).** This skill runs in the **session model** — whatever Opus/Sonnet/Haiku tier you're already in. Earlier versions (3.5–3.6) pinned to Haiku 4.5 for speed, but that broke startup whenever a long-running session pushed conversation context past Haiku's 200K window in a 1M-context Opus session ("context used up" error). Resource discovery is still delegated to `detect-resources.py` with caching (Phase 2.5.0), so the model rarely does any scanning work itself — the model-pin shortcut wasn't load-bearing for speed in the cache-hit path. If you want extra speed on a routine startup, run `/model haiku` *before* invoking `/startup` — the explicit choice keeps you in control of the context-window trade-off.
+> **Status:** rad-session 5.0 — released. plugin.json is at 5.0.0; the marketplace ships this workflow.
 
-**Cross-model note.** Output briefing format is identical across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Phase 1.4 stale-handoff auto-refresh benefits from Opus-level synthesis; that path will already be running in your session model.
+## What changed from v4.0
+
+| v4.0 | v5.0 |
+|---|---|
+| `CLAUDE.md` (always) | Operating manual (CLAUDE.md and/or AGENTS.md) per `.rad/profile` agent_scope |
+| `HANDOFF.md` | `docs/status.md` — evidence-based, project-scoped (not session-scoped) |
+| `.claude/session-log.md` | retired — `docs/planning/archive/` serves the journal role |
+| v3.0 strategic-doc gap-check (PRD/ARCHITECTURE/ASSUMPTIONS/DECISIONS/PLAN) | v4.0 canonical gap-check (`docs/vision.md`, `docs/architecture.md`, `docs/planning/current.md`, `docs/status.md`, `docs/decisions/`) |
+
+The session-log retirement is the biggest behavioral shift: rad-session no longer maintains a chronological session journal. Instead, completed milestones live in `docs/planning/archive/` (moved by /wrapup when a milestone ships), and `docs/status.md` always reflects current evidence-based reality.
 
 ## Mode flags
 
@@ -29,27 +41,36 @@ Orient a new session by reading the handoff state left by `/wrapup`, detecting t
 - `--no-pull` — Skip the sync check entirely; read local files as-is. Briefing leads with a stale warning if origin has unpulled commits. For offline work.
 - Neither → prompt at Phase 0 when behind (default).
 
+## Cross-model note
+
+Output briefing format is identical across Opus 4.7, Sonnet 4.6, and Haiku 4.5. This skill runs in the **session model** — whatever tier you're already in. Resource discovery is delegated to `scripts/detect-resources.py` with caching (Phase 2.5.0), so the model rarely does scanning work itself.
+
 ---
 
 ## Execution: parallel-first
 
-Phase 0 (sync from origin) **must run first** because it can update the very files that the rest of the skill reads, and may need to wait for a user response to the pull prompt. After Phase 0 resolves (pulled, declined, skipped, or aborted), the work inside Phases 1, 2, and 2.5 has **no inter-phase dependencies** — every read and every shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that. The only sequential step is Phase 3 (briefing synthesis), which depends on the results.
+Phase 0 (sync from origin) **must run first** because it can update the very files the rest of the skill reads. After Phase 0 resolves (pulled, declined, skipped, or aborted), Phases 1, 2, and 2.5 have no inter-phase dependencies — every read and shell command can be issued as a single parallel batch. Opus 4.7 and Sonnet 4.6 should do exactly that.
 
-**Batch to issue at the start of the skill:**
+**Batch to issue at the start of the skill (after Phase 0 resolves):**
 
-- Read `CLAUDE.md`, `HANDOFF.md`, `.claude/session-log.md` (Phase 1.1–1.3)
-- Read `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md` at project root (Phase 1.5 strategic doc gap-check — file-existence detection; content not consumed by the briefing)
-- Read `.mcp.json`, `.claude/settings.json`, `.env.example`, `package.json`, `pyproject.toml` (if any exist — Phase 2.5)
+- Read `.rad/profile` (Phase 1.1 — determines which operating manual files to read)
+- Read `CLAUDE.md` and/or `AGENTS.md` per agent_scope (Phase 1.2)
+- Read `docs/status.md` or `docs/status-<branch>.md` per multi_branch_status (Phase 1.3)
+- Read `docs/planning/current.md` (Phase 1.4)
+- Read `docs/vision.md`, `docs/architecture.md` (Phase 1.5 file-existence checks)
+- Glob `docs/decisions/*.md` (Phase 1.5)
+- Glob root for legacy v3.0 strategic docs: `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md` (Phase 1.5 legacy detection)
+- Read `.mcp.json`, `.claude/settings.json`, `.env.example`, `package.json`, `pyproject.toml` (Phase 2.5)
 - Glob for stack marker files (Phase 2.5.2)
-- Bash: `git status --short`, `git log --oneline -5`, `git rev-parse --abbrev-ref HEAD`, `git rev-list --left-right --count HEAD...@{upstream}` — run as one combined command so the shell spawn cost is paid once (Phase 2.2)
+- Bash: combined `git status --short && git log --oneline -5 && git rev-parse --abbrev-ref HEAD && git rev-list --left-right --count HEAD...@{upstream}` (Phase 2.2)
 
-If a file is missing, the corresponding Read call will error silently — that's fine, skip its content in the briefing. Do not re-attempt serial reads after a parallel batch.
+Missing files error silently — skip them in the briefing. Do not re-attempt serial reads after a parallel batch.
 
 ---
 
 ## Phase 0: Sync from origin
 
-A handoff is only useful if you're reading the latest state. Phase 0 confirms local matches origin **before** any HANDOFF.md / session-log.md / CLAUDE.md read fires. The owner approves push during `/wrapup`; startup verifies freshness on the way in.
+A handoff is only useful if you're reading the latest state. Phase 0 confirms local matches origin **before** any operating manual / status.md / planning/current.md read fires.
 
 ### 0.1 Skip silently if any hold
 
@@ -86,21 +107,21 @@ A fast-forward is possible when the tree is clean AND ahead = 0. Otherwise it's 
 ⚠ Couldn't sync — <dirty working tree | local diverged from origin>. Resolve with: <git stash | git pull --rebase>.
 ```
 
-When prompting in the default behind-FF-possible case, list the incoming commits first via `git log HEAD..@{u} --oneline -10` so the user sees what's about to land. Default the prompt to Y (sync is the safe choice when FF is possible).
+When prompting in the default behind-FF-possible case, list the incoming commits first via `git log HEAD..@{u} --oneline -10` so the user sees what's about to land. Default the prompt to Y.
 
 ### 0.4 Cross-machine handoff signal
 
-Fires whenever the most recent session commit was made on another machine — independent of whether this turn pulled. This is what surfaces "Continuing from <PC>" on the laptop even if the pull came in earlier.
+Fires whenever the most recent commit to `docs/status.md` was made on another machine — independent of whether this turn pulled.
 
 ```bash
-git log -1 --format='%s' -- HANDOFF.md .claude/session-log.md 2>/dev/null
+git log -1 --format='%s' -- docs/status.md 2>/dev/null
 ```
 
-Parse for the canonical session-commit format `session: YYYY-MM-DD on <hostname> — <status>` (written by `/wrapup` Phase 6.3).
+Parse for the canonical session-commit format `session: YYYY-MM-DD on <hostname> — <status>` written by `/wrapup`.
 
 - Hostname differs from `$HOSTNAME` / `$COMPUTERNAME` / `hostname` → stash this Phase 3 note:
   ```
-  Continuing from <other-host> — last session committed there.
+  Continuing from <other-host> — last status update committed there.
   ```
 - Hostname matches → no note (continuing on the same machine).
 - Commit doesn't match the canonical session format (manual commit) → skip silently.
@@ -109,82 +130,128 @@ The cross-machine note appears at the top of the Phase 3 briefing, above the Pro
 
 ---
 
-## Phase 1: Discover Project State
+## Phase 1: Read project state
 
-Read handoff files. All are optional — skip silently if missing.
+All reads in Phase 1 are issued as one parallel batch with Phases 2 and 2.5 (after Phase 0 resolves). The phase numbering is for human readability; execution is concurrent.
 
-### 1.1 Read CLAUDE.md + resolve imports
+### 1.1 Read `.rad/profile`
 
-Read `CLAUDE.md` at the project root. Note:
-- Project name and type
-- Tech stack
-- Key conventions and rules
+Determine:
 
-**Import resolution.** If CLAUDE.md contains lines matching `@<path>` (e.g., `@docs/architecture.md`, `@.claude/rules.md`), treat each as an imported file. Resolve each path relative to the CLAUDE.md location and Read the file in the same parallel batch. Include the imported content as additional project context in the briefing when relevant. Missing import targets are reported silently (note in the briefing under a subtle "⚠ missing import: <path>" line — do not error out).
+- `agent_scope` (`claude_only` / `codex_only` / `claude_and_codex`) — drives Phase 1.2
+- `mode` (`mentor` / `dev`) — recorded but not used by /startup (used by /wrapup)
+- `multi_branch_status` (`true` / `false`) — if true, Phase 1.3 reads `docs/status-<current-branch>.md` instead of `docs/status.md`
 
-Do not follow imports recursively beyond one level — imports of imports are out of scope for `/startup`, and following them risks pulling in unbounded content.
+If `.rad/profile` doesn't exist, default: `agent_scope = claude_only`, `mode = mentor`, `multi_branch_status = false`. Surface in briefing: "No .rad/profile detected — run /init to set up project profile."
 
-### 1.2 Read HANDOFF.md
+### 1.2 Read operating manual
 
-Read `HANDOFF.md` at the project root. This is the primary handoff from the last session. Extract:
-- Status line
-- Where work was left off
-- Key decisions from last session
-- "What NOT To Do" traps (TRIED / FAILED BECAUSE / CORRECT APPROACH — see `references/handoff-template.md`)
-- Open work items
-- Modified files
-- Key insights
+Per `agent_scope`:
 
-### 1.3 Read Session Log
+- `claude_only` → read `CLAUDE.md`
+- `codex_only` → read `AGENTS.md`
+- `claude_and_codex` → read `AGENTS.md` (canonical) + `CLAUDE.md` (shim)
 
-Read `.claude/session-log.md` if it exists. Focus on the most recent 3–5 entries for:
-- Patterns across sessions (recurring traps, ongoing work threads)
-- Context that the latest HANDOFF.md alone might not capture
-- How long the current work has been in progress
+**Non-standard naming detection (Phase 2 M4 adaptation):** if the expected file is missing, Glob root for any `*.md` containing the heading `# Agent Operating Manual` or an `@AGENTS.md` import line. If found, treat that file as the operating manual — roll with what's there. Surface in briefing: "Operating manual: detected at non-standard path `<filename>`."
 
-### 1.4 Assess Handoff Freshness — with auto-refresh for stale handoffs
+Extract:
 
-Check the date in HANDOFF.md against today's date:
+- Project name and one-sentence purpose
+- Read order (which docs to consult before what kind of work)
+- Hard boundaries
+- Engineering rules
+- Definition of done
+- Escalate triggers
+- Commands (install / dev / test / lint / build)
 
-- **Same day or yesterday:** Handoff is fresh — trust it fully.
-- **2–7 days old:** Handoff is recent — trust it but note the gap.
-- **7+ days old:** Handoff is stale. **Before presenting the briefing**, run an auto-refresh:
-  1. `git log --oneline --since="<handoff date>" 2>/dev/null`
-  2. `git diff --stat <commit-at-handoff-date>..HEAD 2>/dev/null` if resolvable, else skip
-  3. Synthesize a one-paragraph "Changes since last session" block summarizing commits that weren't authored during a Claude Code session (i.e., commits not referenced in HANDOFF.md's "Modified Files" list).
-  4. Include the synthesized block in the briefing under a `Changes since last session (outside Claude Code):` heading, and lead the briefing with a one-line staleness note: `⚠ Handoff is N days old — auto-refreshed from git log.`
-- **No HANDOFF.md:** Note this is either a brand-new project or one that hasn't used `/wrapup` yet — fall through to the Minimal Briefing.
+Resolve `@-imports` one level deep (per v4.0 logic). Missing import targets are reported silently with a "⚠ missing import: <path>" line in the briefing.
 
----
+### 1.3 Read `docs/status.md` (the canonical handoff)
 
-## Phase 1.5: Strategic Doc Gap-Check (4.0)
+If `multi_branch_status == true`, read `docs/status-<current-branch>.md` instead.
 
-Check whether the **RAD 8-doc standard** strategic and operational tier files exist at project root. This is the soft companion to `/rad-planner:plan --validate` — the validate skill is the deliberate "is my plan ready to execute" gate; Phase 1.5 is the cheap "did we forget to plan this" nudge that fires every session.
+Extract the 8 sections (per [`docs/status-md-schema.md`](../../../../docs/status-md-schema.md)):
 
-The five files checked are owned by rad-planner `/plan`. rad-session does not write them; it only reports their presence.
+1. **Current state** (branch, milestone, overall status: on track | blocked | validating | needs decision)
+2. **Last completed**
+3. **Files changed recently**
+4. **Latest validation results**
+5. **Decisions made during execution**
+6. **Known issues or blockers**
+7. **Next recommended step**
+8. **If restarting from scratch** — load-bearing read order for the briefing
+
+**If status.md doesn't exist** or all 8 sections show "No data yet — populated by rad-session /wrapup from evidence", fall through to Minimal Briefing in Phase 3.
+
+### 1.4 Read `docs/planning/current.md` (the active plan)
+
+Extract:
+
+- Objective
+- Current milestone
+- Acceptance criteria (including checkbox state — count `[x]` vs `[ ]` for progress)
+- Stop conditions
+- Notes for the next session
+
+If `current.md` doesn't exist, surface in briefing: "No active plan — recommend `/rad-planner:plan` to create one."
+
+### 1.5 Strategic Doc Gap-Check (v4.0)
+
+Soft gap-check for the v4.0 canonical strategic docs. The reads already happened in the parallel batch at the top of the skill — Phase 1.5 just inspects which Reads returned content vs. which silently errored.
 
 | File | If missing |
 |---|---|
-| `PRD.md` | Add to the "missing strategic docs" list |
-| `ARCHITECTURE.md` | Add to the "missing strategic docs" list |
-| `ASSUMPTIONS.md` | Add to the "missing strategic docs" list |
-| `DECISIONS.md` | Add to the "missing strategic docs" list |
-| `PLAN.md` | Add to the "missing strategic docs" list |
-
-The reads already happened in the parallel batch at the top of the skill — Phase 1.5 just inspects which Reads returned content vs. which silently errored.
+| `docs/vision.md` | Add to "missing strategic docs" list |
+| `docs/architecture.md` | Add to list |
+| `docs/planning/current.md` | (already checked in 1.4) |
+| `docs/status.md` | (already checked in 1.3) |
+| `docs/decisions/` (directory with at least `README.md`) | Add to list |
 
 **Output behavior:**
 
-- **All five present** → emit nothing. Strategic docs are in place, no nudge needed.
-- **Some missing** → stash a single briefing line for Phase 3 (placed under any stale/block/cross-machine warning, above the Project line):
+- **All present** → emit nothing. Strategic docs are in place.
+- **Some missing** → single briefing line:
   ```
   ⚠ Missing strategic docs: <comma-separated list> — run /rad-planner:plan to create. (Soft warning; session continues.)
   ```
-- **All five missing AND CLAUDE.md exists without strategic-doc `@-import` references** → same warning, but recommend `/rad-planner:plan` (greenfield) rather than `/plan --reboot`. If CLAUDE.md is also missing, the project is fresh — the warning is informational, not corrective.
 
-**Why soft.** Many sessions are pure execution against an existing plan; some are exploratory and haven't planned yet; some projects are too small for the full 8-doc set. The warning informs without blocking — session continues regardless. Users who want a hard gate run `/rad-planner:plan --validate` explicitly.
+**Legacy v3.0 detection:** Glob root for `PRD.md`, `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `DECISIONS.md`, `PLAN.md`. If any present, surface separately:
 
-**`--no-pull` interaction.** Phase 1.5 still fires when `--no-pull` is set (the file-existence check doesn't depend on origin state). If origin had a new PRD.md committed but local hasn't pulled, the warning may fire spuriously — the stale warning from Phase 0.3 covers that case, so the user has the context to interpret.
+```
+⚠ v3.0 strategic docs detected at project root (PRD.md / etc.). v4.0 canonical structure is at docs/. Run /rad-planner:plan --pivot to migrate, or rad-session 5.0 will read what's there in mixed-layout mode.
+```
+
+**Why soft.** Many sessions are pure execution against an existing plan; some are exploratory; some projects are too small for the full set. The warning informs without blocking — session continues regardless.
+
+### 1.6 Status freshness check
+
+Quick mtime check (or use `status-validator.py --mode freshness` if rad-planner is installed alongside):
+
+```bash
+python3 ${plugin_root}/../rad-planner/scripts/status-validator.py --mode freshness docs/status.md --json 2>/dev/null
+```
+
+If `status-validator.py` isn't available (rad-planner not installed or path doesn't resolve), inline check:
+
+```bash
+# status.md mtime vs HEAD commit date
+git log -1 --format='%ct' -- docs/status.md 2>/dev/null  # status's last commit timestamp
+git log -1 --format='%ct' HEAD 2>/dev/null              # HEAD timestamp
+git rev-list "$(git log -1 --format=%H -- docs/status.md)..HEAD" --count 2>/dev/null
+```
+
+Compute:
+- **fresh:** `(head_date - status_date) < 2 days` AND `commits_since_status < 5`
+- **stale:** `(head_date - status_date) > 7 days` OR `commits_since_status > 20`
+- **moderate:** in between
+
+If stale, include warning in briefing:
+
+```
+⚠ docs/status.md is N days old (M commits since last update) — refresh at next /wrapup recommended.
+```
+
+If status.md doesn't exist at all, skip the freshness check.
 
 ---
 
@@ -219,17 +286,17 @@ git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null
 
 Capture: current branch, uncommitted changes, recent commits, ahead/behind vs. remote.
 
-### 2.3 Detect Changes Since Last Session
+### 2.3 Detect Changes Since Last Status Update
 
-If HANDOFF.md has a date and no stale-refresh was triggered in Phase 1.4, spot-check for commits between the handoff date and now that aren't referenced in the handoff's Modified Files list. If found, flag them in the briefing as "changes made outside the last session."
+If `docs/status.md` has been committed and the freshness check (1.6) returned non-fresh, spot-check for commits between the status's last-commit-date and HEAD. Flag in briefing as "changes since status last updated" — useful when work happened outside a rad-session session (e.g., a quick hand-edit between /startup and /wrapup).
 
 ---
 
 ## Phase 2.5: Resource Discovery
 
-Detect project-specific resources so Claude doesn't need to be reminded every session. All steps are read-only and issued in the parallel batch from "Execution." Skip silently when nothing is found.
+Detect project-specific resources so Claude doesn't need to be reminded every session. All steps are read-only and issued in the parallel batch. Skip silently when nothing is found.
 
-### 2.5.0 Preferred path: deterministic script (mtime-cached in 3.5)
+### 2.5.0 Preferred path: deterministic script (mtime-cached)
 
 If Python is available, prefer the deterministic scanner over LLM-based marker scanning. Always pass `--cache` so cache-hit startups skip re-scanning entirely:
 
@@ -237,24 +304,17 @@ If Python is available, prefer the deterministic scanner over LLM-based marker s
 python3 ${plugin_root}/scripts/detect-resources.py "$PWD" --json --cache --include-env-names
 ```
 
-The `--cache` flag (3.5) writes results to `.claude/cache/resources.json`, keyed by the mtimes of every input file (`.mcp.json`, `.claude/settings.json`, `CLAUDE.md`, `.env.example`, all marker files in the CLI table, and the script itself). On cache hit, scanning is skipped and the cached data is returned in milliseconds. Any input file edit invalidates the cache automatically — no manual cache busting required. The output adds a `"cache_status": "hit" | "miss"` field; surface it under the briefing's resources block only if status is `miss` (e.g., `Resources: scanned fresh`); on `hit`, stay silent — that's the common path and silence is correct.
+The `--cache` flag writes results to `.claude/cache/resources.json`, keyed by mtimes of every input file. On cache hit, scanning is skipped — results return in milliseconds. The output adds a `"cache_status": "hit" | "miss"` field; surface under the briefing's resources block only if status is `miss` (e.g., `Resources: scanned fresh`); on `hit`, stay silent.
 
-The script returns the same data structure as steps 2.5.1–2.5.6 below — MCPs, stack CLIs, documented-resources reconciliation, drift detection. Use the JSON output verbatim. The LLM-based steps below remain as fallback when Python is not available.
+The script returns the same data structure as steps 2.5.1–2.5.6 below. Use JSON output verbatim. The LLM-based steps remain as fallback when Python is not available.
 
 ### 2.5.1 MCP Servers
 
-Read `.mcp.json` at the project root if it exists. Parse the JSON and extract the keys under `mcpServers`.
-
-```json
-{ "mcpServers": { "supabase": {...}, "coolify": {...} } }
-```
-→ `MCPs: supabase, coolify`
-
-Also read `.claude/settings.json` and collect names under `enabledMcpjsonServers` or plugin-scoped MCP entries. Merge without duplication. Malformed JSON → skip silently.
+Read `.mcp.json` at project root. Parse JSON and extract keys under `mcpServers`. Also read `.claude/settings.json` and collect names under `enabledMcpjsonServers` or plugin-scoped MCP entries. Merge without duplication. Malformed JSON → skip silently.
 
 ### 2.5.2 Stack CLIs (inferred from marker files)
 
-Glob the project root for these markers. File-presence inference only — **never exec any binary**.
+Glob the project root for marker files. File-presence inference only — never exec any binary.
 
 | Marker file(s) | Implied CLI |
 |----------------|-------------|
@@ -288,60 +348,178 @@ Collect into a deduplicated list.
 
 If `package.json` exists:
 
-- Read `packageManager` field (e.g., `pnpm@9.0.0`). If absent, infer from lockfile: `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `bun.lockb` → bun, else npm.
-- Extract top 5–8 keys from `scripts`. Prefer in this order if present: `dev`, `build`, `test`, `typecheck`, `lint`, `start`, `check`, `format`.
+- Read `packageManager` field. If absent, infer from lockfile.
+- Extract top 5–8 keys from `scripts`. Prefer in order if present: `dev`, `build`, `test`, `typecheck`, `lint`, `start`, `check`, `format`.
 
 Output example: `Scripts (pnpm): dev, build, test, typecheck, lint`
 
-For Python: if `pyproject.toml` has a `[tool.poetry.scripts]` or `[project.scripts]` table, list up to 5 entries as `Scripts (poetry): ...`. For other non-Node stacks, skip unless trivially obvious.
+For Python: if `pyproject.toml` has a `[tool.poetry.scripts]` or `[project.scripts]` table, list up to 5 entries.
 
 ### 2.5.4 Environment Template
 
-If `.env.example` exists, read it and extract **variable names only** (everything before `=` on each non-comment line). **Never read `.env` or any file that may contain real values.**
+If `.env.example` exists, read it and extract variable names only (everything before `=` on each non-comment line). **Never read `.env`** or any file that may contain real values.
 
 Output: `Env template: SUPABASE_URL, STRIPE_SECRET_KEY, ... (.env.example)`
 
-### 2.5.5 CLAUDE.md Resources Section
+### 2.5.5 Operating Manual Resources Section
 
-If CLAUDE.md contains a heading matching any of these (case-insensitive), extract its contents verbatim:
+If the operating manual (CLAUDE.md or AGENTS.md) contains a heading matching any of these (case-insensitive), extract its contents verbatim:
 
 - `## Resources`
 - `## MCP` / `## MCPs`
 - `## Tools` / `## CLI Tools`
 
-Treat the extracted contents as the **documented** source of truth for this project.
+Treat as the **documented** source of truth for this project.
 
 ### 2.5.6 Reconciliation
 
 Compare documented (2.5.5) against detected (2.5.1–2.5.4):
 
 - **Documented + detected** → show normally in "Resources available."
-- **Documented but not detected** → show with `⚠ documented but not found` — possible drift (config moved, tool uninstalled).
-- **Detected but not documented** → show under a secondary line `Also detected (not in CLAUDE.md):` — signals the user may want to run `/add-resource` to register them.
+- **Documented but not detected** → show with `⚠ documented but not found` — possible drift.
+- **Detected but not documented** → show under `Also detected (not in operating manual):` — user may want to register via `/add-resource`.
 
-If no CLAUDE.md Resources section exists, treat all detected items as primary with no drift warnings.
+If no Resources section exists in the operating manual, treat all detected items as primary with no drift warnings.
 
 ---
 
 ## Phase 3: Orient and Brief
 
-Present a concise, scannable session briefing. Adapt the format based on what's available. Full example briefings (full, minimal, non-coding) are in `references/briefing-examples.md` — follow those structures verbatim.
+Present a concise, scannable session briefing. Adapt the format based on what's available. Target **under 35 lines** and **under 5 seconds wall clock**.
 
 ### Briefing selection
 
 | Condition | Template |
-|-----------|----------|
-| HANDOFF.md exists + coding project | Full Briefing (see `references/briefing-examples.md`) |
-| No HANDOFF.md | Minimal Briefing |
-| No build-system markers | Non-Coding Briefing |
+|---|---|
+| status.md + planning/current.md both present + coding project | **Full Briefing** |
+| status.md present, no planning/current.md | **Status-only Briefing** (recommend `/rad-planner:plan` to create the plan) |
+| No status.md but operating manual exists | **Minimal Briefing** (no resume context to share; recommend `/wrapup` at end of next session to populate status) |
+| No operating manual | **First-time Briefing** (recommend `/init`) |
+| No build-system markers | **Non-Coding Briefing** |
+
+### Full Briefing structure
+
+```
+[warnings — one line each, in order: block, stale, cross-machine, gap-check, freshness]
+
+Project: {from operating manual Project line}
+Branch: {current_branch} ({clean | <N> uncommitted})
+Plan: {milestone X of Y from planning/current.md; AC progress N/M ({pct}%)}
+
+Last completed:
+- {top 3-5 from status.md Last completed}
+
+Recently changed:
+- {top 3-5 files from status.md Files changed recently}
+
+Validation: {from status.md Latest validation results — one line, only if recent and not 'No data this session'}
+
+Open issues:
+- {top 3 from status.md Known issues or blockers, only if any}
+
+Next: {from status.md Next recommended step — one paragraph; use exact wording}
+
+Resources: {from Phase 2.5 — MCPs / CLIs / scripts; omit if all categories empty}
+
+Ready to continue. What would you like to work on?
+```
+
+### Status-only Briefing structure
+
+```
+[warnings]
+
+Project: {from operating manual}
+Branch: {current_branch}
+Plan: (none — recommend /rad-planner:plan to create one)
+
+Last completed: {from status.md, only if any}
+Next: {from status.md Next recommended step, only if any}
+
+Resources: {from Phase 2.5}
+
+Ready to continue. What would you like to work on?
+```
+
+### Minimal Briefing structure
+
+```
+[warnings, if any]
+
+Project: {from operating manual}
+Branch: {current_branch}
+
+No status.md yet — first session, or /wrapup hasn't run yet on this project.
+Run /wrapup at the end of this session to populate status.md from evidence.
+
+Resources: {from Phase 2.5}
+
+Ready to continue. What would you like to work on?
+```
+
+### First-time Briefing structure
+
+```
+No operating manual detected. This looks like a fresh project.
+
+Recommend: /rad-session:init to set up the operating manual + status.md scaffold.
+Then: /rad-planner:plan to create the plan and populate Constitution sections.
+
+What would you like to work on?
+```
+
+### Non-Coding Briefing structure
+
+```
+[warnings]
+
+Project: {from operating manual} (non-coding)
+
+{status.md Next, if present, else "No status.md."}
+
+Ready to continue.
+```
 
 ### Presentation rules
 
-- Keep the briefing **under 35 lines** — this is a quick orientation, not a report.
-- Use the **exact wording from HANDOFF.md** for traps and open work — don't paraphrase. The original wording was chosen carefully and paraphrasing often loses the load-bearing detail.
+- Keep the briefing **under 35 lines** — this is a quick orientation.
+- Use the **exact wording from status.md** — don't paraphrase. The wrapup chose those words from evidence; paraphrasing loses load-bearing detail.
 - End with `Ready to continue. What would you like to work on?` to hand control back.
-- If the handoff is **stale (7+ days)**, lead with the staleness + auto-refresh note before the briefing body.
-- If **Phase 1.5 found missing strategic docs**, include the warning line under any stale/block/cross-machine warning, above the Project line. One line only; do not repeat the full list elsewhere in the briefing.
-- **Omit** the "Resources available" block entirely if every category (MCPs, CLIs, scripts, env) is empty — don't show an empty header.
-- Cap the Resources block at **6 lines**; truncate with `...` if a category has more than 8 items.
-- If imports were resolved in Phase 1.1 and surfaced non-trivial content (e.g., architecture notes not in CLAUDE.md body), add a single `Imports: <file1>, <file2>` line under the Resources block.
+- **Omit empty blocks** — don't show "Validation: (none)" or empty Resources headers.
+- Cap each block at the line counts indicated; truncate with `...` if longer.
+- If imports were resolved in Phase 1.2 and surfaced non-trivial content, add a single `Imports: <file1>, <file2>` line under Resources.
+- If the "If restarting from scratch" section in status.md has a `Resume with:` line, prefer that verbatim as the Next-step content.
+
+---
+
+## What this skill does NOT do
+
+- Does not modify any files (strict read-only)
+- Does not write `docs/status.md` — that's `/wrapup`'s job at session end
+- Does not update `docs/planning/current.md` — that's `/rad-planner:plan` or human edits
+- Does not invoke `/rad-planner:plan` — recommends only when missing
+- Does not derive resume context from chat history — only from evidence on disk (status.md, planning/current.md, git)
+- Does not run anything beyond read-only Bash commands + `detect-resources.py`
+- Does not read `.env` or any file that may contain secret values
+- Does not maintain `.claude/session-log.md` (retired in v5.0)
+- Does not maintain `HANDOFF.md` (retired in v5.0 — replaced by `docs/status.md`)
+
+## Key references
+
+**Canonical spec docs (top-level):**
+
+- [`docs/doc-conventions.md`](../../../../docs/doc-conventions.md) — canonical file structure
+- [`docs/cross-plugin-contracts.md`](../../../../docs/cross-plugin-contracts.md) — single-writer rule, sectioned-writer exception, .rad/profile protocol
+- [`docs/status-md-schema.md`](../../../../docs/status-md-schema.md) — 8-section status schema with evidence sources
+
+**Plugin internals:**
+
+- `scripts/detect-resources.py` — MCP + CLI scanner with drift detection and mtime cache
+- `references/briefing-examples.md` — concrete v5.0 briefing examples (5 templates: full / status-only / minimal / first-time / non-coding)
+- `scripts/README.md` — full script documentation
+
+## Mode flags (recap)
+
+- `--auto-pull` — skip Phase 0 prompt, fast-forward silently when behind
+- `--no-pull` — skip sync entirely; lead briefing with stale warning if behind
+- Default → prompt at Phase 0 when behind
