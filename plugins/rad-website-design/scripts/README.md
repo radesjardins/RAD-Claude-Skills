@@ -30,6 +30,17 @@ python check-tap-targets.py src/components/
 python check-tap-targets.py --json src/
 ```
 
+### `check-cls-risk.py`
+Flags CLS-prone patterns in HTML / JSX / Astro / Svelte / Vue / CSS: `<img>`, `<iframe>`, `<video>` without width/height/aspect-ratio (major); `@font-face` without `font-display: swap` or with `font-display: block` (moderate — FOIT risk). Recognizes inline `style="aspect-ratio: ..."` and Tailwind `aspect-{square|video|[ratio]}` classes as valid dimension reservations. Skips data URIs and inline SVGs.
+
+```
+python check-cls-risk.py src/
+python check-cls-risk.py --files src/Hero.tsx,public/index.html
+python check-cls-risk.py --json src/
+```
+
+Note: real CLS measurement requires a running browser (Lighthouse / Chrome DevTools / PageSpeed Insights). This validator catches the source-level causes.
+
 ## Honest scope
 
 These validators are **regex-based static analysis**. They do NOT measure:
@@ -48,6 +59,7 @@ TARGET=src/
 python check-viewport-meta.py --json "$TARGET" > /tmp/viewport.json &
 python check-pure-bw.py --json "$TARGET" > /tmp/bw.json &
 python check-tap-targets.py --json "$TARGET" > /tmp/tap.json &
+python check-cls-risk.py --json "$TARGET" > /tmp/cls.json &
 wait
 ```
 
