@@ -99,14 +99,6 @@
       "license": "Apache-2.0"
     },
     {
-      "name": "rad-agentic-company-builder",
-      "source": "./plugins/rad-agentic-company-builder",
-      "description": "Scaffold and configure an AI-agent-driven company infrastructure — folder hierarchies, CLAUDE.md files, agent definitions, skills, hooks, MCP configs, and operational patterns based on The Agentic Bible 2026.",
-      "category": "productivity",
-      "homepage": "https://github.com/radesjardins/RAD-Claude-Skills/tree/main/plugins/rad-agentic-company-builder",
-      "license": "Apache-2.0"
-    },
-    {
       "name": "rad-para-second-brain",
       "source": "./plugins/rad-para-second-brain",
       "description": "Active PARA system management — weekly review automation, folder structure auditing, Progressive Summarization, Intermediate Packet assembly, Hemingway Bridge session handoffs, and 12 Favorite Problems workshop.",
