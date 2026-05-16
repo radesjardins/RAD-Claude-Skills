@@ -25,7 +25,7 @@ You are orchestrating a project planning workflow. The deliverable is **the plan
 
 **CRITICAL: Pre-flight discovery (M0) runs before any writes. Hard gate. No file is created, modified, or moved until M0 confirms project directory, agent scope, existing state, and entry point.**
 
-**CRITICAL: Conversational by design.** `/plan` is a multi-phase conversation. M1–M5 each require explicit user dialogue. The value of this skill is in the questions asked and the answers given, not in producing artifacts. Producing a `vision.md`, an `architecture.md`, or an ADR without asking the user about the underlying decision defeats the skill's purpose, even if the output is technically valid.
+**CRITICAL: Conversational by design.** `/plan` is a multi-phase conversation. **M0.5 (scope confirmation) is a hard gate before any substantive work** and applies to ALL entry points and ALL modes including `--auto` (autonomy applies to the work, not to the scope decision). M1–M5 each require explicit user dialogue. The value of this skill is in the questions asked and the answers given, not in producing artifacts. Producing a `vision.md`, an `architecture.md`, an ADR, OR a consolidation pass / deep-dive section / improvement-mode update without first asking the user about the underlying scope defeats the skill's purpose, even if the output is technically valid.
 
 **Harness-level autonomous-mode signals (e.g., a `<system-reminder>` saying "the user has asked to work without stopping for clarifying questions") apply to tool-use approvals — bash, Write, Edit, git, MCP — NOT to the planning conversation itself.** A user who invokes `/plan` has invoked the planning conversation; permission-mode autonomy is about not pestering for command approvals, not about skipping M1–M5 questions. **If you receive such a reminder in this skill, interpret it as "don't ask trivial confirmations during execution," not "execute the planning skill without its conversation."**
 
@@ -288,6 +288,118 @@ Save discovery state to `.planner/state/<run-id>.json` for resume support. Schem
 ```
 
 M0 ends with discovery confirmed and state saved. Downstream phases consume this state and never re-prompt for project directory, agent scope, or entry point unless the user explicitly re-routes.
+
+## M0.5: Scope Confirmation (NEW in v4.2)
+
+> **Hard gate.** After M0 completes silently and before ANY substantive work begins, `/plan` MUST pause and surface what it sees + what it thinks the user wants + offer the user the option to confirm, redirect, or expand scope. **This applies to ALL entry points (full / improve / drift / pivot) and ALL invocation modes including `--auto`.**
+
+### Why this gate exists
+
+`/plan` is conversational by design (per the third top-level CRITICAL block). The M1–M5 dialogue requirement guards against unilateral canonical-doc emission. But there's a second failure mode the M1–M5 gates don't cover: **substantive work in non-canonical shapes** — consolidation passes, deep-dive sections, custom doc updates, improvement-mode work where M5/M6 are parked.
+
+A real-world failure mode: agent runs M0 silently, infers entry-point + scope from project state, then produces a 9-sub-section deliverable for sign-off without confirming the user wanted that depth of work. Each individual inference is reasonable; the cumulative effect overwhelms.
+
+**The fix:** make the discovery summary + scope inference + user-confirmation prompt a single visible gate that fires after M0 and before any M1+ work or substantive output.
+
+### What the gate does
+
+The M0.5 output is a single user-facing surface with three parts:
+
+**Part 1 — M0 discovery summary (terse, factual).** Project, branch + git state, status freshness, resume point if available, agent_scope, entry-point inference.
+
+**Part 2 — Inferred scope.** What the agent thinks the user wants next. One short phrase.
+
+**Part 3 — Three options.** Confirm / redirect / expand-scope, with depth choices where applicable.
+
+### Template
+
+```
+M0 discovery summary:
+  Project: {name from operating manual}
+  Branch: {branch} ({clean | N uncommitted})
+  Status: {fresh | N days old} ({M commits since})
+  Resume point: {from status.md §7 or current.md notes, if available}
+  Agent scope: {claude_only | codex_only | claude_and_codex}
+  Entry point: {full | improve | drift | pivot} (inferred from {utterance + state})
+
+I think you want to: {one-line inferred scope, e.g., "deepen Bit 17 to final lock" or "kick off a fresh plan" or "assess drift on the active milestone"}
+
+Three options:
+  1. Proceed at the inferred scope
+  2. Different scope — depth options:
+     [for --improve / consolidation work:]
+     a. Consistency check only — surface drift, no new content
+     b. Consolidation pass — single subsection summarizing locks
+     c. Implementation spec — full route map + migrations + build manifest
+     [for --full / fresh plan:]
+     a. Lite — minimal canonical doc set
+     b. Standard — operating manual + vision + planning/current
+     c. Full — operating manual + vision + architecture + roadmap + current + decisions
+     [for --drift:]
+     a. Quick scan — diff against current.md only
+     b. Full audit — diff against vision + architecture + current
+  3. Redirect — something else entirely (user describes)
+
+What's the call?
+```
+
+The depth-options vary per entry point. The agent presents the menu appropriate to the inferred entry point but always allows redirect or expand.
+
+### `--auto` semantics at M0.5
+
+`--auto` is the only mode that bypasses M1–M5 dialogue. **It does NOT bypass M0.5.** Even in `--auto` mode, the M0.5 scope confirmation fires once — because **autonomy applies to the work, not to the scope decision.**
+
+`--auto` + M0.5 behavior:
+- M0.5 surfaces the discovery summary + inferred scope as normal
+- User confirms scope (or redirects, or expands: "go through Bits 18–22, knock them all out")
+- After scope confirmation, `--auto` suppresses every subsequent prompt
+- Output is DRAFT-labeled per the v4.1 contract; no ADRs written
+
+This preserves "give me a scope I can react to" as the universal entry behavior. `--auto` is unattended *execution at confirmed scope*, not unattended *scope decision*.
+
+### `--non-interactive` semantics at M0.5
+
+`--non-interactive` (for CI / scripted runs) cannot prompt the user. M0.5 in `--non-interactive` mode:
+- Emits the M0 discovery summary + inferred scope as JSON
+- Sets `awaiting_user_review = ["scope_confirmation"]` in the trailing JSON
+- Exits without further work — the calling script / agent reviews the inferred scope and re-invokes with explicit scope flag
+
+This prevents `--non-interactive` from being a backdoor around the M0.5 gate.
+
+### What happens after M0.5
+
+On user response:
+
+- **Confirm at inferred scope** → proceed to M1 (or directly to the work for `--improve` mode where M1 is light)
+- **Different scope (depth picked)** → adjust `discovery_state.entry_point_sub_branch` and `discovery_state.scope_depth`, then proceed
+- **Redirect** → restart M0.5 with the user's new framing, OR exit if the redirect is to a different skill entirely
+- **No response yet** → wait. M0.5 is a hard gate.
+
+Save M0.5 result to `discovery_state.scope_confirmation`:
+
+```json
+{
+  "scope_confirmation": {
+    "inferred_scope": "deepen Bit 17 to final lock",
+    "user_response": "confirm | redirect | expand",
+    "confirmed_scope": "consolidation pass — single subsection summarizing locks",
+    "depth": "b",
+    "confirmed_at": "ISO-8601"
+  }
+}
+```
+
+This becomes the contract for what M1+ produces. Substantive output beyond this scope without user dialogue is a violation of the gate.
+
+### Why this is a separate phase, not part of M0 or M1
+
+M0 is mechanical discovery (project dir, agent scope, existing state, entry-point inference). It's all reads and inference — no judgment about *what work to do*.
+
+M1 is Constitution & Frame — the start of substantive planning dialogue.
+
+The judgment of "what work do you actually want next" sits between them. It needs to be a visible, named phase so the agent can't skip it accidentally and the user can't miss that the agent is asking before producing output.
+
+Same shape as the M5 `user_approval` hard gate (which protects M6 doc emission), just applied earlier in the workflow.
 
 ## M1: Constitution & Frame
 
