@@ -4,14 +4,24 @@ description: >
   This skill should be used when the user says "plan my project", "create an
   implementation plan", "help me architect this", "I need a plan before coding",
   "let's plan before we build", "improve my plan", "deepen the current
-  milestone", "what's drifted from the plan", "are we sticking to the plan",
-  "we're pivoting", "rescope this project", "scope creep check", "validate my
-  plan", "audit the plan", or wants to create / refine / re-check a project
-  plan. Triggers four entry points: full plan (greenfield), improvement
-  (deepen or continue), drift assessment (compare reality to plan), pivot
-  (substantial re-plan with disposition manifest). Also trigger proactively
-  when a user describes a non-trivial project idea and appears ready to start
-  coding without a plan.
+  milestone", "continue the plan", "continue planning", "let's continue
+  planning", "continue the planning session", "pick up the plan", "where did we
+  leave off in the plan", "where did we leave off planning", "continue from
+  where we left off" (when planning context is implied), "keep planning",
+  "let's keep going on the plan", "resume the plan", "what's drifted from the
+  plan", "are we sticking to the plan", "we're pivoting", "rescope this
+  project", "scope creep check", "validate my plan", "audit the plan", or wants
+  to create / refine / re-check / continue a project plan. Triggers four entry
+  points: full plan (greenfield), improvement (deepen or continue), drift
+  assessment (compare reality to plan), pivot (substantial re-plan with
+  disposition manifest). Free-form planning continuation utterances ("continue
+  the plan" / "let's keep planning" / "where did we leave off planning") route
+  to the improvement entry point. Also trigger proactively when a user
+  describes a non-trivial project idea and appears ready to start coding
+  without a plan, OR when a user signals planning continuation at session open
+  even without an explicit /plan invocation — route through this skill so the
+  M0.5 scope-confirmation gate fires rather than letting it become ad-hoc
+  agent work.
 argument-hint: "[project description or path] [--full|--improve|--drift|--pivot|--validate] [--auto] [--agents <scope>] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
 user-invocable: true
 allowed-tools: Read Glob Grep WebSearch WebFetch Agent Write Bash
@@ -311,39 +321,61 @@ The M0.5 output is a single user-facing surface with three parts:
 
 **Part 3 — Three options.** Confirm / redirect / expand-scope, with depth choices where applicable.
 
-### Template
+### Template (NEW in v4.3 — prose-first briefing pattern)
+
+The M0.5 surface renders as a friendly, layperson-readable briefing matching the doorman model rad-session's `/startup` uses for its Path A / Path B / Path C alternatives. Cross-plugin consistency is a design principle.
 
 ```
-M0 discovery summary:
-  Project: {name from operating manual}
-  Branch: {branch} ({clean | N uncommitted})
-  Status: {fresh | N days old} ({M commits since})
-  Resume point: {from status.md §7 or current.md notes, if available}
-  Agent scope: {claude_only | codex_only | claude_and_codex}
-  Entry point: {full | improve | drift | pivot} (inferred from {utterance + state})
+**Where we left off:** {one short prose sentence summarizing the most recent locked / shipped chunk of work. Plain language. Pulled from status.md §7 "what changed", current.md notes, the brainstorm or planning doc's "Resume point" line, or the most recent shipped milestone in planning/archive.}
 
-I think you want to: {one-line inferred scope, e.g., "deepen Bit 17 to final lock" or "kick off a fresh plan" or "assess drift on the active milestone"}
+**Last accomplishment:** {one or two short prose sentences naming what got done in that chunk. Plain language. Example: "The five decision-rich phases of Bit 17 each got their deep specs locked, and the weather-migration sub-slice was deleted per the Bit 15c revision."}
 
-Three options:
-  1. Proceed at the inferred scope
-  2. Different scope — depth options:
-     [for --improve / consolidation work:]
-     a. Consistency check only — surface drift, no new content
-     b. Consolidation pass — single subsection summarizing locks
-     c. Implementation spec — full route map + migrations + build manifest
-     [for --full / fresh plan:]
-     a. Lite — minimal canonical doc set
-     b. Standard — operating manual + vision + planning/current
-     c. Full — operating manual + vision + architecture + roadmap + current + decisions
-     [for --drift:]
-     a. Quick scan — diff against current.md only
-     b. Full audit — diff against vision + architecture + current
-  3. Redirect — something else entirely (user describes)
+**Next logical step:** {one short prose sentence describing the inferred next scope in plain English. Example: "Finish the consolidation pass that reconciles the framework with the five locked deep specs before locking the main slice fully."}
 
-What's the call?
+**Or you could start with:**
+  - {Alternative A — one prose sentence describing a different scope at the same altitude}
+  - {Alternative B — one prose sentence describing a different scope or a skip-ahead option}
+  - {Alternative C — at least one option that is "skip more planning, execute the next milestone instead" OR "redirect to something else entirely"}
+
+**Mechanical state:** Project: {name} · Branch: {branch} ({clean | N uncommitted}) · Status: {fresh | N days old} ({M commits since}) · Agent scope: {scope} · Entry point: {entry} (inferred from {signal})
+
+**What's the call?** Confirm the next step, pick an alternative, or redirect to something else entirely.
 ```
 
-The depth-options vary per entry point. The agent presents the menu appropriate to the inferred entry point but always allows redirect or expand.
+### Per-entry-point alternative menus
+
+Populate the "Or you could start with" list with options appropriate to the inferred entry point.
+
+**For `--improve` (deepen or continue):**
+- Consistency check only — flag the drift, write nothing.
+- Bigger consolidation that also captures route changes, migrations, and a build manifest.
+- Skip planning — start building the next milestone now.
+- Different milestone or topic — name which one.
+
+**For `--full` (fresh plan):**
+- Lite doc set — operating manual + planning/current only.
+- Standard doc set — operating manual + vision + planning/current.
+- Full doc set — operating manual + vision + architecture + roadmap + current + decisions.
+
+**For `--drift` (assessment, no new plan):**
+- Quick scan — diff against planning/current only.
+- Full audit — diff against vision + architecture + planning/current.
+
+**For `--pivot` (substantial re-plan):**
+- Surgical pivot — disposition manifest only, keep existing docs.
+- Full re-plan — fresh five-phase conversation with disposition manifest.
+
+The agent always includes at least one "redirect entirely" option regardless of inferred entry point.
+
+### Rendering discipline (load-bearing — do not drop)
+
+These rules exist because v4.2 M0.5 output rendered too densely in real-world use. The reshape preserves the same gate; the rules preserve the friendlier framing:
+
+1. **Prose, not bullet lists of identifiers.** ADR numbers, bit numbers, schema column names, file paths, and other technical identifiers belong in the **Mechanical state** line, not in the friendly framing. The four briefing lines (Where we left off / Last accomplishment / Next logical step / Or you could start with) must read as plain English.
+2. **Readable to someone outside the project's vocabulary.** A reader who doesn't know the project's internal terms should be able to follow each line. If you reach for an abbreviation or a numeric reference to make a sentence work, rewrite at a higher altitude (e.g., "the five decision-rich phases" rather than "M.6 / M.7 / M.8 / M.9 / M.10").
+3. **Acknowledge missing context.** If status.md / current.md / brainstorm doesn't yield enough context to summarize cleanly, say so explicitly: "Last accomplishment couldn't be confidently inferred from {sources read} — please confirm before I proceed." Better an honest gap than dense agent-inferred jargon filling the slot.
+4. **Briefing first, JSON second.** The prose briefing is the user-facing surface. The JSON discovery state (saved per the schema below) is the machine-readable annex for downstream phases — not a substitute for the prose surface.
+5. **No drift audit before the gate.** Do NOT produce a multi-item drift audit, consolidation analysis, or substantive recap of state as part of M0.5. The briefing names the scope and the alternatives in plain language; the actual work (audit, consolidation, etc.) happens after the user confirms which scope they want.
 
 ### `--auto` semantics at M0.5
 
