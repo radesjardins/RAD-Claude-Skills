@@ -119,10 +119,6 @@ PLUGIN_RULES: dict[str, dict] = {
         "category": "stack-conditional",
         "required_signals": ["chrome_extension"],
     },
-    "rad-website-design@rad-claude-skills": {
-        "category": "stack-conditional",
-        "required_signals": ["frontend_web"],
-    },
     "rad-a11y@rad-claude-skills": {
         "category": "stack-conditional",
         "required_signals": ["frontend_web"],
