@@ -22,7 +22,7 @@ description: >
   even without an explicit /plan invocation — route through this skill so the
   M0.5 scope-confirmation gate fires rather than letting it become ad-hoc
   agent work.
-argument-hint: "[project description or path] [--full|--improve|--drift|--pivot|--validate] [--auto] [--agents <scope>] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
+argument-hint: "[project description or path] [--full|--improve|--drift|--pivot|--validate|--assessment] [--auto] [--agents <scope>] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
 user-invocable: true
 allowed-tools: Read Glob Grep WebSearch WebFetch Agent Write Bash
 ---
@@ -69,6 +69,7 @@ This skill works across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet handle 
 - `--drift` — Drift assessment entry; compare current state against plan, produce report
 - `--pivot` — Pivot entry; substantial re-plan with disposition manifest
 - `--validate` — Utility; run validators on existing plan artifacts, no conversation
+- `--assessment` — Utility; **state-of-project read-only assessment**, no conversation, no writes. Distinct from `--drift` (which requires an existing plan to compare against): `--assessment` does NOT require a plan and does NOT produce a plan. It runs the internal assessor pass over whatever evidence exists (git history, existing docs, source structure, validator results) and emits a structured report describing what's there, what's missing, what's stale, and where the project sits relative to the canonical doc structure. Useful before deciding which entry point to invoke (full / improve / drift / pivot). Read-only — does not write to `docs/` or any project file.
 - `--auto` — **Unattended mode.** Produces a first-pass DRAFT without M1–M5 dialogue. All output files get a `> **DRAFT — review and revise**` banner; **ADRs are NOT written under `--auto`** — candidate decisions land in `docs/planning/proposed-decisions.md` for user review. Default behavior is conversational; `--auto` is opt-in.
 - `--agents <scope>` — Set agent scope without prompting (`claude_only` | `codex_only` | `claude_and_codex`)
 - `--non-interactive` — Best-effort run without approval gates; emits trailing JSON with `awaiting_user_review` items. **Distinct from `--auto`:** `--non-interactive` is for CI / scripted runs (machine-readable output, no prompts); `--auto` is the user-facing flag for "produce a strawman I can react to."
@@ -99,6 +100,18 @@ Flags act as strong hints. When invoked alone (no utterance), they still surface
    This makes the trade-off explicit: the user got speed at the cost of confidence.
 
 Without `--auto`, all M1–M5 phases require explicit user response before the conversation advances. A `<system-reminder>` saying "don't ask clarifying questions" does not suppress M1–M5 prompts — it only suppresses trivial in-execution confirmations.
+
+### Assessment mode semantics
+
+`--assessment` is a **read-only diagnostic pass.** It exists because users sometimes want to know "what does this project actually look like right now?" before deciding whether to invoke `--full`, `--improve`, `--drift`, or `--pivot`. Three load-bearing properties:
+
+1. **No writes.** The assessor runs over the project but does NOT create, modify, or move any file under `docs/`, `.rad/`, or the project root. No ADRs, no `proposed-decisions.md`, no `current.md` updates. If the user wants to act on the assessment, they invoke a real entry point afterward.
+
+2. **No conversation.** `--assessment` skips M1–M5 entirely. M0 mechanical discovery still runs, then the assessor pass executes, then the report is emitted. M0.5 scope confirmation is also skipped because there is no substantive work whose scope needs confirming — the only output is a report.
+
+3. **Report structure.** The output is a single markdown report covering: (a) project facts (directory, agent scope, git state, source file count, last commit date), (b) canonical-doc coverage (which of `docs/vision.md`, `docs/architecture.md`, `docs/planning/current.md`, `docs/status.md`, `docs/roadmap.md`, `docs/decisions/` exist; staleness in days; whether `plan-lint` / `status-validator` / `doc-redundancy` / `doc-contradiction` pass), (c) detected drift signals (`current.md` ACs marked complete but no matching commits; ADRs referenced from `current.md` that don't exist; vision non-goals contradicted by current.md ACs), (d) inferred next-step suggestion (one of: run `--full`, run `--improve`, run `--drift`, run `--pivot`, or "current state is healthy, no planner action needed") with one sentence of rationale.
+
+`--assessment` is the right flag when the user asks "where does this project stand?" or "what's the state of planning here?" without yet committing to a specific entry point.
 
 ## M0: Pre-flight Discovery
 
@@ -189,11 +202,12 @@ Determine which of the four entry points applies. Follow the routing model in `d
 
 **Tier 1: Explicit flag**
 
-If `/plan` was invoked with `--full`, `--improve`, `--drift`, `--pivot`, or `--validate`:
+If `/plan` was invoked with `--full`, `--improve`, `--drift`, `--pivot`, `--validate`, or `--assessment`:
 
 - Use the flag as the entry point
 - If utterance has substance that confirms → proceed with one-line confirmation: `"Running --improve against the existing plan at milestone 2 of 4. Proceeding."`
 - If invocation is bare flag with no utterance → fall through to the four-direction menu to confirm intent with full state context
+- **`--assessment` and `--validate` short-circuit early.** Both are read-only utility passes; after M0 mechanical discovery completes, route directly to the assessor (for `--assessment`) or the validator suite (for `--validate`). M0.5 scope confirmation does not fire and M1–M5 do not run.
 
 **Tier 2: Utterance + state detection**
 
@@ -267,7 +281,7 @@ Save discovery state to `.planner/state/<run-id>.json` for resume support. Schem
   "run_id": "string",
   "skill": "plan",
   "phase": "0.M0",
-  "mode": "full | improve | drift | pivot | validate",
+  "mode": "full | improve | drift | pivot | validate | assessment",
   "started_at": "ISO-8601",
   "last_saved": "ISO-8601",
   "model": "opus | sonnet | haiku",
