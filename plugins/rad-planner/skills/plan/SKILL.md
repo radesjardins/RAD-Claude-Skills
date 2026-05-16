@@ -299,7 +299,7 @@ M0 ends with discovery confirmed and state saved. Downstream phases consume this
 
 A real-world failure mode: agent runs M0 silently, infers entry-point + scope from project state, then produces a 9-sub-section deliverable for sign-off without confirming the user wanted that depth of work. Each individual inference is reasonable; the cumulative effect overwhelms.
 
-**The fix:** make the discovery summary + scope inference + user-confirmation prompt a single visible gate that fires after M0 and before any M1+ work or substantive output.
+**The fix:** make the discovery summary + scope inference + user-confirmation prompt a single visible gate that fires after M0 and before any M1+ work or substantive output. Same doorman-model logic rad-session's `/startup` Phase 3 uses: confirm the skill ran, surface what it sees, hand the next move back to the user.
 
 ### What the gate does
 

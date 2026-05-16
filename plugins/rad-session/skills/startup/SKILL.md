@@ -863,7 +863,9 @@ If no Resources section exists in the operating manual, treat all detected items
 
 ## Phase 3: Orient and Brief
 
-Present a concise, scannable session briefing. Adapt the format based on what's available. Target **under 35 lines** and **under 5 seconds wall clock**.
+Present a concise, scannable session briefing. Adapt the format based on what's available. Target **under 35 lines** (typically far less in routine cases) and **under 5 seconds wall clock**.
+
+> **Floor of one line — never zero output (NEW in v5.3).** The first job of `/startup` is *to confirm it ran*. Silent completion violates the doorman model: the user just invoked a command and got nothing back, which reads as "did the tool actually run?" Even in the cleanest possible routine open (no anomalies, status fresh, plan healthy, no draft ADRs, no drift), `/startup` MUST emit at least a one-line confirmation that includes: status freshness signal, plan progress phrase, and a pointer to the canonical doc. Silence is the failure mode, not the goal.
 
 ### Briefing selection
 
@@ -965,12 +967,69 @@ Ready to continue.
 ### Presentation rules
 
 - Keep the briefing **under 35 lines** — this is a quick orientation.
+- **Floor of one line.** The skill MUST produce at least one user-visible line even in the cleanest routine case. Silence violates the doorman model. See "Routine confirmation line" below.
 - Use the **exact wording from status.md** — don't paraphrase. The wrapup chose those words from evidence; paraphrasing loses load-bearing detail.
 - End with `Ready to continue. What would you like to work on?` to hand control back.
-- **Omit empty blocks** — don't show "Validation: (none)" or empty Resources headers.
+- **Omit empty blocks** — don't show "Validation: (none)" or empty Resources headers — BUT never omit the routine confirmation line.
 - Cap each block at the line counts indicated; truncate with `...` if longer.
 - If imports were resolved in Phase 1.2 and surfaced non-trivial content, add a single `Imports: <file1>, <file2>` line under Resources.
 - If the "If restarting from scratch" section in status.md has a `Resume with:` line, prefer that verbatim as the Next-step content.
+
+### Routine confirmation line (NEW in v5.3)
+
+When all of the following hold:
+
+- No sync warnings (block / stale / cross-machine all silent)
+- No bootstrap fired (artifacts present)
+- No strategic-doc gaps (1.5 emits nothing)
+- No draft ADRs pending review (1.5.1 emits nothing)
+- Status freshness check returns fresh (1.6 emits nothing)
+- Git tree clean, no ahead/behind anomalies
+- No resource drift
+
+…the Full / Status-only / Minimal briefing structures above would emit a substantial scrollable block describing routine state. **In v5.3, the steady-state output collapses to a single-line confirmation when the underlying state is routine.** Template:
+
+```
+Routine open. docs/status.md fresh ({N} days, M{X} {Y}/{Z} ACs done). Read it to resume.
+```
+
+Concrete example:
+
+```
+Routine open. docs/status.md fresh (2 days, M3 2/5 ACs done). Read it to resume.
+```
+
+Anomalies add lines ABOVE the confirmation line. The confirmation line ALWAYS appears:
+
+```
+⚠ docs/status.md is 12 days old (8 commits since).
+⚠ 2 draft ADRs pending review: 0007, 0008.
+
+Routine open. M3 2/5 ACs done. Read docs/status.md to resume.
+```
+
+If status.md doesn't exist yet (Minimal Briefing case), the line shape adapts:
+
+```
+Routine open. No status.md yet — first session for this project, or /wrapup hasn't run. Read CLAUDE.md to orient; run /wrapup at session end to populate status.
+```
+
+If the operating manual is missing (First-time / no-bootstrap diagnostic case), the existing dedicated templates apply — those already have content, so the floor is naturally met.
+
+### When to use the longer Full/Status-only briefing vs. the one-line routine confirmation
+
+The decision is based on how much **non-status.md content** the briefing needs to surface:
+
+| State | Briefing shape |
+|---|---|
+| Anomalies + non-status content (drift, resources, imports, draft ADRs, etc.) | Full / Status-only briefing as defined above, with all relevant blocks |
+| No anomalies, routine state, status.md fresh | Single-line routine confirmation |
+| Bootstrap fired this turn | Bootstrap summary then routine confirmation |
+| First session / no operating manual | First-time briefing as defined above (already has content) |
+
+Rationale: the Full Briefing's value is when status.md content needs to be *surfaced* (because anomalies exist alongside it, or because resource discovery added context). When status.md is fresh and clean, paraphrasing its sections in the briefing duplicates content the user can read directly. The one-line routine confirmation closes the "did anything happen?" gap without re-narrating what's already in canonical form.
+
+**The exact wording rule still applies.** When the longer briefing fires, status.md sections appear verbatim. When the one-line routine confirmation fires, it points the user at status.md — they read the verbatim content there.
 
 ---
 
