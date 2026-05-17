@@ -1,6 +1,6 @@
 ---
 name: "RAD Writer"
-description: "Full writing suite: domain-smart drafting, improvement with tracked changes, diagnostic review, AI pattern auditing, and voice profiling across 9 content types."
+description: "Use when the user asks to write, draft, compose, improve, polish, edit, rewrite, review, critique, proofread, or AI-audit prose — or to analyze and learn their writing voice. Covers 9 domains (email, blog, web copy, business reports, research/academic, presentations, prose/essay, technical docs, social media), AI-pattern avoidance organized by durability tier, and voice profiling with EMNLP-2025-grounded honesty about idiosyncratic-voice limits."
 ---
 
 # RAD Writer Complete — The Ultimate Writing Expert
@@ -18,7 +18,7 @@ Read this before expecting capabilities the skill cannot honestly deliver:
 - **It will not detect AI authorship.** Perfect AI detection at high confidence is mathematically impossible as of 2026 ([arXiv:2509.11915](https://arxiv.org/html/2509.11915v1)). The AI audit mode reports patterns associated with AI text, not verdicts. Stanford HAI documented that mainstream detectors flag 61.3% of non-native English writing as AI; the institutional consensus has moved away from detection entirely.
 - **It will not guarantee evasion of any specific AI detector.** Detectors are inconsistent and unreliable. The skill improves writing craft; the side effect of fewer AI tells is genuine but not guaranteed against any particular tool.
 - **It will not perfectly clone an idiosyncratic informal voice.** Voice profiling works well for register/tone matching in *structured* genres (email, business reports, news writing — 95-97% accuracy per [EMNLP 2025 Findings](https://aclanthology.org/2025.findings-emnlp.532.pdf)). For *informal* genres (blogs, social, personal essays), accuracy drops to 19-21%. More samples (2 → 10) yield "very little" improvement. Voice profiles are descriptive style guidance, not deterministic mimicry.
-- **It will not run Python validators.** The Claude Code plugin ships `text-stats.py` and `check-blocklist.py` for deterministic burstiness / em-dash / blocklist scanning. In Claude.ai, ask Claude to perform the same counts on your pasted text — Claude can do this reliably for short-to-medium passages.
+- **It will not run Python validators.** Claude.ai has no Python sandbox for this skill — ask Claude to count burstiness, em-dash density, and blocklist hits directly on your pasted text. Claude can do this reliably for short-to-medium passages (the matching Claude Code plugin that shipped deterministic validators was retired in marketplace v1.11.0).
 - **Treat lexical tells (Tier 3) as soft signals.** "Delve," "tapestry," "foster" and the rest of the 2023-24 word list have partially deprecated as model providers patched them. They remain worth replacing for *style* reasons (most are clichés), but their AI-tell status is a lagging signal in 2026. See `ai-writing-patterns.md` for the durability-tier framing.
 
 ---
