@@ -1,8 +1,10 @@
 # rad-code-review — Catch what AI wrote wrong before it ships.
 
-> **v4.0 — Naming pass.** The `UCR-` heritage prefix on config / finding IDs / state dirs renamed to `RADCR-` for naming consistency. **Existing users:** rename `.ucrconfig.yml` → `.radcrconfig.yml` and `.ucr/` → `.radcr/` before running this version (no content changes). See the Naming section below.
+> **v4.1 — current release.** Refinement pass on the v4.0 naming changeover (RADCR config + state dirs) plus small surface tightening. No breaking changes; users on 4.0 upgrade in place.
 >
-> **v3.0 — Optimized for Claude Opus 4.7.** Opus 4.7 is now the default primary-review model. Parallel tool calls across discovery/stack-detection/automated-checks. JSON-first subagent output (robust across models). Compaction-safe checkpointing with `--resume <run-id>`. `--non-interactive` mode for agents and CI. Externalized subagent prompt templates. `.radcrconfig.yml` accepted-risk expiry is now enforced. Sonnet 4.6 is a first-class fallback; Haiku 4.5 works for narrow blame-aware diffs.
+> **v4.0 — Naming pass.** The `UCR-` heritage prefix on config / finding IDs / state dirs renamed to `RADCR-` for naming consistency. **Existing users on 3.x:** rename `.ucrconfig.yml` → `.radcrconfig.yml` and `.ucr/` → `.radcr/` before running this version (no content changes). See the Naming section below.
+>
+> **v3.0 (prior) — Optimized for Claude Opus 4.7.** Opus 4.7 default; parallel tool calls across discovery/stack-detection/automated-checks; JSON-first subagent output; compaction-safe checkpointing with `--resume <run-id>`; `--non-interactive` mode for agents and CI; externalized subagent prompt templates; `.radcrconfig.yml` accepted-risk expiry enforced. Sonnet 4.6 first-class fallback; Haiku 4.5 for narrow blame-aware diffs.
 
 When you build with Claude, you move fast. Fast enough that subtle bugs, fake error handling, and hardcoded accessibility states slip through — and they look fine at a glance. rad-code-review is the adversarial reviewer that knows exactly which mistakes AI code generators make. It only flags what *you* changed, not the whole codebase. And it understands your framework well enough to catch the security holes that generic linters miss.
 

@@ -2,8 +2,7 @@
 
 Domain-smart writing, AI pattern avoidance, voice profiling, and editorial review across 9 content types — email, blog, web copy, business reports, research, presentations, prose, technical docs, social media.
 
-> **Two distributions, two audiences.**
-> This Claude.ai skill is the multi-genre home for rad-writer. For engineer-writing in Claude Code (READMEs, CHANGELOGs, commits, PRs, ADRs, technical docs, runbooks), see the [rad-writer plugin](../../plugins/rad-writer/) instead. The plugin's engineer-focused pivot is in progress; multi-genre coverage migrates here as it completes.
+> **Claude.ai-only distribution.** This is the standalone Claude.ai skill version. The matching Claude Code plugin was retired in marketplace v1.11.0 — its project-narrative use case is now covered by [rad-explain](../../plugins/rad-explain/) (`narrate-project`, `ground-readme`) for any repo, and [rad-planner](../../plugins/rad-planner/)'s `/project-story` for canonical-doc projects. This skill remains the multi-genre writing home for Claude.ai users.
 
 ## What's Included
 
@@ -46,7 +45,7 @@ The skill includes a SKILL.md with 5 modes (write, improve, review, AI audit, vo
 - **Tracked changes**: Every improvement is numbered. Accept all, review individually, or cherry-pick by number.
 - **Not an AI detector**: The AI audit reports patterns with fixes, not verdicts. Every "AI tell" is also a craft problem — fix the writing quality, detectability solves itself.
 
-## Honesty Statement (aligned with rad-writer plugin 2.0)
+## Honesty Statement
 
 Read these before expecting capabilities this skill cannot honestly deliver:
 
@@ -55,14 +54,16 @@ Read these before expecting capabilities this skill cannot honestly deliver:
 - **Voice profiles are partial.** EMNLP 2025 Findings paper showed structured-genre voice mimicry (emails, news, business reports) reaches 95-97% accuracy. Informal-genre mimicry (blogs, social, personal essays) sits at 19-21%. Profiles are descriptive style guidance, not deterministic mimicry.
 - **Lexical tells are degrading signals.** "Delve," "tapestry," "foster" and the 2023-24 word list have partially deprecated as model providers patched them. They remain worth replacing for style reasons (most are clichés), but their AI-tell status is a lagging signal. See `resources/ai-writing-patterns.md` for the durability-tier framing (T1 durable structural / T2 degrading stylistic / T3 deprecated lexical).
 
-## Compared to the [rad-writer plugin](../../plugins/rad-writer/)
+## What this skill is and isn't
 
-| Capability | Plugin | This skill |
-|---|---|---|
-| Domain-aware drafting (9 domains) | ✓ | ✓ |
-| AI pattern audit organized by durability tier | ✓ | ✓ |
-| Voice profile generation | ✓ (filesystem-persisted) | ✓ (artifact download) |
-| Three-pass review | ✓ | ✓ |
-| Deterministic burstiness/em-dash/blocklist scan | `text-stats.py`, `check-blocklist.py` | Ask Claude to count on pasted text |
-| Long-document chunked processing | ✓ | Manual sectioning |
-| Operates on filesystem | ✓ | ✗ (paste / artifact only) |
+| Capability | Available |
+|---|---|
+| Domain-aware drafting (9 domains) | ✓ |
+| AI pattern audit organized by durability tier | ✓ |
+| Voice profile generation (artifact download) | ✓ |
+| Three-pass review | ✓ |
+| Deterministic burstiness / em-dash / blocklist scan | Ask Claude to count on pasted text — no Python validators in the Claude.ai sandbox |
+| Long-document chunked processing | Manual sectioning |
+| Operates on filesystem | ✗ (paste / artifact only — Claude.ai sandbox has no filesystem) |
+
+For engineer-writing in a Claude Code session (READMEs, changelogs, ADRs, commits) with grounding and overpromise checks, use [`rad-explain`](../../plugins/rad-explain/) — its `ground-readme` skill audits or generates README-style copy against the repo source.

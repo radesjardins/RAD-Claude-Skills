@@ -1,48 +1,43 @@
 # rad-planner
 
-Structured implementation-planning scaffolding for Claude Code, with **mechanical validators** (Python scripts) backing the parts that templates alone can't enforce.
+Plan-first project planning for Claude Code — **conversational by design**, with mechanical validators (pure-stdlib Python) backing the parts templates alone can't enforce.
 
-> **v4.1 — Internal split: validator surface promoted to standalone commands.**
+> **v4.5 — `--assessment` flag exposed.** A read-only state-of-project diagnostic. Runs the internal assessor over whatever evidence exists (git, docs, source, validator results) and emits a structured report: project facts, canonical-doc coverage + staleness + validator pass/fail, detected drift signals, and an inferred next-step suggestion (full / improve / drift / pivot / "no planner action needed") with one-sentence rationale. Distinct from `--drift` (which requires an existing plan): `--assessment` works on any project state, produces no writes, skips M0.5 and M1–M5.
 >
-> - **Four new validators**: `estimate-validator.py` (flag plans with no effort/size signal), `dependency-cycle-detector.py` (DFS cycle detection across milestone deps), `coverage-validator.py` (flag ACs with no apparent validation command), `scope-creep-detector.py` (vision non-goals dropped from current.md AND present in plan content).
-> - **Eight standalone slash commands** wrap the validator surface, usable on any plan-shaped markdown outside the `/plan` workflow: `/plan-lint`, `/status-validate`, `/doc-redundancy`, `/doc-contradiction`, `/plan-estimates`, `/plan-cycles`, `/plan-coverage`, `/plan-scope-creep`.
-> - **New `/plan --assessment` flag** — non-interactive risk-assessor pass over an existing plan (reads current.md + vision.md + architecture.md, returns the agent's findings, no file writes).
+> **v4.4 — project-story synthesis skills.** Two new skills derive plain-language narrative views from the canonical doc set: `/project-story` generates a state-of-the-project narrative (one-line product test, who it's for in build order, what it's explicitly NOT, where we are, what's pending, bottom line) for non-developer stakeholders, new collaborators, future-self after time away, or funders. `/refresh-story` updates an existing story file in place via inline drift detection.
 >
-> The `/plan` workflow itself is unchanged — the validators were always there, just nested inside the workflow. v4.1 makes them addressable on their own.
+> **v4.3 — M0.5 briefing reshape + conversational-continuation triggers.** The M0.5 scope-confirmation gate renders as a prose-first briefing (Where we left off + Last accomplishment + Next logical step + Or you could start with + a single Mechanical state line) instead of identifier-heavy recap. Trigger phrases expanded to catch free-form planning-continuation utterances at session open.
+>
+> **v4.2 — M0.5 scope-confirmation hard gate.** Fires after M0 discovery and BEFORE any substantive work on ALL entry points and ALL modes including `--auto`. Autonomy applies to the work, not to the scope decision.
+>
+> **v4.1 — conversational by design.** `/plan` is multi-phase dialogue. M1–M5 each require explicit user input. Harness-level autonomy hints (permission-mode Auto/Bypass, `<system-reminder>` "don't ask clarifying questions") apply to *tool-use approvals*, NOT to the planning conversation. New opt-in `--auto` flag is the only way to suppress M1–M5 — it produces DRAFT-labeled strawmen and does NOT write ADRs (candidates land in `docs/planning/proposed-decisions.md` for user review).
 
 ## What this actually is
 
-A 5-skill plugin that walks you through Discovery → Stack Eval → Plan → Risk → Review → Export, dispatches subagents for stack and risk work, and runs Python validators on the generated artifacts. The plan output is markdown intended for a fresh AI session to pick up cold.
+A 7-skill plugin built around a five-phase **planning conversation** that produces the plan, then an M6 milestone that writes the approved doc set per the [canonical structure](../../docs/doc-conventions.md). The plan is the deliverable; the docs follow the plan, not the other way around.
 
-The skills are mostly structured prompts that ask the model to behave like a planner. The **scripts** in `scripts/` are real validators — they parse the generated tasks file, build the DAG, check for cycles and phantom dependencies, verify required fields are present, flag vague language, and validate subagent JSON against schemas. Where the README says "enforced," the script does the work.
-
-## File conventions
-
-rad-planner produces project-level planning artifacts per the [RAD 8-doc standard](../../docs/doc-conventions.md) at the repository root. The standard is the canonical convention shared with rad-session: it defines target lengths, update triggers, pruning rules, and the single-writer rule that prevents collision between plugins.
+The skills are structured prompts that drive the conversation. The **scripts** in `scripts/` are real validators — they parse the generated `current.md`, check required sections, validate AC checkbox format, scan for vague language, detect cross-doc duplicates, find vision/plan contradictions, lint dependency cycles, and validate subagent JSON against schemas. Where the README says "validates," the script does the work.
 
 ## What it does NOT do
 
 - **Does not execute the resulting plan.** It produces planning artifacts. You (or another tool) run the work.
-- **Does not test that a plan is "zero-context ready."** That's the *intent* of the templates, not a verified property.
-- **Does not detect every anti-pattern.** Mechanical checks cover field presence, DAG integrity, and vague language. Anti-patterns 1, 9, 11, 13 (judgment-required) are still checked by the risk-assessor agent — and several of those are opinions with thresholds, not laws.
-- **Does not stop you from skipping phases.** Phase order is enforced by instructions to the model, not by code.
-- **Does not auto-checkpoint or auto-clear context.** The checkpoint skill writes a handoff file; you run `/clear` and rehydrate yourself.
+- **Does not silently auto-write under `--auto`.** Every `--auto` output file carries a `> **DRAFT — review and revise**` banner; ADRs are deferred to `docs/planning/proposed-decisions.md` so the user explicitly promotes them.
+- **Does not bypass the M0.5 scope-confirmation gate.** Not even under `--auto`. Autonomy applies to the work; the scope decision is always confirmed.
+- **Does not detect every anti-pattern.** Mechanical checks cover section presence, AC format, vague language, cross-doc duplication, and vision/plan contradiction. Judgment-required anti-patterns are surfaced by the `risk-assessor` agent.
 - **Does not track planning quality over time.** No metrics, no learning from prior plans.
-- **Does not replace Claude Code's built-in Plan Mode** — it adds artifacts on top of it. See "Relationship to built-in Plan Mode" below.
+- **Does not migrate from 3.x to 4.x automatically.** Neither prior version had public traffic; migration tooling was intentionally not built.
 
 ## Skills
 
 | Skill | Trigger | What it produces |
 |---|---|---|
-| `/rad-planner:plan` | "plan my project", "create implementation plan" | Full 6-phase workflow → 5-file split (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN) + `tasks.md` + transient `CLAUDE-FRAGMENT.md`. Supports `--lite`, `--reboot`, `--validate`. Legacy 2.x trigger `plan-project` still works. |
-| `/rad-planner:evaluate-stack` | "what stack should I use", "recommend a stack" | Stack recommendation table with live version verification. Standalone or as Phase 2 of `/plan`. |
+| `/rad-planner:plan` | "plan my project", "create implementation plan", "improve my plan", "continue planning" | Five-phase conversation → approved doc set written at M6 per the [canonical structure](../../docs/doc-conventions.md). Six mode flags: `--full`, `--improve`, `--drift`, `--pivot`, `--validate`, `--assessment`. Plus opt-in `--auto` for DRAFT strawmen. |
+| `/rad-planner:project-story` | "tell me what this project is", "explain the state of the project", "summarize for a stakeholder" | State-of-project narrative read from the canonical doc set (vision + decisions + planning/current + status + roadmap). Plain English, no marketing language, every claim traceable. |
+| `/rad-planner:refresh-story` | "refresh the story", "update PROJECT-STORY.md" | In-place refresh of an existing story file. Inline drift detection — regenerates only sections whose canonical source has changed; preserves the user's edits in fresh sections. |
+| `/rad-planner:evaluate-stack` | "what stack should I use", "recommend a stack" | Stack recommendation table with live version verification. Standalone, or invoked as part of `/plan`'s M2/M3 conversation. |
 | `/rad-planner:review-plan` | "review my plan", "audit this plan" | Deep quality audit combining mechanical lint + risk-assessor judgment. For a cheap "do the docs exist + does lint pass" gap-check, use `/plan --validate` instead. |
 | `/rad-planner:status` | "plan status", "what's next", "where am I in the plan" | Quick read of an in-flight plan: % complete, blocked tasks, next eligible. |
-| `/rad-planner:checkpoint` | "checkpoint", "save progress", "document and clear" | Writes `.planner/state/<run-id>.json` and updates plan task states. **Does NOT write HANDOFF.md in 3.0+** — that's rad-session `/wrapup`'s job (single-writer rule). |
-
-Honest note: `evaluate-stack` and `review-plan` are also exposed as standalone skills, but they re-use the same agents (`stack-advisor`, `risk-assessor`) that `/plan` invokes during its phases. Treat them as direct entry points for those phases, not separate functionality.
-
-**Removed in 3.0:** `generate-project-config` is gone. Its v2.x role (derive `CLAUDE.md` + `ARCHITECTURE.md` from an approved plan) is fully absorbed by `/plan`'s Phase 6, which now emits `ARCHITECTURE.md` directly and produces `CLAUDE-FRAGMENT.md` for rad-session `/init` to merge into `CLAUDE.md`. Run `/plan` for greenfield, `/plan --reboot` for projects without a plan.
+| `/rad-planner:checkpoint` | "checkpoint", "save progress" | Writes `.planner/state/<run-id>.json` and updates plan task states. Does NOT write `docs/status.md` — that's owned by rad-session `/wrapup` (single-writer rule). |
 
 ## Agents
 
@@ -54,39 +49,57 @@ Honest note: `evaluate-stack` and `review-plan` are also exposed as standalone s
 
 ## Mechanical validators (scripts/)
 
-The validators are what convert "we enforce DAG integrity" from aspiration to fact.
+The validators are what convert "we enforce structure" from aspiration to fact. All pure-stdlib Python 3.8+. All emit human-readable text by default and structured `--json` on request. Exit 0 clean, 1 issues found, 2 script error.
 
-### `scripts/plan-lint.py`
-
-Pure-Python (3.8+ stdlib only). Modes:
-
-| Mode | Catches |
+| Script | What it checks |
 |---|---|
-| `dag` | Multi-hop cycles, phantom dependencies (`Dependencies: [S99]` where S99 doesn't exist), complexity > 7 without subtasks |
-| `checklist` | Missing required fields (Validation, Rollback, Dependencies, Complexity), vague language ("verify it works", "looks right", "tbd") |
-| `status` | Task state report — % complete, state breakdown, blocked tasks, next-eligible by dependency |
-| `all` | dag + checklist |
+| `plan-lint.py` | `docs/planning/current.md` — required sections, AC checkbox format, vague-language detection |
+| `status-validator.py` | `docs/status.md` — freshness vs git mtime, 8-section presence, evidence-based validation results |
+| `doc-redundancy.py` | Cross-doc bullet duplicate detection via Jaccard similarity (catches "same thing said in two docs") |
+| `doc-contradiction.py` | `vision.md` non-goals vs `current.md` acceptance criteria via stemmed token overlap (catches "we said NOT to do X but plan-task #3 does X") |
+| `estimate-validator.py` | Flags plans with no effort/size signal |
+| `dependency-cycle-detector.py` | DFS cycle detection across milestone dependencies |
+| `coverage-validator.py` | Flags ACs with no apparent validation command |
+| `scope-creep-detector.py` | Vision non-goals dropped from current.md AND present elsewhere in plan content |
+| `validate-json.py` | JSON Schema validator for subagent output contracts; re-prompts the agent once on schema failure |
 
-Output: human-readable text or `--json` for machine consumption. Exit `0` clean, `1` issues found, `2` script error.
+Each validator is also exposed as a standalone slash command (`/plan-lint`, `/status-validate`, `/doc-redundancy`, `/doc-contradiction`, `/plan-estimates`, `/plan-cycles`, `/plan-coverage`, `/plan-scope-creep`) usable on any plan-shaped markdown outside the `/plan` workflow. Validator documentation lives in `scripts/README.md`.
 
-### `scripts/validate-json.py`
+## The planning conversation (M0 → M6)
 
-Validates JSON output (from subagents) against JSON Schema files at `references/subagent-prompts/*.schema.json`. Pure stdlib; uses the `jsonschema` package if installed for fuller draft-07 coverage.
+```
+M0  Pre-flight discovery — project dir, agent scope, existing state, entry point  (mechanical, silent)
+M0.5  Scope-confirmation hard gate — prose-first briefing, user confirms / redirects / expands  ◀── ALL entry points & modes, including --auto
+M1  Constitution & Frame — operating-manual content
+M2  Goal-Backward Scope — must-be-TRUE / must-EXIST / CRITICAL vs nice-to-have, hardest unknown, derailment risks, non-goals
+M3  Sequence with Size Discipline — milestones with 2-3 tasks each, ~50% context bar, dependencies mapped, risk-first ordering
+M4  Quality Gates — per-milestone ACs, validation commands, stop conditions, Definition of Done
+M5  Doc-Set Recommendation — complexity routing (lite / standard / full), per-doc rationale, user_approval hard gate
+M6  Execute the plan's first milestone — write the approved doc set per the canonical structure
+```
 
-Used by skills to validate subagent contracts before consuming them — re-prompts the agent once on schema failure rather than silently parsing whatever came back.
+Without `--auto`, all M1–M5 phases require explicit user response before the conversation advances. A `<system-reminder>` saying "don't ask clarifying questions" does not suppress M1–M5 prompts — it only suppresses trivial in-execution confirmations.
 
-### `scripts/README.md`
+`--auto` is the only mode that bypasses M1–M5 dialogue. **It does NOT bypass M0.5.** Even in `--auto`, the scope confirmation fires once.
 
-Full invocation docs and the table of which skill / agent calls which script when.
+`--assessment` and `--validate` short-circuit early: after M0 mechanical discovery, route directly to the assessor (for `--assessment`) or the validator suite (for `--validate`). M0.5 does not fire and M1–M5 do not run.
 
-## Relationship to built-in Plan Mode
+## What gets written at M6
 
-Claude Code ships with [Plan Mode](https://docs.claude.com/en/docs/claude-code/) (Shift+Tab toggle, `--permission-mode plan`) which restricts to read-only tools. rad-planner does not replace it; the two compose:
+Per the [canonical doc structure](../../docs/doc-conventions.md):
 
-- **Plan Mode** handles read-only enforcement at the runtime level (no Edit/Write/Bash).
-- **rad-planner** adds structured artifacts on top: a 7-section plan template, a DAG, a risk audit, an executor handoff manifest, and a checkpoint schema.
+- **Operating manual** — `CLAUDE.md` and/or `AGENTS.md` per agent scope (Claude-only / Codex-only / both)
+- `docs/vision.md` — what success looks like, audience, non-goals
+- `docs/architecture.md` — system shape, key components, integration points
+- `docs/planning/current.md` — current milestone, tasks with acceptance criteria, validation commands
+- `docs/status.md` — scaffold only (rad-session populates from evidence)
+- `docs/decisions/NNNN-*.md` — sequence-numbered ADRs (default mode only; `--auto` writes `docs/planning/proposed-decisions.md` instead)
+- `docs/roadmap.md` — optional, depending on doc-set complexity
+- `.rad/profile` — project-scoped mentor vs dev mode preference
 
-You can run `/rad-planner:plan` inside Plan Mode for runtime-level read-only guarantees — the skill will still produce all its planning artifacts via the Write tool (which is required to save the plan).
+**Not written by `/plan` (single-writer rule):**
+- `docs/status.md` — owned by rad-session `/wrapup` (populates from evidence)
+- `.claude/session-log.md` — owned by rad-session `/wrapup`
 
 ## Pipeline with rad-brainstormer
 
@@ -96,168 +109,45 @@ You can run `/rad-planner:plan` inside Plan Mode for runtime-level read-only gua
 |---|---|---|---|
 | **Ideation** (divergent) | `rad-brainstormer` | Exploring the problem, generating options, stress-testing assumptions | A decided idea + rough direction |
 | **Design** (post-ideation) | `rad-brainstormer:design-sprint` | Architecture, components, data flow, API design, error handling, testing strategy | A reviewable design spec |
-| **Planning** (pre-code) | `rad-planner:plan` | Dependency-aware task graph, complexity scoring, risk audit, failure states | An ordered implementation plan |
+| **Planning** (pre-code) | `rad-planner:plan` | Five-phase plan-first conversation, doc-set recommendation, mechanical validation | An approved plan + the canonical doc set |
 | **Code** | your tools of choice | Implementation | Working software |
 
 If you come in with a clear idea, start with `/rad-planner:plan`. If the idea is fuzzy, start with `/rad-brainstormer:brainstorm-session` first.
 
-## Reference Files
+## Relationship to built-in Plan Mode
+
+Claude Code ships with [Plan Mode](https://docs.claude.com/en/docs/claude-code/) (Shift+Tab toggle, `--permission-mode plan`) which restricts to read-only tools. rad-planner does not replace it; the two compose:
+
+- **Plan Mode** handles read-only enforcement at the runtime level (no Edit/Write/Bash).
+- **rad-planner** adds the conversation + the doc-set artifact + the mechanical validators.
+
+`/plan --assessment` and `/plan --validate` are safe to run inside Plan Mode (no writes). The full `/plan` workflow needs Write at M6 to emit the doc set.
+
+## Reference files
 
 The `references/` directory contains the knowledge base agents and skills load on demand:
 
 | Reference | Content |
 |---|---|
 | `golden-path-matrix.md` | AI-native proficiency tiers + project-type stack recommendations (date-stamped, opinionated) |
-| `anti-patterns.md` | 14 documented "Do Not Do" constraints (some are opinions with thresholds — clearly marked) |
-| `plan-template.md` | v3.0 template structure for the 5-file split (PRD / ARCHITECTURE / ASSUMPTIONS / DECISIONS / PLAN). For the v4.0 canonical structure, see [`docs/doc-conventions.md`](../../docs/doc-conventions.md). |
-| `task-format.md` | v3.0 DAG-based task syntax, states, dependency rules, complexity scoring. v4.0 retires `tasks.md`; planning lives in `docs/planning/current.md`. |
+| `anti-patterns.md` | Documented "Do Not Do" constraints (some are opinions with thresholds — clearly marked) |
 | `failure-state-template.md` | Triple-component validation (Action → Validation → Rollback) |
 | `tdd-constraints.md` | Red-Green-Refactor + mutation testing requirements |
 | `context-management.md` | Document & Clear triggers, handoff protocol, shared checkpoint schema |
 | `subagent-prompts/stack-eval.md` + `.schema.json` | Stack-advisor dispatch template + JSON Schema |
 | `subagent-prompts/risk-assessment.md` + `.schema.json` | Risk-assessor dispatch template + JSON Schema |
 
-## Examples
+## Fixtures
 
-`examples/example-plan.md` and `examples/example-tasks.md` are a complete (small) plan that passes the validators. Use them to:
-- See what `/plan` actually produces (not just templates) — `example-plan.md` shows all five strategic/operational docs concatenated for readability.
-- Run the validators against a real artifact: `python3 scripts/plan-lint.py --mode all examples/example-tasks.md`.
-- Test the validator failure modes by introducing a cycle or stripping a field.
+Two test fixtures under `fixtures/` exercise the validators end-to-end. Use them to see what passing artifacts look like, or to test validator failure modes by introducing a contradiction or stripping a section.
 
-## Upgrading from 2.x
+## Pair with rad-session
 
-If you have a project that was set up with rad-planner 2.x, run the migration helper bundled with rad-session **before** installing rad-planner 3.0:
-
-```bash
-# Preview the changes (writes nothing)
-python3 ${rad-claude-skills}/plugins/rad-session/scripts/migrate-to-v4.py /path/to/your/project --dry-run
-
-# Apply (interactive — confirms each transformation)
-python3 ${rad-claude-skills}/plugins/rad-session/scripts/migrate-to-v4.py /path/to/your/project
-
-# Or apply non-interactively (safe transforms only; ambiguous items skipped for manual review)
-python3 ${rad-claude-skills}/plugins/rad-session/scripts/migrate-to-v4.py /path/to/your/project --non-interactive
-```
-
-**What gets transformed:**
-
-| v2.x artifact | 3.0 outcome |
-|---|---|
-| `implementation_plan.md` (mega-doc) | Split into `PRD.md` / `ARCHITECTURE.md` / `ASSUMPTIONS.md` / `DECISIONS.md` / `PLAN.md` at project root. Section-heading heuristics map the old 7-section template. The "Key Design Decisions" table seeds DECISIONS.md as sequence-numbered entries. ASSUMPTIONS.md is a placeholder (no v2.x source). |
-| `EXECUTION-PROMPT.md` | Archived. The rad-session 4.0 `/startup` briefing covers the same kickoff role. |
-| `docs/ARCHITECTURE.md` | Moved to `ARCHITECTURE.md` at project root (3.0 puts all strategic docs at root). When `implementation_plan.md` is also being split, the duplicate at `docs/` is archived to avoid two sources of truth. |
-| `HANDOFF.md` from `/checkpoint` | Archived. rad-planner 3.0's `/checkpoint` no longer writes HANDOFF.md (single-writer rule) — that file is owned by rad-session `/wrapup`. The next `/rad-session:wrapup` regenerates it. |
-| `CLAUDE.md` from `/rad-planner:generate-project-config` | Preserved as-is. The `generate-project-config` skill is removed in 3.0; `CLAUDE-FRAGMENT.md` is emitted alongside so the next `/rad-session:init` can merge strategic `@-imports`. |
-
-All originals archive to `.rad-archive/<UTC-timestamp>/` (gitignored by default). The archive's `manifest.json` records every action for audit and rollback. See `plugins/rad-session/scripts/README.md` for the script's full contract.
-
-**After migration, verify:**
-
-```bash
-python3 scripts/plan-lint.py --mode all tasks.md   # mechanical task-graph lint
-/rad-planner:plan --validate                       # cheap 8-doc gap-check
-/rad-session:init                                  # merges CLAUDE-FRAGMENT.md
-```
-
-**Rollback:** copy files back from `.rad-archive/<timestamp>/` (originals carry `.orig` suffix, path separators flattened to `-`), then delete the new v4 files. **Re-run safety:** the migration script is a no-op on projects already on the 8-doc standard.
-
-## What's New in 3.0
-
-- **Document standardization — the RAD 8-doc standard.** `/plan` now emits five strategic/operational files (PRD.md, ARCHITECTURE.md, ASSUMPTIONS.md, DECISIONS.md, PLAN.md) at project root instead of a single 7-section `implementation_plan.md`. Each file has a single canonical purpose and one plugin owner. Canonical spec at `docs/doc-conventions.md` (shared with rad-session 4.0).
-- **`plan-project` renamed to `plan`.** Same skill, shorter name. Legacy trigger phrases (`plan-project`, "plan my project") still work.
-- **`CLAUDE-FRAGMENT.md` handoff to rad-session.** `/plan` Phase 6 emits a transient `@-import` block listing the 5 strategic paths. rad-session `/init` merges it into CLAUDE.md and deletes the FRAGMENT. Single-writer rule: `/plan` never touches CLAUDE.md directly.
-- **`/plan --reboot` mode.** For projects past their original plan: audits existing code (Phase 0.5), archives prior strategic docs to `*.pre-reboot`, regenerates anchored to current reality, marks superseded DECISIONS entries with sequence-number references (`Superseded by 0042 (reboot YYYY-MM-DD)`). ADR-layout conversion at the ~500-line threshold is prompted independently, not automatic.
-- **`/plan --validate` mode.** Cheap 8-doc gap-check: do the files exist? Does `tasks.md` lint clean? No agents dispatched, no writes. Cheaper than `/review-plan` (which dispatches the risk-assessor for deep judgment audits).
-- **`/checkpoint` no longer writes HANDOFF.md.** That file is owned exclusively by rad-session `/wrapup` in the 4.0/3.0 era. `/checkpoint` now writes only `.planner/state/<run-id>.json` and updates plan task states. Run `/rad-session:wrapup` before clearing if you want a session-level handoff.
-- **`generate-project-config` removed.** Its v2.x role is fully absorbed by `/plan`'s Phase 6 (ARCHITECTURE.md) and `/init`'s FRAGMENT merge (CLAUDE.md). One source of truth, not two.
-- **`EXECUTION-PROMPT.md` dropped.** rad-session `/startup` briefing covers the same role: it reads HANDOFF.md + session-log + CLAUDE.md and orients you for the next chunk of work. A separate kickoff artifact was redundant.
-- **`ASSUMPTIONS.md` is a new file type.** Phase 1 Discovery explicitly captures non-obvious truths about the project's reality ("no users yet", "single-tenant only", "sensitive data — no real values in repo"). Invalidated assumptions use strikethrough, not deletion — audit trail matters.
-- **`DECISIONS.md` is sequence-numbered and append-only.** Stack rationale + risk-assessor verdicts seed the initial entries. `/wrapup` Phase 3.5 (rad-session 4.0) prompts to append tagged decisions from a work session.
-
-## What's New in 2.1
-
-- **`scripts/plan-lint.py`** — Mechanical DAG + checklist + status validator. Converts "we enforce DAG integrity" from claim to mechanism.
-- **`scripts/validate-json.py`** — JSON Schema validator for subagent output contracts. Skills now re-prompt on schema failure instead of silently falling back to markdown parsing.
-- **JSON Schema files** at `references/subagent-prompts/{stack-eval,risk-assessment}.schema.json` — Concrete contract, not just documentation.
-- **`/rad-planner:status` skill** — Quick read of in-flight plan progress, blocked tasks, next eligible.
-- **`--lite` flag on `plan-project`** — Single-milestone workflow for small/bug-fix work, skips stack eval + risk-assessor loop, still runs `plan-lint.py`.
-- **`EXECUTION-PROMPT.md` artifact** — Phase 6 now generates a copy-pasteable kickoff prompt for the next session, not just "start a fresh session and load the plan."
-- **Risk-assessor calls `plan-lint.py` first** — Mechanical checks are deterministic; the agent's judgment is reserved for anti-pattern, architecture, and TDD-quality passes scripts can't do.
-- **Honesty pass across the README and references** — "Enforces" softened to "guides" or "validates" depending on actual mechanism. "Zero-context ready" now framed as the intent, not a verified property. Anti-pattern #1 (Vector Sidecar) reframed from dogmatic ban to threshold-based default.
-- **Date-stamped Golden Path matrix** with explicit "trust live verification over the matrix when they disagree" guidance.
-- **`examples/`** — A real, validator-clean plan + tasks file ships with the plugin.
-
-## What's New in 2.0 (prior release)
-
-Platform-level optimization pass for Opus 4.7 (Sonnet 4.6 and Haiku 4.5 fully supported):
-
-- **Opus-default on all three agents.** Sonnet 4.6 is a first-class fallback; Haiku 4.5 for narrow scope.
-- **JSON-first subagent output contracts** with markdown fallback for model variance. (2.1 made these enforced via `validate-json.py`.)
-- **Externalized subagent prompt templates** at plugin-level `references/subagent-prompts/`.
-- **`--non-interactive` mode** on `plan-project`, `review-plan`, `evaluate-stack`, `generate-project-config`.
-- **`--resume <run-id>` + shared checkpoint schema** at `.planner/state/<run-id>.json`.
-- **Parallel-first execution guidance** in every multi-phase skill.
-- **Escalation path to brainstormer** on `RETHINK` verdict.
-- **Flattened agent layout** to `agents/<name>.md`.
-- **Honest claims audit** across references — first pass; 2.1 extends this throughout.
-
-## Quick Start
-
-1. Start a new Claude Code session.
-2. Run `/rad-planner:plan` with your project description (add `--lite` for small work, `--reboot` for an existing project that needs replanning).
-3. Answer the strategic discovery questions (including the assumption-capture interview new in 3.0).
-4. Review the generated plan and approve.
-5. Run `/rad-session:init` (or restart your session) so rad-session merges `CLAUDE-FRAGMENT.md` into `CLAUDE.md`. Then start a fresh execution session — `/rad-session:startup` briefs you for the first task.
-
-For an existing plan: `/rad-planner:plan --validate path/to/project` for a cheap 8-doc gap-check, `/rad-planner:review-plan path/to/plan.md` for a deep quality audit, or `/rad-planner:status path/to/tasks.md` for a quick progress read.
-
-## The Planning Workflow
-
-```
-┌───────────┐  ┌────────────┐  ┌─────────┐  ┌─────────┐  ┌────────────┐
-│ Discovery │→ │ Stack Eval │→ │  Plan   │→ │  Risk   │→ │   Review   │
-└───────────┘  └────────────┘  └─────────┘  └─────────┘  └────────────┘
-                                                              ↓
-                                              ┌──────────────────────────────────┐
-                                              │ Export: PRD + ARCHITECTURE +     │
-                                              │ ASSUMPTIONS + DECISIONS + PLAN + │
-                                              │ tasks + CLAUDE-FRAGMENT (with    │
-                                              │ plan-lint validation)            │
-                                              └──────────────────────────────────┘
-```
-
-`--lite` collapses Stack Eval and Risk into a single Plan→Lint→Review pass. `--reboot` adds a Phase 0.5 audit before Discovery. `--validate` short-circuits the workflow to a cheap gap-check + lint pass.
-
-## What Gets Generated
-
-After the planning workflow completes, at project root (or `--output-dir`):
-
-**Strategic tier (set at project genesis, rarely change):**
-- `PRD.md` — project summary, scope, success criteria, tech-stack summary, constraints
-- `ARCHITECTURE.md` — component diagram, system boundaries, data flow, design decisions
-- `ASSUMPTIONS.md` — non-obvious truths about the project's reality
-
-**Operational tier (evolve with the work):**
-- `DECISIONS.md` — sequence-numbered append-only architecture decisions (stack rationale + risk-assessor verdicts seed it)
-- `PLAN.md` — milestones, implementation steps, target files, checkpoints, risks/considerations
-
-**Machine-readable:**
-- `tasks.md` — task list with dependency graph, validated by `plan-lint.py`
-- `.planner/state/<run-id>.json` — resumable run state (via `--resume`)
-
-**Transient handoff:**
-- `CLAUDE-FRAGMENT.md` — `@-import` block consumed and deleted by `/rad-session:init`
-
-**Not written by `/plan` (single-writer rule):**
-- `CLAUDE.md` — owned by rad-session `/init`, `/wrapup`, `/add-resource`
-- `HANDOFF.md` — owned by rad-session `/wrapup`
-- `.claude/session-log.md` — owned by rad-session `/wrapup`
-
-See `docs/doc-conventions.md` (canonical) for the full ownership matrix and update/pruning rules.
+`rad-planner` owns the plan and the strategic docs; [`rad-session`](../rad-session/) owns each session's lifecycle and `docs/status.md` (the evidence of what's actually been built). They share the [canonical doc structure](../../docs/doc-conventions.md) and the sectioned-writer rule that keeps the operating manual coherent across both. Use them together for the full lifecycle; each one works standalone.
 
 ## Requirements
 
-- **Python 3.8+** for the validator scripts. If unavailable, the skills surface a fallback: manual review using the documented checklists. The honest framing is that without Python, the "validators" reduce to "templates the model is asked to follow."
+- **Python 3.8+** for the validator scripts. If unavailable, the skills surface a fallback: manual review using the documented checklists. Honest framing: without Python, the "validators" reduce to "templates the model is asked to follow."
 - Optional: `pip install jsonschema` for fuller JSON Schema draft-07 coverage in `validate-json.py`. Pure-stdlib subset is used when not installed.
 
 ## License

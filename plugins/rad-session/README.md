@@ -1,5 +1,13 @@
 # rad-session — agent session lifecycle: startup (with first-run bootstrap), wrapup, add-resource, with cross-machine continuity for Claude + Codex.
 
+> **v5.3 — floor of one line on `/startup`.** Silent completion violates the doorman model; even the cleanest routine open emits at least a single confirmation line with status freshness + plan progress + pointer to `docs/status.md`. Anomalies stack above the floor; the floor always appears.
+>
+> **v5.2 — permission-mode-safe.** Operations split by asymmetry of downside. `/startup` Phase 0.5 Case C guard rail (overwrite/append/skip on operating manual > 500 bytes) is **data-loss-protected** — prompts regardless of Auto / Bypass / `--non-interactive` because silent overwrite of user-authored content is hard to recover. Conversely, `/wrapup --auto` writes candidate-decision ADRs with a `DRAFT — auto-recorded` banner so the capture isn't lost; review surfaces automatically in the next `/startup` Phase 1.5.1 briefing.
+>
+> **v5.1 — `/init` folded into `/startup` Phase 0.5.** Resolved the name conflict with Claude Code's built-in `/init`. First-run bootstrap (stack detection, agent_scope question, operating-manual scaffold per sectioned-writer rule with rad-planner, plugin-bloat audit) now runs as Phase 0.5 of `/startup` on the first session in a project. Subsequent runs skip Phase 0.5 entirely.
+>
+> **v5.0 — canonical doc structure.** Intent-vs-reality split: `docs/planning/current.md` (intent, owned by rad-planner) vs `docs/status.md` (reality, owned by rad-session, written from evidence). Operating manual sectioned-writer rule. Conditional CLAUDE.md / AGENTS.md per agent scope. Milestone-shipped archive.
+
 **What it is.** A three-skill plugin that gives agent-driven projects a structured session lifecycle: orient + bootstrap once at first run, capture each session at the end, register tools as you discover them. Works for a single agent on a single machine — and **transparently keeps PC ↔ GitHub ↔ Laptop in sync across Claude Code and Codex sessions** when a git remote exists.
 
 **What it solves.** The default Claude / Codex experience loses session state at compaction, can't tell you what tools the project has, lets the operating manual grow forever, and forgets everything when you switch machines or agents. rad-session keeps `docs/status.md` (evidence-based reality), pairs it with `docs/planning/current.md` (intent — owned by rad-planner), archives shipped milestones, and pulls/commits/pushes the relevant files via git so your laptop sees what your PC did, and your Codex session sees what your Claude session did.
