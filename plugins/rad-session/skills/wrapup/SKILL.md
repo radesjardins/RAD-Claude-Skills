@@ -419,6 +419,11 @@ python3 "${RAD_PLANNER_SCRIPTS}/doc-redundancy.py" "$PWD" --json 2>/dev/null > /
 
 # Cross-doc contradiction
 python3 "${RAD_PLANNER_SCRIPTS}/doc-contradiction.py" "$PWD" --json 2>/dev/null > /tmp/rad-contradiction.json
+
+# User-owned content audit (NEW in v5.6 — visibility pass over the
+# operating manual's user-owned sections; neither plugin modifies these,
+# but staleness can be flagged for the user to act on)
+python3 "${RAD_PLANNER_SCRIPTS}/audit-user-content.py" "$PWD" --json 2>/dev/null > /tmp/rad-user-content.json
 ```
 
 ### 4.2 Surface findings
@@ -433,16 +438,23 @@ Parse the JSON outputs.
 - MEDIUM (overlap ≥ 0.6): show as "Potential contradiction — vision non-goal overlaps with current AC"
 - LOW (overlap in [threshold, 0.6)): show with note "may be a real contradiction or unrelated overlap"
 
+**User-owned content findings (v5.6):**
+- HIGH (`dead-path`): show as "Path referenced in user-owned section doesn't exist — confirm whether to update or remove the reference"
+- MEDIUM (`orphan-terminology`): show as "Title-Case terminology in user-owned section appears nowhere else in the repo — possibly stale (brand reset, retired concept, renamed system)"
+
 Display under a single block in the Phase 8 anomaly output (only if any findings):
 
 ```
 Cross-doc maintenance:
   Redundancies: N (M MEDIUM, K LOW) — see /tmp/rad-redundancy.json or re-run doc-redundancy.py
   Contradictions: N (M MEDIUM, K LOW) — see /tmp/rad-contradiction.json or re-run doc-contradiction.py
+  User-owned content: N (M HIGH, K MEDIUM) — see /tmp/rad-user-content.json or re-run audit-user-content.py
   Action: review for canonical placement; resolve before next /plan if blocking.
 ```
 
 Cross-doc findings are advisory — no automatic file changes. The user decides what to fix.
+
+**Honesty about the user-owned audit (v5.6):** the audit reads user-owned sections (anything not in either plugin's owned-section list — see `docs/cross-plugin-contracts.md`) but **does not modify them**. The single-writer rule keeps user-authored content safe; this advisory layer surfaces signals without crossing that boundary. The two heuristics in v1 catch **orphan terminology** (Title-Case phrases appearing only in this section, often a brand reset or renamed system that didn't propagate) and **dead paths** (markdown link or path-shaped tokens to files that no longer exist). False positives surface as confidently as true positives — the user is the final judge.
 
 ---
 

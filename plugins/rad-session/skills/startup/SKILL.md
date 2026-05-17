@@ -718,6 +718,33 @@ If `docs/planning/current.md` exists and has a `## Session contract` sub-section
 
 **Why this matters:** the build-readiness gate (rad-planner v4.6+ schema + v4.8 contract embed) is only useful if the contract is in front of the agent at the moment work starts. Surfacing it at `/startup` puts the contract literally in the session's context window before the first tool call.
 
+### 1.5.3 User-owned content audit (NEW in v5.6)
+
+Run rad-planner's `audit-user-content.py` against the project to flag stale terminology and dead paths in user-owned sections of the operating manual. **Advisory only** — neither plugin modifies user-owned content; this surfaces what to act on.
+
+**Skip conditions:**
+- rad-planner scripts not available at sibling path
+- No `CLAUDE.md` or `AGENTS.md` at project root (the script handles this gracefully with a note, but we can short-circuit to avoid the call)
+
+**Invocation:**
+
+```bash
+RAD_PLANNER_SCRIPTS="${plugin_root}/../rad-planner/scripts"
+python3 "${RAD_PLANNER_SCRIPTS}/audit-user-content.py" "$PWD" --json 2>/dev/null
+```
+
+**Output behavior:**
+
+- **Zero findings (exit 0)** — emit nothing
+- **One or more findings** — single briefing line near the gap-check warnings:
+  ```
+  ⚠ N user-owned-content findings (X HIGH dead-path, Y MEDIUM orphan-terminology) in CLAUDE.md / AGENTS.md — re-run audit-user-content.py or read the JSON to see details. These were preserved by /wrapup because user-owned content is never auto-modified.
+  ```
+
+This surfaces stale signals from prior sessions at the moment that matters — agent orientation. Re-running the audit is idempotent (no state file); fixed content disappears from the briefing automatically.
+
+**Why this exists:** the sectioned-writer rule's single-writer guarantee keeps your content safe from unwanted plugin edits. The flip side is that user-owned sections can go stale without anything noticing. This Phase makes staleness visible without crossing the safety boundary — you decide what to update or remove.
+
 ### 1.6 Status freshness check
 
 Quick mtime check (or use `status-validator.py --mode freshness` if rad-planner is installed alongside):

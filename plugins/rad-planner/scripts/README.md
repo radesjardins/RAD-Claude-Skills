@@ -185,6 +185,34 @@ python3 scripts/scope-creep-detector.py /path/to/project --json
 
 **Exit codes:** `0` clean, `1` HIGH/MEDIUM issues, `2` script error.
 
+## audit-user-content.py (v4.10)
+
+Visibility pass over user-owned sections of the operating manual (`CLAUDE.md` / `AGENTS.md`). The sectioned-writer rule keeps both plugins from modifying user-authored content; this validator adds the missing visibility layer — flag staleness without crossing the modification boundary.
+
+```bash
+python3 scripts/audit-user-content.py <project-dir>
+python3 scripts/audit-user-content.py <project-dir> --json
+python3 scripts/audit-user-content.py <project-dir> \
+  --min-orphan-words 3 --min-orphan-occurrences 2
+```
+
+**Two heuristics in v1:**
+
+1. **Orphan terminology** — Title-Case multi-word phrases (likely named systems, design directions, branded concepts) that appear in a user-owned section but nowhere else in the project. Often a signal the term is stale (brand renamed, system retired) but the operating manual didn't get the memo. Severity: MEDIUM.
+
+2. **Dead paths** — markdown links `[text](path)` and bare path-shaped tokens (paths with separators ending in a file extension) that don't resolve on disk. Severity: HIGH.
+
+**False-positive filtering:**
+
+- Domain-like extensions (`.ai`, `.com`, `.io`, `.dev`, etc.) without path separators are treated as brand references, not paths
+- Template placeholders (`<X>`, `{Y}`, `YYYY`, `NNNN`) are exempt
+- Single-segment filenames without a separator (`SKILL.md` mentioned generically) are exempt
+- Leading articles (`The X`, `A X`) are stripped before counting so `The Digital Diorama` and `Digital Diorama` count as the same concept
+
+**Exit codes:** `0` no findings (or only INFO); `1` at least one HIGH or MEDIUM advisory finding; `2` script error.
+
+**Advisory only.** This validator never auto-modifies content. Findings surface signals; the user decides what to update or remove. Invoked from `/wrapup` Phase 4 (before prune) and `/startup` Phase 1.5.3 (advisory orientation).
+
 ## assess-planning-velocity.py (v4.6)
 
 Surfaces overplanning signals from git history. Built for the `/plan --assessment` flow but usable standalone. Catches the planning-as-avoidance pattern (rewriting plans without shipping code).

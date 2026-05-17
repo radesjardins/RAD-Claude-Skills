@@ -61,6 +61,17 @@ When a plugin processes the operating manual, it explicitly notes which sections
 
 This surfaces the preservation explicitly so the user can verify nothing was missed.
 
+### Visibility vs. modification (v5.6+ principle)
+
+The single-writer rule is about **safety** — neither plugin silently rewrites user-authored content. It is **not** about silence. Stale user-owned sections (renamed brand, retired system, references to deleted files) are a real failure mode the safety rule made invisible.
+
+**Two principles, separately enforced:**
+
+1. **Refusal to modify** (single-writer rule) — never auto-edit user-owned content. Existing behavior; unchanged.
+2. **Refusal to be silent about staleness** (visibility layer, v5.6+) — surface mechanically-detectable signals that user-owned content may have drifted, without crossing the modification boundary.
+
+The visibility layer ships as `audit-user-content.py` (in rad-planner's `scripts/`), invoked by `/wrapup` Phase 4 and `/startup` Phase 1.5.3. Heuristics in v1: orphan terminology (Title-Case phrases appearing nowhere else in the repo) and dead paths (markdown link or path-shaped tokens to files that don't exist). Findings are advisory. The user always decides what to update or remove.
+
 ### Conflict resolution
 
 Plugins respect "don't touch the other's sections." If rad-session at `/wrapup` notices a section the other owns has drifted from its source (e.g., Hard Boundaries no longer matches architecture.md's invariants), it flags for user review rather than rewriting.
