@@ -22,7 +22,7 @@ description: >
   even without an explicit /plan invocation — route through this skill so the
   M0.5 scope-confirmation gate fires rather than letting it become ad-hoc
   agent work.
-argument-hint: "[project description or path] [--full|--improve|--drift|--pivot|--validate|--assessment] [--auto] [--agents <scope>] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
+argument-hint: "[project description or path] [--full|--improve|--drift|--pivot|--validate|--assessment] [--auto] [--depth shallow|standard|deep] [--agents <scope>] [--non-interactive] [--resume <run-id>] [--output-dir <path>]"
 user-invocable: true
 allowed-tools: Read Glob Grep WebSearch WebFetch Agent Write Bash
 ---
@@ -71,6 +71,7 @@ This skill works across Opus 4.7, Sonnet 4.6, and Haiku 4.5. Opus/Sonnet handle 
 - `--validate` — Utility; run validators on existing plan artifacts, no conversation
 - `--assessment` — Utility; **state-of-project read-only assessment**, no conversation, no writes. Distinct from `--drift` (which requires an existing plan to compare against): `--assessment` does NOT require a plan and does NOT produce a plan. It runs the internal assessor pass over whatever evidence exists (git history, existing docs, source structure, validator results) and emits a structured report describing what's there, what's missing, what's stale, and where the project sits relative to the canonical doc structure. Useful before deciding which entry point to invoke (full / improve / drift / pivot). Read-only — does not write to `docs/` or any project file.
 - `--auto` — **Unattended mode.** Produces a first-pass DRAFT without M1–M5 dialogue. All output files get a `> **DRAFT — review and revise**` banner; **ADRs are NOT written under `--auto`** — candidate decisions land in `docs/planning/proposed-decisions.md` for user review. Default behavior is conversational; `--auto` is opt-in.
+- `--depth shallow|standard|deep` — **NEW in v4.9.** Override the M0.5 depth-of-planning heuristic. Shallow skips M1–M5 and produces a targeted in-place `current.md` update; standard runs the normal M1–M5 conversation; deep runs M1–M5 with a mandatory `risk-assessor` agent pass at M4. When omitted, the heuristic at M0.5 recommends a depth from utterance + state cues, and the user confirms or overrides during the M0.5 reply. The M0.5 hard gate fires regardless of depth.
 - `--agents <scope>` — Set agent scope without prompting (`claude_only` | `codex_only` | `claude_and_codex`)
 - `--non-interactive` — Best-effort run without approval gates; emits trailing JSON with `awaiting_user_review` items. **Distinct from `--auto`:** `--non-interactive` is for CI / scripted runs (machine-readable output, no prompts); `--auto` is the user-facing flag for "produce a strawman I can react to."
 - `--resume <run-id>` — Continue a saved planning session from `.planner/state/<run-id>.json`
@@ -380,6 +381,43 @@ Populate the "Or you could start with" list with options appropriate to the infe
 - Full re-plan — fresh five-phase conversation with disposition manifest.
 
 The agent always includes at least one "redirect entirely" option regardless of inferred entry point.
+
+### Recommended depth (NEW in v4.9)
+
+After producing the three-part briefing above, add a **Recommended depth** line based on the inferred decision class. This implements the depth-of-planning rule: **plan deeply only when the decision changes architecture, cost, UX flow, user trust, or product identity.** Cosmetic changes shouldn't burn a full M1–M5.
+
+**Depth classification (heuristic, pure-stdlib pattern matching — see `references/decision-class-heuristics.md`):**
+
+Cue sources, in priority order:
+1. **`--depth` flag if provided** — user override; skip heuristic entirely
+2. **Utterance keywords** — `fix typo`, `rename button`, `tweak copy`, `adjust layout` → shallow; `redesign auth`, `rewrite pricing`, `change data model`, `pivot product` → deep; everything else → standard
+3. **State signals** — `vision.md` non-goals match the utterance → suggests shallow or non-goal (offer parking); existing milestone is mid-flight → standard for additions, deep for changes; greenfield → standard or deep
+4. **File-scope inference** — utterance mentions one file in `app/` (UI surface) → shallow likely; mentions `lib/auth/` or schema files → deep likely
+
+**The three depths:**
+
+- **Shallow** — single-turn proposal. Skip M1–M5. Update `current.md` with the change in-place; no new ADRs unless user explicitly asks. Appropriate for: cosmetic copy fixes, minor layout tweaks, micro-refactors within one file, doc-only updates.
+- **Standard** — current M1–M5 conversation. Appropriate for: UX-flow-affecting changes, new milestone within an existing plan, single-feature additions, small-to-medium architecture touches.
+- **Deep** — full M1–M5 with mandatory `risk-assessor` agent pass at M4. Appropriate for: architecture-changing decisions, identity-changing pivots, cost-model changes, user-trust-affecting changes (auth, billing, data handling), pricing or tier-gating changes.
+
+**Render the recommendation as one line** below the "Or you could start with" alternatives:
+
+```
+**Recommended depth:** shallow — {one-sentence rationale, e.g., "looks like a copy-only fix to the signup button; no architecture, UX flow, or identity impact detected"}
+```
+
+The recommendation is a **suggestion the user confirms or overrides**. The M0.5 gate continues to fire regardless — depth determines what runs after M0.5 confirmation, not whether M0.5 fires.
+
+**Override options the user can name in M0.5 reply:**
+
+- "Yes, shallow is right" → skip M1–M5, go straight to M6 with the targeted change
+- "Standard please" or "Walk me through it" → run M1–M5 even though shallow was recommended
+- "Deep — I want the risk-assessor pass" → run M1–M5 with mandatory risk-assessor at M4
+- Or pass `--depth shallow|standard|deep` on a re-invocation
+
+**`--auto` interaction:** `--auto` already skips M1–M5. If both `--auto` and `--depth deep` are passed, `--depth deep` is honored — risk-assessor still runs at M4 — but M1–M5 dialogue stays suppressed (auto produces DRAFTs, the depth flag just controls whether risk-assessor runs).
+
+**`--depth` flag explicit:** when `--depth` is provided, the heuristic is skipped and the M0.5 surface reads `**Recommended depth:** {flag value} — user-specified via --depth`. The render still shows the line so the choice is visible.
 
 ### Rendering discipline (load-bearing — do not drop)
 
