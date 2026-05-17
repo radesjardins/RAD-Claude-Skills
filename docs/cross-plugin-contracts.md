@@ -39,6 +39,7 @@ The operating manual (`CLAUDE.md` and/or `AGENTS.md`) is the one file with two a
 | Read order | rad-planner (Phase 1) |
 | Hard boundaries | rad-planner (Phase 1); human edits |
 | Engineering rules | rad-planner (Phase 1); human edits |
+| **Lanes** (role-separation contract — v4.7+) | rad-planner (M6 Constitution); template-driven, agent-agnostic; human edits |
 | Definition of done | rad-planner (Phase 1) |
 | Escalate triggers | rad-planner (Phase 1) |
 | Commands (install / test / lint / build) | rad-session (during `/startup` bootstrap path, first run only); human edits |

@@ -367,7 +367,7 @@ Determine paths per `agent_scope`:
 **Critical: bootstrap writes Operational sections only.** Per the sectioned-writer rule:
 
 - **Operational sections (rad-session writes):** Commands, Compact Instructions (CLAUDE.md only), Claude-specific behavior (CLAUDE.md only), `@AGENTS.md` import line (CLAUDE.md shim case)
-- **Constitution sections (rad-planner `/plan` M6 writes):** Project, Read order, Hard boundaries, Engineering rules, Definition of done, Escalate triggers
+- **Constitution sections (rad-planner `/plan` M6 writes):** Project, Read order, Hard boundaries, Engineering rules, **Lanes** (NEW in rad-planner v4.7+ — role-separation contract, agent-agnostic), Definition of done, Escalate triggers
 
 If Constitution sections are missing, leave them missing — surface in Step 10 final report: "run `/rad-planner:plan` to populate Constitution sections."
 
@@ -616,6 +616,7 @@ Extract:
 - Read order (which docs to consult before what kind of work)
 - Hard boundaries
 - Engineering rules
+- Lanes (rad-planner v4.7+ — role-separation contract; read but do not modify)
 - Definition of done
 - Escalate triggers
 - Commands (install / dev / test / lint / build)

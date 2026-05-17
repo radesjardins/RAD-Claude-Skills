@@ -474,6 +474,7 @@ Per `agent_scope` from .rad/profile:
 | Read order | rad-planner | **NO** |
 | Hard boundaries | rad-planner | **NO** |
 | Engineering rules | rad-planner | **NO** |
+| Lanes (v4.7+) | rad-planner | **NO** — role-separation contract, never touched |
 | Definition of done | rad-planner | **NO** |
 | Escalate triggers | rad-planner | **NO** |
 | Commands | rad-session | **YES** — prune stale entries |

@@ -1140,6 +1140,7 @@ Sections written by rad-planner (per `docs/cross-plugin-contracts.md` sectioned-
 - **Read order** — computed from `doc_set_draft.approved_docs` (which docs to read before what kinds of work)
 - **Hard boundaries** — from `constitution_draft.hard_boundaries`
 - **Engineering rules** — from `constitution_draft.principles`
+- **Lanes** (NEW in v4.7) — verbatim from `references/lanes-template.md`. Role-separation contract: what the user decides, what the agent may do during planning, what the agent may do during coding, what the agent must NOT do. Agent-agnostic — same content regardless of CLAUDE.md vs AGENTS.md target. **Idempotency:** if the operating manual already has a `## Lanes` section, do NOT overwrite without explicit M5 user confirmation; treat existing user edits as user-owned.
 - **Definition of done** — from `quality_gates_draft.project_definition_of_done`
 - **Escalate triggers** — from `constitution_draft.escalation_triggers`
 

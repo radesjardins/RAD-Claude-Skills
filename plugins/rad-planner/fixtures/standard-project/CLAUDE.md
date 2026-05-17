@@ -36,6 +36,56 @@ Wayfinder is a weather-aware trip planning tool that recommends optimal travel w
 - When behavior or workflow changes, update the relevant docs in the same change set.
 - If a decision becomes durable, record it in `docs/decisions/`.
 
+## Lanes
+
+Role separation between human and agent. This contract applies to every session — planning, coding, review, anything else.
+
+### What you (the human) decide
+
+- Product boundaries — what's in scope, what isn't
+- User value — who the product is for, what they need
+- Pricing, monetization, business model
+- Ethics posture and policy
+- Feature priority and ordering
+- What gets deferred or parked
+- Whether any agent suggestion changes the product
+- All changes to vision.md and the operating manual's Hard boundaries
+
+### What the agent may do during PLANNING
+
+- Identify gaps in existing plans or docs
+- Propose implementation sequences and milestones
+- Find contradictions between docs (vision vs current.md, plan vs status)
+- Draft acceptance criteria for human review
+- Generate test-case skeletons
+- Summarize trade-offs of competing approaches
+- Suggest simpler alternatives when complexity looks unjustified
+
+### What the agent may do during CODING
+
+- Implement only the current milestone — nothing more
+- Avoid unrelated refactors
+- Update docs ONLY when explicitly instructed
+- Write tests for the milestone being implemented
+- Report blockers instead of inventing scope to work around them
+- Ask before changing user-visible product behavior
+
+### What the agent must NOT do
+
+- Add new major features mid-milestone (even if "small")
+- Reinterpret the product vision or change vision.md
+- Revive retired or parked frames without explicit user approval
+- Change pricing, tier, or monetization logic
+- Replace source authority (the canonical docs) with model judgment
+- "Improve" the architecture outside the current milestone's scope
+- Refactor unrelated modules because they "looked off"
+- Add dependencies outside the active milestone's dependency cone
+- Skip stop conditions to make progress
+
+### When in doubt
+
+Stop and ask. The cost of pausing is low; the cost of an unwanted product change is high. Use the milestone's "Stop conditions" section in `docs/planning/current.md` as the primary check — and when none of those fire but something still feels load-bearing, ask anyway.
+
 ## Definition of done
 
 - The acceptance criteria in `docs/planning/current.md` are satisfied.
