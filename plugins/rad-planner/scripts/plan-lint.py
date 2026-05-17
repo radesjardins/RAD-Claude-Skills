@@ -67,6 +67,21 @@ RECOMMENDED_SECTIONS = (
     "Risks",
 )
 
+# Compact milestone contract — sub-section embedded in current.md (rad-planner v4.8+).
+# Required at level 3 (`### Session contract`) under the active milestone. Each
+# field is a bold-labeled bullet. The fields are derived from canonical sections;
+# the contract is the rad-session /startup render target.
+CONTRACT_HEADING = "Session contract"
+CONTRACT_FIELDS = (
+    "Current milestone",
+    "Goal",
+    "In scope",
+    "Out of scope",
+    "Files likely touched",
+    "Acceptance criteria",
+    "Stop and ask if",
+)
+
 VAGUE_PHRASES = (
     "verify it works",
     "verify that it works",
@@ -92,9 +107,14 @@ PLACEHOLDER_PATTERNS = (
 )
 
 SECTION_HEADING = re.compile(r"^##\s+(.+?)\s*$")
+SUBSECTION_HEADING = re.compile(r"^###\s+(.+?)\s*$")
 CHECKBOX = re.compile(r"^\s*-\s*\[(?P<box>[ x])\]\s*(?P<text>.+?)\s*$")
 BULLET = re.compile(r"^\s*-\s+(?P<text>.+?)\s*$")
 CODE_BLOCK = re.compile(r"`(?P<cmd>[^`]+)`")
+# Bold-label bullet inside the Session contract: `- **Field name:** value`
+CONTRACT_FIELD_BULLET = re.compile(
+    r"^\s*-\s*\*\*(?P<label>[^*:]+?):\*\*\s*(?P<value>.*?)\s*$"
+)
 
 
 @dataclass
@@ -360,6 +380,98 @@ def check_checklist(sections: dict[str, Section]) -> list[Issue]:
     return issues
 
 
+def _extract_contract_block(text: str) -> tuple[list[str], int] | None:
+    """Find a `### Session contract` (or `## Session contract`) sub-section in
+    the raw text. Return (body_lines, start_line) or None if not present."""
+    lines = text.splitlines()
+    start: int | None = None
+    end: int | None = None
+    start_level: int | None = None
+    for i, raw in enumerate(lines, start=1):
+        sub = SUBSECTION_HEADING.match(raw)
+        top = SECTION_HEADING.match(raw)
+        if sub and sub.group(1).strip().lower() == CONTRACT_HEADING.lower():
+            start = i
+            start_level = 3
+            continue
+        if top and top.group(1).strip().lower() == CONTRACT_HEADING.lower():
+            start = i
+            start_level = 2
+            continue
+        if start is not None:
+            # End at any heading of equal-or-shallower level than start
+            if top:  # level 2 always closes
+                end = i - 1
+                break
+            if sub and start_level == 3:
+                end = i - 1
+                break
+    if start is None:
+        return None
+    if end is None:
+        end = len(lines)
+    body = lines[start:end]
+    return body, start
+
+
+def check_contract(text: str) -> list[Issue]:
+    """Validate the embedded Session contract block (rad-planner v4.8+)."""
+    issues: list[Issue] = []
+    extracted = _extract_contract_block(text)
+    if extracted is None:
+        issues.append(Issue(
+            severity="HIGH",
+            category="contract",
+            section=CONTRACT_HEADING,
+            message=(
+                "Missing required sub-section: '### Session contract' "
+                "(rad-planner v4.8+ — embedded compact contract that "
+                "rad-session /startup renders)"
+            ),
+            fix=(
+                "Add a '### Session contract' sub-section near the top of the "
+                "active milestone per references/session-contract-template.md"
+            ),
+        ))
+        return issues
+
+    body_lines, _start_line = extracted
+    # Map of label -> value (lowercased label key)
+    found: dict[str, str] = {}
+    for line in body_lines:
+        m = CONTRACT_FIELD_BULLET.match(line)
+        if m:
+            label = m.group("label").strip()
+            value = m.group("value").strip()
+            found[label.lower()] = value
+
+    for required in CONTRACT_FIELDS:
+        key = required.lower()
+        if key not in found:
+            issues.append(Issue(
+                severity="HIGH",
+                category="contract",
+                section=CONTRACT_HEADING,
+                message=f"Session contract missing required field: '{required}'",
+                fix=(
+                    f"Add a bullet '- **{required}:** <value>' to the Session "
+                    f"contract sub-section"
+                ),
+            ))
+            continue
+        value = found[key]
+        if not value or value in ("-", "TBD", "tbd", "..."):
+            issues.append(Issue(
+                severity="HIGH",
+                category="contract",
+                section=CONTRACT_HEADING,
+                message=f"Session contract field '{required}' has an empty or placeholder value",
+                fix=f"Populate '- **{required}:** <value>' with the derived content",
+            ))
+
+    return issues
+
+
 def status_report(sections: dict[str, Section]) -> dict:
     """Acceptance-criteria progress."""
     if "Acceptance criteria" not in sections:
@@ -479,6 +591,7 @@ def main(argv: list[str]) -> int:
         issues.extend(check_sections(sections))
     if args.mode in ("checklist", "all"):
         issues.extend(check_checklist(sections))
+        issues.extend(check_contract(text))
 
     report: dict = {
         "file": str(file_path),

@@ -17,6 +17,16 @@ M1 shipped the basic weather lookup. Without constraint-based evaluation (M2), t
 
 M2: Activity-constraint engine + per-constraint go/no-go evaluation
 
+### Session contract
+
+- **Current milestone:** M2 — Activity-constraint engine + per-constraint go/no-go evaluation
+- **Goal:** Ship constraint-set CRUD + per-day evaluation so users get go/no-go decisions for the next 7 days
+- **In scope:** constraint types module, evaluator logic, Drizzle CRUD, constraint-set UI, evaluation results UI
+- **Out of scope:** social features, auto-inferred constraints, multi-location batch evaluation, M3 historical trend view
+- **Files likely touched:** `lib/constraints/*`, `app/constraints/*`, `app/evaluate/[id]/*`, `lib/db/schema.ts`, `lib/db/migrations/0003_*.sql`
+- **Acceptance criteria:** 5 ACs below — see § Acceptance criteria
+- **Stop and ask if:** scope expands beyond the 5 constraint types, new dep added beyond package.json, schema change affecting users/forecast_cache, M1 weather adapter contract needs to change, validation exposes a requirement conflict
+
 ## Acceptance criteria
 
 - [x] User can create a named constraint set with at least 5 constraint types (visibility, wind, temp range, precipitation, time-of-day)

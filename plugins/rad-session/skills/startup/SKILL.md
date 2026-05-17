@@ -688,6 +688,36 @@ After globbing `docs/decisions/*.md` in the parallel batch, count files whose fi
 
 This makes draft ADRs visible at session open so review doesn't get indefinitely deferred. Removing the banner is the user's signal that the ADR has been validated.
 
+### 1.5.2 Compact milestone contract (NEW in v5.5)
+
+If `docs/planning/current.md` exists and has a `## Session contract` sub-section, render it as the **first user-visible block after the v5.3 floor line**. This is the build-readiness gate surface — the agent sees the contract in context before any work starts.
+
+**Detection:** scan the already-read `docs/planning/current.md` content for a level-3 heading `### Session contract` (or level-2 `## Session contract` if the user prefers top-level). The section follows the rad-planner v4.8+ canonical format:
+
+```markdown
+### Session contract
+
+- **Current milestone:** <name from "Current milestone" section>
+- **Goal:** <one-sentence objective from "Objective" section>
+- **In scope:** <bulleted list — derived from "Acceptance criteria" or stated explicitly>
+- **Out of scope:** <bulleted list — derived from "Non-goals" + this milestone's exclusions>
+- **Files likely touched:** <bulleted list — derived from "Planned changes" or stated explicitly>
+- **Acceptance criteria:** <reference to AC checkboxes or summary>
+- **Stop and ask if:** <bulleted list — derived from "Stop conditions">
+```
+
+**Rendering rules:**
+
+- Render the contract verbatim as a markdown block. Do not summarize or paraphrase.
+- Cap at 25 lines of contract content. If `current.md`'s Session contract exceeds 25 lines, render the first 25 and append a single line: `… (full contract in docs/planning/current.md)`.
+- Render BEFORE the standard briefing output. After the contract block, emit a separator line `---` then proceed with the normal Phase 1.5 / 1.5.1 / 1.6 outputs.
+- If no `## Session contract` (or `### Session contract`) sub-section is present, skip silently. No warning, no placeholder — the floor-of-one-line still fires.
+- If `current.md` itself is missing, skip silently (Phase 1.4 already handles that case).
+
+**Graceful degradation:** when the Session contract block is malformed (missing fields, wrong heading level), render whatever fields parse cleanly and skip the malformed ones. Do not crash the briefing.
+
+**Why this matters:** the build-readiness gate (rad-planner v4.6+ schema + v4.8 contract embed) is only useful if the contract is in front of the agent at the moment work starts. Surfacing it at `/startup` puts the contract literally in the session's context window before the first tool call.
+
 ### 1.6 Status freshness check
 
 Quick mtime check (or use `status-validator.py --mode freshness` if rad-planner is installed alongside):
